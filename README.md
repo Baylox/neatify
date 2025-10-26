@@ -1,62 +1,74 @@
-# 📦 Neatify
+# Neatify
 
-**Outil de rangement automatique de fichiers** - Organisez vos dossiers en bordel en quelques secondes !
+Outil de rangement automatique de fichiers basé sur des règles.
 
-## 🎯 Description
+---
 
-Neatify est un outil CLI en Java qui range automatiquement vos fichiers selon des règles personnalisables basées sur les extensions.
+## Description
 
-**Caractéristiques :**
-- ✅ Simple : 4 classes, zéro dépendance externe
-- ✅ Sûr : Mode dry-run par défaut, pas d'écrasement de fichiers
-- ✅ Extensible : Règles personnalisables via `.properties`
-- ✅ Robuste : Gestion des collisions, validation des entrées
+Neatify est un utilitaire en ligne de commande écrit en Java qui organise automatiquement vos fichiers dans des dossiers catégorisés selon des règles d'extension personnalisables. Conçu avec simplicité et sécurité à l'esprit, il propose un mode simulation par défaut pour prévisualiser les changements avant de les appliquer.
 
-## 🚀 Installation
+**Caractéristiques principales :**
+- Architecture simple : 4 classes principales, aucune dépendance externe
+- Opérations sécurisées : mode dry-run par défaut, gestion des collisions avec renommage automatique
+- Extensible : configuration par règles via fichiers `.properties`
+- Robuste : validation complète des entrées et gestion des erreurs
+
+---
+
+## Installation
 
 ### Prérequis
-- Java 21+
-- Maven 3.8+
 
-### Compilation
+- Java 21 ou supérieur
+- Maven 3.8+ (ou utiliser le Maven Wrapper fourni)
+
+### Compilation depuis les sources
 
 ```bash
-# Cloner le projet
-git clone <url-du-repo>
+# Cloner le dépôt
+git clone <url-du-depot>
 cd neatify
 
-# Compiler et créer le JAR exécutable
+# Construire le JAR exécutable
 mvn clean package
+
+# Ou utiliser le Maven Wrapper (Windows)
+.\mvnw.cmd clean package
 
 # Le JAR sera créé dans target/neatify.jar
 ```
 
-## 📖 Utilisation
+---
+
+## Utilisation
 
 ### Commandes de base
 
 ```bash
-# 1️⃣ Simulation (dry-run) - recommandé pour tester
+# Mode dry-run (prévisualisation sans appliquer)
 java -jar target/neatify.jar --source ~/Downloads --rules rules.properties
 
-# 2️⃣ Application réelle des changements
+# Appliquer les changements
 java -jar target/neatify.jar --source ~/Downloads --rules rules.properties --apply
 
-# 3️⃣ Aide
+# Afficher l'aide
 java -jar target/neatify.jar --help
 
-# 4️⃣ Version
+# Afficher la version
 java -jar target/neatify.jar --version
 ```
 
-### Via Maven (développement)
+### Mode développement
 
 ```bash
 # Exécuter directement avec Maven
 mvn exec:java -Dexec.args="--source ~/Downloads --rules rules.properties"
 ```
 
-## ⚙️ Configuration des règles
+---
+
+## Configuration
 
 Créez un fichier `rules.properties` avec le format suivant :
 
@@ -76,67 +88,77 @@ java=Code
 py=Code
 js=Code
 
-# Sous-dossiers possibles
+# Les sous-dossiers sont supportés
 csv=Documents/Tableurs
 pptx=Documents/Presentations
 ```
 
 **Format :** `extension=DossierCible`
 
+**Règles :**
 - Les extensions sont automatiquement normalisées (minuscules, sans point)
-- Les sous-dossiers sont créés automatiquement
-- Les caractères interdits dans les noms de dossiers sont remplacés par `_`
+- Les dossiers cibles sont créés automatiquement s'ils n'existent pas
+- Les caractères invalides dans les noms de dossiers sont remplacés par `_`
+- Les fichiers sans règle correspondante sont ignorés
 
-## 🏗️ Architecture
+---
+
+## Architecture
 
 ```
 src/main/java/io/neatify/
-├── Neatify.java          # Point d'entrée CLI (parsing args)
-├── FileMetadata.java     # Record avec métadonnées fichier
+├── Neatify.java          # Point d'entrée CLI (parsing des arguments)
+├── FileMetadata.java     # Record des métadonnées de fichier
 ├── Rules.java            # Chargement et validation des règles
-└── FileMover.java        # Logique métier (plan + execute)
+└── FileMover.java        # Logique métier principale (plan + execute)
 ```
 
-**Principe :**
-1. **Plan** : Analyse le dossier et calcule les actions à effectuer
-2. **Execute** : Applique les actions (ou simule en dry-run)
+**Principe de conception :**
+1. **Phase de planification :** Scanne le répertoire et calcule les actions nécessaires
+2. **Phase d'exécution :** Applique les actions (ou simule en mode dry-run)
 
-## 🧪 Tests
+---
+
+## Tests
 
 ```bash
-# Lancer les tests unitaires (à venir)
+# Lancer les tests unitaires
 mvn test
 ```
 
-## 🛡️ Sécurité
+---
 
-- ✅ **Dry-run par défaut** : Aucun fichier n'est déplacé sans `--apply`
-- ✅ **Pas d'écrasement** : Les collisions sont résolues avec suffixe `_1`, `_2`, etc.
-- ✅ **Validation stricte** : Tous les chemins et règles sont validés
-- ✅ **Fichiers cachés ignorés** : Les fichiers commençant par `.` sont ignorés par défaut
-- ✅ **Déplacement atomique** : Utilise `ATOMIC_MOVE` quand possible
+## Fonctionnalités de sécurité
 
-## 📋 Exemples
+- **Dry-run par défaut :** Aucun fichier n'est déplacé sans le flag explicite `--apply`
+- **Pas d'écrasement :** Les collisions de fichiers sont résolues avec des suffixes `_1`, `_2`, etc.
+- **Validation stricte :** Tous les chemins et règles sont validés avant exécution
+- **Fichiers cachés ignorés :** Les fichiers commençant par `.` sont ignorés par défaut
+- **Déplacements atomiques :** Utilise `ATOMIC_MOVE` quand disponible pour des opérations plus sûres
 
-### Exemple 1 : Ranger un dossier Téléchargements
+---
+
+## Exemples
+
+### Exemple 1 : Organiser un dossier Téléchargements
 
 ```bash
-# Créer des règles pour vos besoins
-cat > my-rules.properties << EOF
+# Créer des règles personnalisées
+cat > mes-regles.properties << EOF
 pdf=Documents
 jpg=Images
 mp4=Videos
 zip=Archives
 EOF
 
-# Tester (dry-run)
-java -jar target/neatify.jar --source ~/Downloads --rules my-rules.properties
+# Prévisualiser les changements
+java -jar target/neatify.jar --source ~/Downloads --rules mes-regles.properties
 
-# Appliquer
-java -jar target/neatify.jar --source ~/Downloads --rules my-rules.properties --apply
+# Appliquer les changements
+java -jar target/neatify.jar --source ~/Downloads --rules mes-regles.properties --apply
 ```
 
-### Exemple 2 : Ranger un projet de code
+### Exemple 2 : Organiser un projet de code
 
 ```properties
 java=SourceCode/Java
@@ -147,7 +169,9 @@ json=Config
 yaml=Config
 ```
 
-## 🔧 Développement
+---
+
+## Développement
 
 ### Structure du projet
 
@@ -155,7 +179,9 @@ yaml=Config
 neatify/
 ├── pom.xml                       # Configuration Maven
 ├── rules.properties              # Règles d'exemple
-├── README.md
+├── README.md                     # Documentation (français)
+├── README.en.md                  # Documentation (anglais)
+├── LICENSE                       # Licence MIT
 └── src/
     ├── main/
     │   ├── java/io/neatify/     # Code source
@@ -164,22 +190,34 @@ neatify/
         └── java/io/neatify/     # Tests unitaires
 ```
 
-### Évolutions futures possibles
+### Évolutions futures
 
-- [ ] Interface `Rule` pour des règles complexes (par date, taille, regex)
-- [ ] Option `--by-date` pour organiser par année/mois
-- [ ] Option `--report` pour générer un JSON avec les actions effectuées
-- [ ] Support des fichiers cachés via `--include-hidden`
-- [ ] Multi-modules Maven si besoin de plugins externes
-
-## 📄 Licence
-
-Ce projet est à usage personnel. Vous êtes libre de l'utiliser et de le modifier.
-
-## 🤝 Contribution
-
-Suggestions et améliorations bienvenues !
+- [ ] Interface `Rule` pour des règles complexes (par date, taille, motifs regex)
+- [ ] Option `--by-date` pour organiser les fichiers par année/mois
+- [ ] Option `--report` pour générer un rapport JSON des actions effectuées
+- [ ] Flag `--include-hidden` pour traiter les fichiers cachés
+- [ ] Structure Maven multi-modules pour support de plugins externes
 
 ---
 
-**⚠️ Avertissement :** Testez toujours avec `dry-run` avant d'appliquer sur des données importantes. L'outil ne crée pas de sauvegardes automatiques.
+## Licence
+
+Ce projet est sous licence MIT - voir le fichier [LICENSE](LICENSE) pour plus de détails.
+
+---
+
+## Contribution
+
+Les contributions, problèmes et demandes de fonctionnalités sont les bienvenus.
+
+---
+
+## Avertissement
+
+Testez toujours en mode dry-run avant d'appliquer des changements sur des données importantes. Cet outil ne crée pas de sauvegardes automatiques.
+
+---
+
+## Documentation
+
+- [English documentation](README.en.md)
