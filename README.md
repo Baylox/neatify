@@ -43,10 +43,27 @@ mvn clean package
 
 ## Utilisation
 
-### Commandes de base
+### Mode interactif (recommandé)
+
+Lancez simplement le programme sans arguments pour accéder au menu interactif :
 
 ```bash
-# Mode dry-run (prévisualisation sans appliquer)
+java -jar target/neatify.jar
+```
+
+**Menu disponible :**
+1. Organiser des fichiers (avec aperçu et confirmation)
+2. Créer un fichier de règles
+3. Afficher l'aide
+4. Afficher la version
+5. Quitter
+
+Le mode interactif guide l'utilisateur étape par étape, affiche un aperçu des changements et demande confirmation avant toute modification.
+
+### Mode ligne de commande
+
+```bash
+# Prévisualisation (dry-run)
 java -jar target/neatify.jar --source ~/Downloads --rules rules.properties
 
 # Appliquer les changements
@@ -57,13 +74,16 @@ java -jar target/neatify.jar --help
 
 # Afficher la version
 java -jar target/neatify.jar --version
+
+# Lancer le mode interactif explicitement
+java -jar target/neatify.jar --interactive
 ```
 
 ### Mode développement
 
 ```bash
 # Exécuter directement avec Maven
-mvn exec:java -Dexec.args="--source ~/Downloads --rules rules.properties"
+mvn exec:java
 ```
 
 ---
