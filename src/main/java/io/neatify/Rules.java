@@ -84,13 +84,15 @@ public final class Rules {
 
     /**
      * Nettoie un nom de dossier pour éviter les caractères interdits.
+     * Note : le slash (/) est conservé pour permettre les sous-dossiers.
      *
      * @param folderName le nom du dossier à nettoyer
      * @return le nom nettoyé
      */
     private static String sanitizeFolderName(String folderName) {
-        // Supprime les caractères interdits sur Windows/Linux : < > : " / \ | ? *
-        return folderName.replaceAll("[<>:\"/\\\\|?*]", "_");
+        // Supprime les caractères interdits sur Windows/Linux : < > : " \ | ? *
+        // Le slash (/) est conservé pour les sous-dossiers
+        return folderName.replaceAll("[<>:\"\\\\|?*]", "_");
     }
 
     /**
