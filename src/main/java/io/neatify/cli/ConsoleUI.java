@@ -1,11 +1,11 @@
-package io.neatify;
+package io.neatify.cli;
 
 import java.util.Scanner;
 
 /**
  * Utilitaires pour l'interface console.
  */
-final class ConsoleUI {
+public final class ConsoleUI {
 
     private static final Scanner scanner = new Scanner(System.in);
 
@@ -13,7 +13,7 @@ final class ConsoleUI {
         // Classe utilitaire
     }
 
-    static void printBanner(String version) {
+    public static void printBanner(String version) {
         System.out.println();
         System.out.println("╔════════════════════════════════════════════╗");
         System.out.println("║            NEATIFY v" + version + "                 ║");
@@ -22,38 +22,38 @@ final class ConsoleUI {
         System.out.println();
     }
 
-    static void printSection(String title) {
+    public static void printSection(String title) {
         System.out.println();
         printLine();
         System.out.println(title);
         printLine();
     }
 
-    static void printLine() {
+    public static void printLine() {
         System.out.println("================================================");
     }
 
-    static void printSuccess(String message) {
+    public static void printSuccess(String message) {
         System.out.println("[✓] " + message);
     }
 
-    static void printInfo(String message) {
+    public static void printInfo(String message) {
         System.out.println("[i] " + message);
     }
 
-    static void printWarning(String message) {
+    public static void printWarning(String message) {
         System.out.println("[!] " + message);
     }
 
-    static void printError(String message) {
+    public static void printError(String message) {
         System.err.println("[✗] " + message);
     }
 
-    static String readInput(String prompt) {
+    public static String readInput(String prompt) {
         return readInput(prompt, null);
     }
 
-    static String readInput(String prompt, String defaultValue) {
+    public static String readInput(String prompt, String defaultValue) {
         if (defaultValue != null) {
             System.out.print(prompt + " [" + defaultValue + "]: ");
         } else {
@@ -64,7 +64,7 @@ final class ConsoleUI {
         return input.isEmpty() && defaultValue != null ? defaultValue : input;
     }
 
-    static void waitForEnter() {
+    public static void waitForEnter() {
         System.out.println();
         System.out.print("Appuyez sur Entrée pour continuer...");
         scanner.nextLine();

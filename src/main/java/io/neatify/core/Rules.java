@@ -1,4 +1,4 @@
-package io.neatify;
+package io.neatify.core;
 
 import java.io.IOException;
 import java.io.InputStream;

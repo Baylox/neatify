@@ -1,4 +1,7 @@
-package io.neatify;
+package io.neatify.cli;
+
+import io.neatify.core.FileMover;
+import io.neatify.core.Rules;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -7,20 +10,20 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
-import static io.neatify.ConsoleUI.*;
+import static io.neatify.cli.ConsoleUI.*;
 
 /**
  * Gère le mode interactif de Neatify.
  */
-final class InteractiveCLI {
+public final class InteractiveCLI {
 
     private final String version;
 
-    InteractiveCLI(String version) {
+    public InteractiveCLI(String version) {
         this.version = version;
     }
 
-    void run() throws IOException {
+    public void run() throws IOException {
         printBanner(version);
 
         while (true) {

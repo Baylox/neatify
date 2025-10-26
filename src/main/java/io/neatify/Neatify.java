@@ -1,5 +1,9 @@
 package io.neatify;
 
+import io.neatify.cli.InteractiveCLI;
+import io.neatify.core.FileMover;
+import io.neatify.core.Rules;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -7,7 +11,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
-import static io.neatify.ConsoleUI.*;
+import static io.neatify.cli.ConsoleUI.*;
 
 /**
  * Point d'entrée principal de Neatify.

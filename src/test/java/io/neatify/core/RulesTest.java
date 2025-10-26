@@ -1,4 +1,4 @@
-package io.neatify;
+package io.neatify.core;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
