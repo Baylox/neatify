@@ -4,69 +4,122 @@ import java.util.Scanner;
 
 /**
  * Utilitaires pour l'interface console.
+ * Méthodes statiques de compatibilité qui délèguent à ConsoleOutput et BannerRenderer.
+ *
+ * Architecture :
+ * - BannerRenderer : logique pure de rendu (String → String)
+ * - ConsoleOutput : abstraction d'IO (évite System.out en dur)
+ * - ConsoleUI : façade statique pour la compatibilité
  */
 public final class ConsoleUI {
 
     private static final Scanner scanner = new Scanner(System.in);
+    private static final ConsoleOutput output = ConsoleOutput.system();
 
     private ConsoleUI() {
         // Classe utilitaire
     }
 
+    /**
+     * Affiche le banner de l'application.
+     *
+     * @param version la version de l'application
+     * @deprecated Utilisez printBanner(AppInfo) pour une meilleure séparation des responsabilités
+     */
+    @Deprecated
     public static void printBanner(String version) {
-        System.out.println();
-        System.out.println("╔════════════════════════════════════════════╗");
-        System.out.println("║            NEATIFY v" + version + "                 ║");
-        System.out.println("║   Outil de rangement automatique          ║");
-        System.out.println("╚════════════════════════════════════════════╝");
-        System.out.println();
+        output.printBanner(AppInfo.neatify(version));
     }
 
+    /**
+     * Affiche le banner de l'application.
+     *
+     * @param appInfo les informations de l'application
+     */
+    public static void printBanner(AppInfo appInfo) {
+        output.printBanner(appInfo);
+    }
+
+    /**
+     * Affiche une section avec titre.
+     *
+     * @param title le titre de la section
+     */
     public static void printSection(String title) {
-        System.out.println();
-        printLine();
-        System.out.println(title);
-        printLine();
+        output.printSection(title);
     }
 
+    /**
+     * Affiche une ligne de séparation.
+     */
     public static void printLine() {
-        System.out.println("================================================");
+        output.printLine();
     }
 
+    /**
+     * Affiche un message de succès.
+     *
+     * @param message le message
+     */
     public static void printSuccess(String message) {
-        System.out.println("[✓] " + message);
+        output.printSuccess(message);
     }
 
+    /**
+     * Affiche un message d'information.
+     *
+     * @param message le message
+     */
     public static void printInfo(String message) {
-        System.out.println("[i] " + message);
+        output.printInfo(message);
     }
 
+    /**
+     * Affiche un message d'avertissement.
+     *
+     * @param message le message
+     */
     public static void printWarning(String message) {
-        System.out.println("[!] " + message);
+        output.printWarning(message);
     }
 
+    /**
+     * Affiche un message d'erreur.
+     *
+     * @param message le message
+     */
     public static void printError(String message) {
-        System.err.println("[✗] " + message);
+        output.printError(message);
     }
 
+    /**
+     * Lit une entrée utilisateur avec un prompt.
+     *
+     * @param prompt le texte du prompt
+     * @return l'entrée utilisateur
+     */
     public static String readInput(String prompt) {
         return readInput(prompt, null);
     }
 
+    /**
+     * Lit une entrée utilisateur avec un prompt et une valeur par défaut.
+     *
+     * @param prompt le texte du prompt
+     * @param defaultValue la valeur par défaut (peut être null)
+     * @return l'entrée utilisateur ou la valeur par défaut si vide
+     */
     public static String readInput(String prompt, String defaultValue) {
-        if (defaultValue != null) {
-            System.out.print(prompt + " [" + defaultValue + "]: ");
-        } else {
-            System.out.print(prompt + ": ");
-        }
-
+        output.print(BannerRenderer.renderPrompt(prompt, defaultValue));
         String input = scanner.nextLine().trim();
         return input.isEmpty() && defaultValue != null ? defaultValue : input;
     }
 
+    /**
+     * Attend que l'utilisateur appuie sur Entrée.
+     */
     public static void waitForEnter() {
-        System.out.println();
-        System.out.print("Appuyez sur Entrée pour continuer...");
+        output.print(BannerRenderer.renderWaitForEnter());
         scanner.nextLine();
     }
 }

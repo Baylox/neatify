@@ -17,14 +17,14 @@ import static io.neatify.cli.ConsoleUI.*;
  */
 public final class InteractiveCLI {
 
-    private final String version;
+    private final AppInfo appInfo;
 
     public InteractiveCLI(String version) {
-        this.version = version;
+        this.appInfo = AppInfo.neatify(version);
     }
 
     public void run() throws IOException {
-        printBanner(version);
+        printBanner(appInfo);
 
         while (true) {
             printMenu();
@@ -38,7 +38,8 @@ public final class InteractiveCLI {
                     waitForEnter();
                 }
                 case "4" -> {
-                    System.out.println("Neatify version " + version);
+                    System.out.println(appInfo.name() + " version " + appInfo.version());
+                    System.out.println(appInfo.description());
                     waitForEnter();
                 }
                 case "5" -> {
