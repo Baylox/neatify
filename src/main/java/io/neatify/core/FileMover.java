@@ -76,54 +76,56 @@ public final class FileMover {
         Files.walkFileTree(sourceRoot, new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-                // SÉCURITÉ : Quota anti-DoS
                 if (++fileCount[0] > maxFiles) {
                     throw new IllegalStateException(
                         "Quota de fichiers dépassé : " + maxFiles + " fichiers maximum. " +
                         "Utilisez un dossier plus petit ou augmentez la limite."
                     );
                 }
-
-                // Ignorer les fichiers cachés par défaut
-                if (file.getFileName().toString().startsWith(".")) {
-                    return FileVisitResult.CONTINUE;
-                }
-
-                try {
-                    FileMetadata metadata = FileMetadata.from(file);
-
-                    if (metadata.hasNoExtension()) {
-                        // Pas de règle pour les fichiers sans extension
-                        return FileVisitResult.CONTINUE;
-                    }
-
-                    String targetFolder = Rules.getTargetFolder(rules, metadata.extension());
-
-                    if (targetFolder != null) {
-                        Path targetDir = sourceRoot.resolve(targetFolder).normalize();
-
-                        // Vérification de sécurité : le chemin doit rester dans sourceRoot
-                        if (!targetDir.startsWith(sourceRoot.normalize())) {
-                            System.err.println("[SECURITE] Tentative de path traversal bloquée : " + targetFolder);
-                            return FileVisitResult.CONTINUE;
-                        }
-
-                        // Pas de gestion des collisions ici - elle se fait pendant execute()
-                        Path targetFile = targetDir.resolve(metadata.fileName());
-
-                        String reason = String.format("extension: %s -> %s", metadata.extension(), targetFolder);
-                        actions.add(new Action(file, targetFile, reason));
-                    }
-
-                } catch (IOException e) {
-                    System.err.println("Erreur lors de la lecture de " + file + " : " + e.getMessage());
-                }
-
-                return FileVisitResult.CONTINUE;
+                return processFile(file, sourceRoot, rules, actions);
             }
         });
 
         return actions;
+    }
+
+    /**
+     * Traite un fichier individuel et ajoute une action si une règle correspond.
+     */
+    private static FileVisitResult processFile(Path file, Path sourceRoot,
+                                               Map<String, String> rules,
+                                               List<Action> actions) {
+        if (file.getFileName().toString().startsWith(".")) {
+            return FileVisitResult.CONTINUE;
+        }
+
+        try {
+            FileMetadata metadata = FileMetadata.from(file);
+
+            if (metadata.hasNoExtension()) {
+                return FileVisitResult.CONTINUE;
+            }
+
+            String targetFolder = Rules.getTargetFolder(rules, metadata.extension());
+
+            if (targetFolder != null) {
+                Path targetDir = sourceRoot.resolve(targetFolder).normalize();
+
+                if (!targetDir.startsWith(sourceRoot.normalize())) {
+                    System.err.println("[SECURITE] Tentative de path traversal bloquée : " + targetFolder);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                Path targetFile = targetDir.resolve(metadata.fileName());
+                String reason = String.format("extension: %s -> %s", metadata.extension(), targetFolder);
+                actions.add(new Action(file, targetFile, reason));
+            }
+
+        } catch (IOException e) {
+            System.err.println("Erreur lors de la lecture de " + file + " : " + e.getMessage());
+        }
+
+        return FileVisitResult.CONTINUE;
     }
 
     /**
@@ -213,39 +215,5 @@ public final class FileMover {
         }
 
         throw new IOException("Impossible de trouver un nom unique après " + MAX_RETRIES + " tentatives");
-    }
-
-    /**
-     * Résout un chemin cible unique en ajoutant un suffixe _n si le fichier existe déjà.
-     *
-     * @param targetDir dossier cible
-     * @param fileName nom du fichier
-     * @return un chemin unique (ajoute _1, _2, etc. si collision).
-     */
-    private static Path resolveUniqueTarget(Path targetDir, String fileName) {
-        Path target = targetDir.resolve(fileName);
-
-        if (!Files.exists(target)) {
-            return target;
-        }
-
-        // Collision : ajouter un suffixe _n
-        String nameWithoutExt = fileName;
-        String extension = "";
-
-        int dotIndex = fileName.lastIndexOf('.');
-        if (dotIndex > 0) {
-            nameWithoutExt = fileName.substring(0, dotIndex);
-            extension = fileName.substring(dotIndex);
-        }
-
-        int counter = 1;
-        while (Files.exists(target)) {
-            String newName = nameWithoutExt + "_" + counter + extension;
-            target = targetDir.resolve(newName);
-            counter++;
-        }
-
-        return target;
     }
 }
