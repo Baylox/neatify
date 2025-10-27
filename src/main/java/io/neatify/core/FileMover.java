@@ -70,7 +70,14 @@ public final class FileMover {
                     String targetFolder = Rules.getTargetFolder(rules, metadata.extension());
 
                     if (targetFolder != null) {
-                        Path targetDir = sourceRoot.resolve(targetFolder);
+                        Path targetDir = sourceRoot.resolve(targetFolder).normalize();
+
+                        // Vérification de sécurité : le chemin doit rester dans sourceRoot
+                        if (!targetDir.startsWith(sourceRoot.normalize())) {
+                            System.err.println("[SECURITE] Tentative de path traversal bloquée : " + targetFolder);
+                            return FileVisitResult.CONTINUE;
+                        }
+
                         Path targetFile = resolveUniqueTarget(targetDir, metadata.fileName());
 
                         String reason = String.format("extension: %s -> %s", metadata.extension(), targetFolder);

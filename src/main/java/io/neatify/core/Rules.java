@@ -181,14 +181,30 @@ public final class Rules {
     }
 
     /**
-     * Nettoie un nom de dossier pour éviter les caractères interdits.
+     * Nettoie un nom de dossier pour éviter les caractères interdits et les path traversal.
      * Note : le slash (/) est conservé pour permettre les sous-dossiers.
      *
      * @param folderName le nom du dossier à nettoyer
      * @return le nom nettoyé
+     * @throws IllegalArgumentException si le chemin contient des tentatives de path traversal
      */
     private static String sanitizeFolderName(String folderName) {
-        // Supprime les caractères interdits sur Windows/Linux : < > : " \ | ? *
+        // 1. Bloquer explicitement ".." pour éviter les path traversal
+        if (folderName.contains("..")) {
+            throw new IllegalArgumentException("Path traversal interdit (\"..\" détecté) : " + folderName);
+        }
+
+        // 2. Bloquer les chemins absolus Unix/Linux (commence par /)
+        if (folderName.startsWith("/")) {
+            throw new IllegalArgumentException("Chemin absolu Unix interdit : " + folderName);
+        }
+
+        // 3. Bloquer les chemins absolus Windows (ex: C:\, D:\)
+        if (folderName.matches("^[A-Za-z]:.*")) {
+            throw new IllegalArgumentException("Chemin absolu Windows interdit : " + folderName);
+        }
+
+        // 4. Supprime les caractères interdits sur Windows/Linux : < > : " \ | ? *
         // Le slash (/) est conservé pour les sous-dossiers
         return folderName.replaceAll("[<>:\"\\\\|?*]", "_");
     }
