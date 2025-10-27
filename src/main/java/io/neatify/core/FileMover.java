@@ -11,6 +11,9 @@ import java.util.*;
  */
 public final class FileMover {
 
+    // Quota par défaut : 100 000 fichiers (protection DoS)
+    private static final int DEFAULT_MAX_FILES = 100_000;
+
     private FileMover() {
         // Classe utilitaire
     }
@@ -34,7 +37,7 @@ public final class FileMover {
     public record Result(int moved, int skipped, List<String> errors) {}
 
     /**
-     * Planifie les déplacements de fichiers selon les règles données.
+     * Planifie les déplacements de fichiers selon les règles données (quota par défaut).
      *
      * @param sourceRoot dossier racine à analyser
      * @param rules map [extension -> dossier cible]
@@ -42,18 +45,45 @@ public final class FileMover {
      * @throws IOException si le dossier source n'est pas accessible
      */
     public static List<Action> plan(Path sourceRoot, Map<String, String> rules) throws IOException {
+        return plan(sourceRoot, rules, DEFAULT_MAX_FILES);
+    }
+
+    /**
+     * Planifie les déplacements de fichiers selon les règles données, avec quota personnalisé.
+     *
+     * @param sourceRoot dossier racine à analyser
+     * @param rules map [extension -> dossier cible]
+     * @param maxFiles nombre maximum de fichiers à traiter (protection DoS)
+     * @return liste des actions planifiées
+     * @throws IOException si le dossier source n'est pas accessible
+     * @throws IllegalStateException si le quota de fichiers est dépassé
+     */
+    public static List<Action> plan(Path sourceRoot, Map<String, String> rules, int maxFiles) throws IOException {
         Objects.requireNonNull(sourceRoot, "Le dossier source ne peut pas être null");
         Objects.requireNonNull(rules, "Les règles ne peuvent pas être null");
+
+        if (maxFiles <= 0) {
+            throw new IllegalArgumentException("Le quota doit être positif : " + maxFiles);
+        }
 
         if (!Files.isDirectory(sourceRoot)) {
             throw new IllegalArgumentException("Le chemin source doit être un dossier : " + sourceRoot);
         }
 
         List<Action> actions = new ArrayList<>();
+        java.util.concurrent.atomic.AtomicInteger fileCount = new java.util.concurrent.atomic.AtomicInteger(0);
 
         Files.walkFileTree(sourceRoot, new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+                // SÉCURITÉ : Quota anti-DoS
+                if (fileCount.incrementAndGet() > maxFiles) {
+                    throw new IllegalStateException(
+                        "Quota de fichiers dépassé : " + maxFiles + " fichiers maximum. " +
+                        "Utilisez un dossier plus petit ou augmentez la limite."
+                    );
+                }
+
                 // Ignorer les fichiers cachés par défaut
                 if (file.getFileName().toString().startsWith(".")) {
                     return FileVisitResult.CONTINUE;
@@ -122,15 +152,10 @@ public final class FileMover {
                     // Créer le dossier cible si nécessaire
                     Files.createDirectories(action.target().getParent());
 
-                    // Déplacer le fichier (ATOMIC_MOVE si même volume, sinon REPLACE_EXISTING)
-                    try {
-                        Files.move(action.source(), action.target(), StandardCopyOption.ATOMIC_MOVE);
-                    } catch (AtomicMoveNotSupportedException e) {
-                        // Fallback : déplacement non atomique
-                        Files.move(action.source(), action.target());
-                    }
+                    // SÉCURITÉ : Déplacement atomique avec gestion des collisions (anti-TOCTOU)
+                    Path finalTarget = atomicMoveWithRetry(action.source(), action.target());
 
-                    System.out.printf("[MOVED] %s -> %s%n", action.source().getFileName(), action.target());
+                    System.out.printf("[MOVED] %s -> %s%n", action.source().getFileName(), finalTarget);
                     moved++;
 
                 } catch (IOException e) {
@@ -146,6 +171,47 @@ public final class FileMover {
         }
 
         return new Result(moved, skipped, errors);
+    }
+
+    /**
+     * Déplace un fichier de manière atomique, avec retry automatique si collision.
+     * Protection anti-TOCTOU : pas de "check puis use", on essaie directement.
+     *
+     * @param source fichier source
+     * @param target cible initiale
+     * @return le chemin final (peut avoir un suffixe si collision)
+     * @throws IOException si erreur I/O
+     */
+    private static Path atomicMoveWithRetry(Path source, Path target) throws IOException {
+        Path currentTarget = target;
+        int counter = 1;
+        final int MAX_RETRIES = 1000;
+
+        while (counter <= MAX_RETRIES) {
+            try {
+                // Tentative de déplacement SANS écraser (pas de REPLACE_EXISTING)
+                // Note : pas d'ATOMIC_MOVE car il peut écraser sur certains systèmes
+                Files.move(source, currentTarget);
+                return currentTarget;  // Succès !
+            } catch (FileAlreadyExistsException e) {
+                // Collision : générer un nouveau nom avec suffixe
+                String fileName = target.getFileName().toString();
+                String nameWithoutExt = fileName;
+                String extension = "";
+
+                int dotIndex = fileName.lastIndexOf('.');
+                if (dotIndex > 0) {
+                    nameWithoutExt = fileName.substring(0, dotIndex);
+                    extension = fileName.substring(dotIndex);
+                }
+
+                String newName = nameWithoutExt + "_" + counter + extension;
+                currentTarget = target.getParent().resolve(newName);
+                counter++;
+            }
+        }
+
+        throw new IOException("Impossible de trouver un nom unique après " + MAX_RETRIES + " tentatives");
     }
 
     /**
