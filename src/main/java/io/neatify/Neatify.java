@@ -3,6 +3,7 @@ package io.neatify;
 import io.neatify.cli.BannerRenderer;
 import io.neatify.cli.InteractiveCLI;
 import io.neatify.core.FileMover;
+import io.neatify.core.PathSecurity;
 import io.neatify.core.Rules;
 
 import java.io.IOException;
@@ -154,6 +155,13 @@ public final class Neatify {
         }
         if (!Files.isRegularFile(config.rulesFile)) {
             throw new IllegalArgumentException("--rules doit etre un fichier: " + config.rulesFile);
+        }
+
+        // SÉCURITÉ : Valider que le dossier source est sûr
+        try {
+            PathSecurity.validateSourceDir(config.sourceDir);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Erreur lors de la validation: " + e.getMessage(), e);
         }
     }
 

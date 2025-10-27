@@ -1,6 +1,7 @@
 package io.neatify.cli;
 
 import io.neatify.core.FileMover;
+import io.neatify.core.PathSecurity;
 import io.neatify.core.Rules;
 
 import java.io.IOException;
@@ -73,6 +74,15 @@ public final class InteractiveCLI {
 
         if (!Files.exists(sourceDir) || !Files.isDirectory(sourceDir)) {
             printError("Dossier invalide : " + sourcePath);
+            waitForEnter();
+            return;
+        }
+
+        // SÉCURITÉ : Valider que le dossier est sûr
+        try {
+            PathSecurity.validateSourceDir(sourceDir);
+        } catch (SecurityException e) {
+            printError("SECURITE : " + e.getMessage());
             waitForEnter();
             return;
         }
@@ -173,7 +183,29 @@ public final class InteractiveCLI {
         printSection("CREER UN FICHIER DE REGLES");
 
         String filename = readInput("Nom du fichier", "custom-rules/my-rules.properties");
-        Path rulesFile = Paths.get(filename);
+        Path rulesFile = Paths.get(filename).toAbsolutePath().normalize();
+
+        // SÉCURITÉ : Vérifier que ce n'est pas un symlink
+        if (Files.exists(rulesFile) && Files.isSymbolicLink(rulesFile)) {
+            printError("SECURITE : Les liens symboliques sont interdits");
+            waitForEnter();
+            return;
+        }
+
+        // SÉCURITÉ : Restreindre à la zone custom-rules/
+        Path safeDir = Paths.get("custom-rules").toAbsolutePath().normalize();
+        if (!rulesFile.startsWith(safeDir)) {
+            printError("SECURITE : Le fichier doit etre dans le dossier custom-rules/");
+            waitForEnter();
+            return;
+        }
+
+        // SÉCURITÉ : Bloquer path traversal
+        if (filename.contains("..")) {
+            printError("SECURITE : Path traversal interdit (..)");
+            waitForEnter();
+            return;
+        }
 
         if (Files.exists(rulesFile)) {
             String overwrite = readInput("Le fichier existe. Ecraser? (o/N)", "n");
@@ -219,7 +251,26 @@ public final class InteractiveCLI {
             printInfo("Dossier créé : " + parentDir);
         }
 
-        Files.writeString(rulesFile, content);
+        // SÉCURITÉ : Vérifier les symlinks dans l'arborescence
+        try {
+            PathSecurity.assertNoSymlinkInAncestry(rulesFile);
+        } catch (SecurityException e) {
+            printError("SECURITE : " + e.getMessage());
+            waitForEnter();
+            return;
+        }
+
+        // SÉCURITÉ : Écriture atomique avec CREATE_NEW (anti-TOCTOU)
+        try {
+            Files.writeString(rulesFile, content,
+                java.nio.file.StandardOpenOption.CREATE_NEW);
+        } catch (java.nio.file.FileAlreadyExistsException e) {
+            // Si on arrive ici, c'est que le fichier a été créé entre-temps (race condition)
+            printError("SECURITE : Le fichier a ete cree par un autre processus");
+            waitForEnter();
+            return;
+        }
+
         printSuccess("Fichier cree: " + rulesFile.toAbsolutePath());
         printInfo("Vous pouvez maintenant l'editer pour personnaliser les regles.");
         printInfo("Note: Ce fichier ne sera pas versionne par Git.");
