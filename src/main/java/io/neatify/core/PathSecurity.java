@@ -42,21 +42,16 @@ public final class PathSecurity {
 
         Path normalized = sourcePath.toAbsolutePath().normalize();
 
-        // Vérifier que ce n'est pas un symlink
         assertNoSymlinkInAncestry(normalized);
+        checkNotForbiddenPath(normalized, FORBIDDEN_PATHS_UNIX);
+        checkNotForbiddenPath(normalized, FORBIDDEN_PATHS_WINDOWS);
+    }
 
-        // Bloquer les dossiers système Unix/Linux
-        for (String forbidden : FORBIDDEN_PATHS_UNIX) {
-            Path forbiddenPath = Paths.get(forbidden).toAbsolutePath().normalize();
-            if (normalized.equals(forbiddenPath) || normalized.startsWith(forbiddenPath)) {
-                throw new SecurityException(
-                    "Dossier système interdit : " + normalized + " (zone: " + forbidden + ")"
-                );
-            }
-        }
-
-        // Bloquer les dossiers système Windows
-        for (String forbidden : FORBIDDEN_PATHS_WINDOWS) {
+    /**
+     * Vérifie qu'un chemin ne correspond pas à une liste de chemins interdits.
+     */
+    private static void checkNotForbiddenPath(Path normalized, List<String> forbiddenPaths) {
+        for (String forbidden : forbiddenPaths) {
             try {
                 Path forbiddenPath = Paths.get(forbidden).toAbsolutePath().normalize();
                 if (normalized.equals(forbiddenPath) || normalized.startsWith(forbiddenPath)) {
@@ -64,8 +59,8 @@ public final class PathSecurity {
                         "Dossier système interdit : " + normalized + " (zone: " + forbidden + ")"
                     );
                 }
-            } catch (Exception e) {
-                // Ignore si le chemin Windows n'existe pas sur Unix
+            } catch (java.nio.file.InvalidPathException e) {
+                // Ignore si le chemin n'est pas valide sur ce système (ex: chemin Windows sur Unix)
             }
         }
     }
@@ -81,17 +76,26 @@ public final class PathSecurity {
             throw new IllegalArgumentException("Le sous-chemin ne peut pas être vide");
         }
 
-        // Bloquer path traversal
+        checkNoPathTraversal(subpath);
+        checkNotAbsolutePath(subpath);
+    }
+
+    /**
+     * Vérifie qu'un chemin ne contient pas de path traversal (..).
+     */
+    private static void checkNoPathTraversal(String subpath) {
         if (subpath.contains("..")) {
             throw new SecurityException("Path traversal interdit (..) : " + subpath);
         }
+    }
 
-        // Bloquer chemins absolus Unix
+    /**
+     * Vérifie qu'un chemin n'est pas absolu (Unix ou Windows).
+     */
+    private static void checkNotAbsolutePath(String subpath) {
         if (subpath.startsWith("/")) {
             throw new SecurityException("Chemin absolu Unix interdit : " + subpath);
         }
-
-        // Bloquer chemins absolus Windows
         if (subpath.matches("^[A-Za-z]:.*")) {
             throw new SecurityException("Chemin absolu Windows interdit : " + subpath);
         }
@@ -133,12 +137,23 @@ public final class PathSecurity {
             return;
         }
 
-        // Vérifier le chemin lui-même
+        checkSymlinkSelf(path);
+        checkSymlinkAncestors(path);
+    }
+
+    /**
+     * Vérifie que le chemin lui-même n'est pas un symlink.
+     */
+    private static void checkSymlinkSelf(Path path) throws IOException {
         if (Files.exists(path) && Files.isSymbolicLink(path)) {
             throw new SecurityException("Symlink interdit : " + path);
         }
+    }
 
-        // Vérifier tous les ancêtres
+    /**
+     * Vérifie qu'aucun ancêtre du chemin n'est un symlink.
+     */
+    private static void checkSymlinkAncestors(Path path) throws IOException {
         Path current = path.getParent();
         while (current != null) {
             if (Files.exists(current) && Files.isSymbolicLink(current)) {
