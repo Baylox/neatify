@@ -22,10 +22,11 @@ public final class AsciiSymbols {
             return true;
         }
 
-        // Sur Windows, vérifier Windows Terminal
+        // Sur Windows PowerShell supporte UTF-8
         String os = System.getProperty("os.name").toLowerCase();
         if (os.contains("win")) {
-            return System.getenv("WT_SESSION") != null;
+            // Activer par défaut sur Windows moderne
+            return true;
         }
 
         // Sur Unix/Linux/Mac, généralement supporté

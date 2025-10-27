@@ -28,12 +28,15 @@ public final class Ansi {
             return false;
         }
 
-        // Sur Windows, vérifier si Windows Terminal ou ConEmu
+        // Sur Windows 10+, ANSI est supporté par défaut depuis 2016
         String os = System.getProperty("os.name").toLowerCase();
         if (os.contains("win")) {
+            // Windows Terminal, ConEmu, ou PowerShell moderne
             String wt = System.getenv("WT_SESSION");
             String conemu = System.getenv("ConEmuANSI");
-            return wt != null || "ON".equals(conemu);
+
+            // Activer par défaut sur Windows 10+ (la plupart des terminaux modernes)
+            return true;
         }
 
         // Sur Unix/Linux/Mac, généralement supporté
