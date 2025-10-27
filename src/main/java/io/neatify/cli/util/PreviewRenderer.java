@@ -54,6 +54,7 @@ public final class PreviewRenderer {
     /**
      * Groupe de fichiers par dossier.
      */
+    @SuppressWarnings("CollectionAddedButNeverAccessed")
     private record FolderGroup(String folderName, List<FileEntry> files) {}
 
     private PreviewRenderer() {
