@@ -71,13 +71,13 @@ public final class FileMover {
         }
 
         List<Action> actions = new ArrayList<>();
-        java.util.concurrent.atomic.AtomicInteger fileCount = new java.util.concurrent.atomic.AtomicInteger(0);
+        int[] fileCount = {0};
 
         Files.walkFileTree(sourceRoot, new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
                 // SÉCURITÉ : Quota anti-DoS
-                if (fileCount.incrementAndGet() > maxFiles) {
+                if (++fileCount[0] > maxFiles) {
                     throw new IllegalStateException(
                         "Quota de fichiers dépassé : " + maxFiles + " fichiers maximum. " +
                         "Utilisez un dossier plus petit ou augmentez la limite."
@@ -108,7 +108,8 @@ public final class FileMover {
                             return FileVisitResult.CONTINUE;
                         }
 
-                        Path targetFile = resolveUniqueTarget(targetDir, metadata.fileName());
+                        // Pas de gestion des collisions ici - elle se fait pendant execute()
+                        Path targetFile = targetDir.resolve(metadata.fileName());
 
                         String reason = String.format("extension: %s -> %s", metadata.extension(), targetFolder);
                         actions.add(new Action(file, targetFile, reason));

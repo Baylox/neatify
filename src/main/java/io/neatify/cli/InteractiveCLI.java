@@ -142,27 +142,14 @@ public final class InteractiveCLI {
     }
 
     private void showPreview(List<FileMover.Action> actions) {
-        System.out.println();
-        printSection("APERCU DES CHANGEMENTS");
+        // Utiliser le nouveau renderer
+        PreviewRenderer.Config config = new PreviewRenderer.Config()
+            .maxFilesPerFolder(5)
+            .sortMode(PreviewRenderer.SortMode.ALPHA)
+            .showDuplicates(true);
 
-        // Barre de progression visuelle
-        System.out.println(BannerRenderer.renderProgressBar(actions.size(), actions.size(), 40));
-        System.out.println();
-
-        // Apercu des fichiers
-        int preview = Math.min(10, actions.size());
-        for (int i = 0; i < preview; i++) {
-            FileMover.Action action = actions.get(i);
-            System.out.printf("  [%d] %s\n      -> %s\n",
-                i + 1,
-                action.source().getFileName(),
-                action.target().getParent().getFileName() + "/" + action.target().getFileName()
-            );
-        }
-        if (actions.size() > preview) {
-            System.out.println("  ... et " + (actions.size() - preview) + " autre(s)");
-        }
-        System.out.println();
+        List<String> lines = PreviewRenderer.render(actions, config);
+        lines.forEach(System.out::println);
     }
 
     private void showSummary(FileMover.Result result) {
@@ -296,6 +283,12 @@ public final class InteractiveCLI {
         System.out.println("  --apply, -a                 Applique les changements (sinon dry-run)");
         System.out.println("  --help, -h                  Affiche cette aide");
         System.out.println("  --version, -v               Affiche la version");
+        System.out.println();
+        System.out.println("OPTIONS D'AFFICHAGE :");
+        System.out.println("  --no-color                  Desactive les couleurs ANSI");
+        System.out.println("  --ascii                     Utilise des symboles ASCII au lieu d'Unicode");
+        System.out.println("  --per-folder-preview <n>    Nombre de fichiers a afficher par dossier (defaut: 5)");
+        System.out.println("  --sort <mode>               Tri des fichiers: alpha, ext ou size (defaut: alpha)");
         System.out.println();
         System.out.println("EXEMPLES :");
         System.out.println("  # Mode interactif");

@@ -1,7 +1,10 @@
 package io.neatify;
 
+import io.neatify.cli.Ansi;
+import io.neatify.cli.AsciiSymbols;
 import io.neatify.cli.BannerRenderer;
 import io.neatify.cli.InteractiveCLI;
+import io.neatify.cli.PreviewRenderer;
 import io.neatify.core.FileMover;
 import io.neatify.core.PathSecurity;
 import io.neatify.core.Rules;
@@ -68,6 +71,14 @@ public final class Neatify {
     private static void executeOrganization(Config config) throws IOException {
         validatePaths(config);
 
+        // Appliquer les options de rendu
+        if (config.noColor) {
+            Ansi.setEnabled(false);
+        }
+        if (config.ascii) {
+            AsciiSymbols.setUseUnicode(false);
+        }
+
         // Chargement des regles
         printInfo("Chargement des regles depuis: " + config.rulesFile);
         Map<String, String> rules = Rules.load(config.rulesFile);
@@ -84,7 +95,15 @@ public final class Neatify {
         }
 
         printSuccess(actions.size() + " fichier(s) a deplacer");
-        System.out.println();
+
+        // Afficher l'aperçu avec le nouveau renderer
+        PreviewRenderer.Config rendererConfig = new PreviewRenderer.Config()
+            .maxFilesPerFolder(config.perFolderPreview)
+            .sortMode(parseSortMode(config.sortMode))
+            .showDuplicates(true);
+
+        List<String> previewLines = PreviewRenderer.render(actions, rendererConfig);
+        previewLines.forEach(System.out::println);
 
         // Exécution
         if (config.apply) {
@@ -131,6 +150,27 @@ public final class Neatify {
                 case "--help", "-h" -> config.showHelp = true;
                 case "--version", "-v" -> config.showVersion = true;
                 case "--interactive", "-i" -> config.interactive = true;
+                case "--no-color" -> config.noColor = true;
+                case "--ascii" -> config.ascii = true;
+                case "--per-folder-preview" -> {
+                    if (i + 1 >= args.length) throw new IllegalArgumentException("--per-folder-preview necessite un argument");
+                    try {
+                        config.perFolderPreview = Integer.parseInt(args[++i]);
+                        if (config.perFolderPreview <= 0) {
+                            throw new IllegalArgumentException("--per-folder-preview doit etre positif");
+                        }
+                    } catch (NumberFormatException e) {
+                        throw new IllegalArgumentException("--per-folder-preview necessite un nombre");
+                    }
+                }
+                case "--sort" -> {
+                    if (i + 1 >= args.length) throw new IllegalArgumentException("--sort necessite un argument");
+                    String sort = args[++i].toLowerCase();
+                    if (!sort.matches("alpha|ext|size")) {
+                        throw new IllegalArgumentException("--sort doit etre: alpha, ext ou size");
+                    }
+                    config.sortMode = sort;
+                }
                 default -> throw new IllegalArgumentException("Argument inconnu : " + args[i]);
             }
         }
@@ -141,6 +181,14 @@ public final class Neatify {
         }
 
         return config;
+    }
+
+    private static PreviewRenderer.SortMode parseSortMode(String mode) {
+        return switch (mode.toLowerCase()) {
+            case "ext" -> PreviewRenderer.SortMode.EXT;
+            case "size" -> PreviewRenderer.SortMode.SIZE;
+            default -> PreviewRenderer.SortMode.ALPHA;
+        };
     }
 
     private static void validatePaths(Config config) {
@@ -185,6 +233,12 @@ public final class Neatify {
         System.out.println("  --help, -h                  Affiche cette aide");
         System.out.println("  --version, -v               Affiche la version");
         System.out.println();
+        System.out.println("OPTIONS D'AFFICHAGE :");
+        System.out.println("  --no-color                  Desactive les couleurs ANSI");
+        System.out.println("  --ascii                     Utilise des symboles ASCII au lieu d'Unicode");
+        System.out.println("  --per-folder-preview <n>    Nombre de fichiers a afficher par dossier (defaut: 5)");
+        System.out.println("  --sort <mode>               Tri des fichiers: alpha, ext ou size (defaut: alpha)");
+        System.out.println();
         System.out.println("EXEMPLES :");
         System.out.println("  # Mode interactif");
         System.out.println("  java -jar neatify.jar");
@@ -204,5 +258,11 @@ public final class Neatify {
         boolean showHelp = false;
         boolean showVersion = false;
         boolean interactive = false;
+
+        // Options de preview
+        boolean noColor = false;
+        boolean ascii = false;
+        int perFolderPreview = 5;
+        String sortMode = "alpha";
     }
 }
