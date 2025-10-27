@@ -68,75 +68,97 @@ public final class InteractiveCLI {
     private void organizeFiles() throws IOException {
         printSection("ORGANISATION DE FICHIERS");
 
-        // Demander le dossier source
+        Path sourceDir = promptAndValidateSourceDir();
+        if (sourceDir == null) return;
+
+        Map<String, String> rules = promptAndLoadRules();
+        if (rules == null) return;
+
+        List<FileMover.Action> actions = planActions(sourceDir, rules);
+        if (actions == null) return;
+
+        executeIfConfirmed(actions);
+    }
+
+    private Path promptAndValidateSourceDir() throws IOException {
         String sourcePath = readInput("Dossier a organiser (chemin complet)");
         Path sourceDir = Paths.get(sourcePath);
 
         if (!Files.exists(sourceDir) || !Files.isDirectory(sourceDir)) {
             printError("Dossier invalide : " + sourcePath);
             waitForEnter();
-            return;
+            return null;
         }
 
-        // SÉCURITÉ : Valider que le dossier est sûr
         try {
             PathSecurity.validateSourceDir(sourceDir);
+            return sourceDir;
         } catch (SecurityException e) {
             printError("SECURITE : " + e.getMessage());
             waitForEnter();
-            return;
+            return null;
         }
+    }
 
-        // Demander le fichier de regles
+    private Map<String, String> promptAndLoadRules() throws IOException {
         String rulesPath = readInput("Fichier de regles (.properties) [Entree = regles par defaut]", "");
 
-        Map<String, String> rules;
-
-        // Si vide, utiliser les regles par defaut
         if (rulesPath.isBlank()) {
-            printInfo("Utilisation des regles par defaut integrees...");
-            rules = Rules.getDefaults();
-            printSuccess(rules.size() + " regle(s) par defaut chargee(s)");
+            return loadDefaultRules();
         } else {
-            // Sinon, charger le fichier spécifié
-            Path rulesFile = Paths.get(rulesPath);
+            return loadCustomRules(rulesPath);
+        }
+    }
 
-            if (!Files.exists(rulesFile)) {
-                printError("Fichier inexistant : " + rulesPath);
-                waitForEnter();
-                return;
-            }
+    private Map<String, String> loadDefaultRules() {
+        printInfo("Utilisation des regles par defaut integrees...");
+        Map<String, String> rules = Rules.getDefaults();
+        printSuccess(rules.size() + " regle(s) par defaut chargee(s)");
+        return rules;
+    }
 
-            printInfo("Chargement des regles depuis le fichier...");
-            rules = Rules.load(rulesFile);
-            printSuccess(rules.size() + " regle(s) chargee(s)");
+    private Map<String, String> loadCustomRules(String rulesPath) throws IOException {
+        Path rulesFile = Paths.get(rulesPath);
+
+        if (!Files.exists(rulesFile)) {
+            printError("Fichier inexistant : " + rulesPath);
+            waitForEnter();
+            return null;
         }
 
+        printInfo("Chargement des regles depuis le fichier...");
+        Map<String, String> rules = Rules.load(rulesFile);
+        printSuccess(rules.size() + " regle(s) chargee(s)");
+        return rules;
+    }
+
+    private List<FileMover.Action> planActions(Path sourceDir, Map<String, String> rules) throws IOException {
         printInfo("Analyse du dossier...");
         List<FileMover.Action> actions = FileMover.plan(sourceDir, rules);
 
         if (actions.isEmpty()) {
             printWarning("Aucun fichier à déplacer.");
             waitForEnter();
-            return;
+            return null;
         }
 
         printSuccess(actions.size() + " fichier(s) a deplacer");
         showPreview(actions);
+        return actions;
+    }
 
-        // Confirmation
+    private void executeIfConfirmed(List<FileMover.Action> actions) throws IOException {
         String confirm = readInput("Appliquer ces changements? (o/N)", "n");
+
         if (!confirm.equalsIgnoreCase("o") && !confirm.equalsIgnoreCase("oui")) {
             printWarning("Operation annulee.");
             waitForEnter();
             return;
         }
 
-        // Exécution
         printInfo("Application des changements...");
         FileMover.Result result = FileMover.execute(actions, false);
 
-        // Resume
         showSummary(result);
         waitForEnter();
     }
