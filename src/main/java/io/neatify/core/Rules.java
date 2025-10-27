@@ -12,7 +12,7 @@ import java.util.Properties;
 
 /**
  * Gère le chargement et la validation des règles de rangement.
- * Les règles sont définies dans un fichier .properties au format : extension=DossierCible
+ * Les règles sont définies dans un fichier.properties au format : extension=DossierCible
  */
 public final class Rules {
 
@@ -23,7 +23,7 @@ public final class Rules {
     /**
      * Retourne un ensemble de règles par défaut intégrées.
      *
-     * @return une Map immuable [extension -> dossier cible] avec des règles sensées
+     * @return une Map immuable [extension → dossier cible] avec des règles sensées
      */
     public static Map<String, String> getDefaults() {
         Map<String, String> defaults = new HashMap<>();
@@ -119,7 +119,7 @@ public final class Rules {
     }
 
     /**
-     * Charge les règles depuis un fichier .properties.
+     * Charge les règles depuis un fichier.properties.
      *
      * Format attendu :
      * <pre>

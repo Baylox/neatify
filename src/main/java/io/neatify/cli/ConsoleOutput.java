@@ -4,7 +4,7 @@ import java.io.PrintWriter;
 
 /**
  * Abstraction de la sortie console.
- * Permet d'injecter différentes destinations (System.out, fichier, logger, etc.).
+ * Permet d'injecter différentes destinations (System. Out, fichier, logger, etc.).
  * Améliore la testabilité en évitant le couplage direct avec System.out.
  */
 public final class ConsoleOutput {

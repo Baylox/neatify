@@ -19,14 +19,12 @@ public final class BannerRenderer {
      * @return le banner formaté
      */
     public static String renderBanner(AppInfo appInfo) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("\n");
-        sb.append("╔════════════════════════════════════════════╗\n");
-        sb.append(String.format("║            %s v%-8s             ║\n", appInfo.name(), appInfo.version()));
-        sb.append(String.format("║   %-39s║\n", appInfo.description()));
-        sb.append("╚════════════════════════════════════════════╝\n");
-        sb.append("\n");
-        return sb.toString();
+        return "\n" +
+                "╔════════════════════════════════════════════╗\n" +
+                String.format("║            %s v%-8s             ║\n", appInfo.name(), appInfo.version()) +
+                String.format("║   %-39s║\n", appInfo.description()) +
+                "╚════════════════════════════════════════════╝\n" +
+                "\n";
     }
 
     /**
@@ -45,12 +43,10 @@ public final class BannerRenderer {
      * @return la section formatée
      */
     public static String renderSection(String title) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("\n");
-        sb.append(renderLine()).append("\n");
-        sb.append(title).append("\n");
-        sb.append(renderLine()).append("\n");
-        return sb.toString();
+        return "\n" +
+                renderLine() + "\n" +
+                title + "\n" +
+                renderLine() + "\n";
     }
 
     /**
@@ -97,7 +93,7 @@ public final class BannerRenderer {
      * Formate un prompt avec valeur par défaut optionnelle.
      *
      * @param prompt le texte du prompt
-     * @param defaultValue la valeur par défaut (peut être null)
+     * @param defaultValue la valeur par défaut (peut être null).
      * @return le prompt formaté
      */
     public static String renderPrompt(String prompt, String defaultValue) {

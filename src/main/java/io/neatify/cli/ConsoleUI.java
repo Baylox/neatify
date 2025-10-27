@@ -24,7 +24,7 @@ public final class ConsoleUI {
      * Affiche le banner de l'application.
      *
      * @param version la version de l'application
-     * @deprecated Utilisez printBanner(AppInfo) pour une meilleure séparation des responsabilités
+     * @deprecated Utilisez printBanner (AppInfo) pour une meilleure séparation des responsabilités
      */
     @Deprecated
     public static void printBanner(String version) {
@@ -106,7 +106,7 @@ public final class ConsoleUI {
      * Lit une entrée utilisateur avec un prompt et une valeur par défaut.
      *
      * @param prompt le texte du prompt
-     * @param defaultValue la valeur par défaut (peut être null)
+     * @param defaultValue la valeur par défaut (peut être null).
      * @return l'entrée utilisateur ou la valeur par défaut si vide
      */
     public static String readInput(String prompt, String defaultValue) {

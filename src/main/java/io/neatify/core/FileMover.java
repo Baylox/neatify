@@ -7,7 +7,7 @@ import java.util.*;
 
 /**
  * Responsable de la planification et de l'exécution des déplacements de fichiers.
- * Principe : plan() calcule les actions, execute() les applique (ou simule en dry-run).
+ * Principe : plan() calcule les actions, execute() les applique (ou simule en dry run).
  */
 public final class FileMover {
 
@@ -20,7 +20,7 @@ public final class FileMover {
      *
      * @param source le fichier source
      * @param target le fichier cible (chemin complet avec nom)
-     * @param reason la raison du déplacement (ex: "extension: jpg -> Images")
+     * @param reason la raison du déplacement (ex: "extension : jpg -> Images")
      */
     public record Action(Path source, Path target, String reason) {}
 
@@ -92,7 +92,7 @@ public final class FileMover {
      * Exécute les actions planifiées (ou simule si dryRun = true).
      *
      * @param actions liste des actions à exécuter
-     * @param dryRun si true, simule sans déplacer (affiche juste les actions)
+     * @param dryRun si true, simule sans déplacer (affiche juste les actions).
      * @return le résultat de l'exécution
      */
     public static Result execute(List<Action> actions, boolean dryRun) {
@@ -146,7 +146,7 @@ public final class FileMover {
      *
      * @param targetDir dossier cible
      * @param fileName nom du fichier
-     * @return un chemin unique (ajoute _1, _2, etc. si collision)
+     * @return un chemin unique (ajoute _1, _2, etc. si collision).
      */
     private static Path resolveUniqueTarget(Path targetDir, String fileName) {
         Path target = targetDir.resolve(fileName);
