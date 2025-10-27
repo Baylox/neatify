@@ -164,7 +164,7 @@ public final class InteractiveCLI {
     private void createRulesFile() throws IOException {
         printSection("CRÉER UN FICHIER DE RÈGLES");
 
-        String filename = readInput("Nom du fichier", "my-rules.properties");
+        String filename = readInput("Nom du fichier", "custom-rules/my-rules.properties");
         Path rulesFile = Paths.get(filename);
 
         if (Files.exists(rulesFile)) {
@@ -204,9 +204,17 @@ public final class InteractiveCLI {
             js=Code
             """;
 
+        // Créer le dossier parent s'il n'existe pas
+        Path parentDir = rulesFile.getParent();
+        if (parentDir != null && !Files.exists(parentDir)) {
+            Files.createDirectories(parentDir);
+            printInfo("Dossier créé : " + parentDir);
+        }
+
         Files.writeString(rulesFile, content);
         printSuccess("Fichier créé : " + rulesFile.toAbsolutePath());
         printInfo("Vous pouvez maintenant l'éditer pour personnaliser les règles.");
+        printInfo("Note : Ce fichier ne sera pas versionné par Git.");
         waitForEnter();
     }
 
