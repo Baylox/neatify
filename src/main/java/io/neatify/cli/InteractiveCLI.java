@@ -57,7 +57,7 @@ public final class InteractiveCLI {
         System.out.println("MENU PRINCIPAL");
         printLine();
         System.out.println("  1. Organiser des fichiers");
-        System.out.println("  2. Créer un fichier de règles");
+        System.out.println("  2. Creer un fichier de regles");
         System.out.println("  3. Afficher l'aide");
         System.out.println("  4. Afficher la version");
         System.out.println("  5. Quitter");
@@ -68,7 +68,7 @@ public final class InteractiveCLI {
         printSection("ORGANISATION DE FICHIERS");
 
         // Demander le dossier source
-        String sourcePath = readInput("Dossier à organiser (chemin complet)");
+        String sourcePath = readInput("Dossier a organiser (chemin complet)");
         Path sourceDir = Paths.get(sourcePath);
 
         if (!Files.exists(sourceDir) || !Files.isDirectory(sourceDir)) {
@@ -77,16 +77,16 @@ public final class InteractiveCLI {
             return;
         }
 
-        // Demander le fichier de règles
-        String rulesPath = readInput("Fichier de règles (.properties) [Entrée = règles par défaut]", "");
+        // Demander le fichier de regles
+        String rulesPath = readInput("Fichier de regles (.properties) [Entree = regles par defaut]", "");
 
         Map<String, String> rules;
 
-        // Si vide, utiliser les règles par défaut
+        // Si vide, utiliser les regles par defaut
         if (rulesPath.isBlank()) {
-            printInfo("Utilisation des règles par défaut intégrées...");
+            printInfo("Utilisation des regles par defaut integrees...");
             rules = Rules.getDefaults();
-            printSuccess(rules.size() + " règle(s) par défaut chargée(s)");
+            printSuccess(rules.size() + " regle(s) par defaut chargee(s)");
         } else {
             // Sinon, charger le fichier spécifié
             Path rulesFile = Paths.get(rulesPath);
@@ -97,9 +97,9 @@ public final class InteractiveCLI {
                 return;
             }
 
-            printInfo("Chargement des règles depuis le fichier...");
+            printInfo("Chargement des regles depuis le fichier...");
             rules = Rules.load(rulesFile);
-            printSuccess(rules.size() + " règle(s) chargée(s)");
+            printSuccess(rules.size() + " regle(s) chargee(s)");
         }
 
         printInfo("Analyse du dossier...");
@@ -111,13 +111,13 @@ public final class InteractiveCLI {
             return;
         }
 
-        printSuccess(actions.size() + " fichier(s) à déplacer");
+        printSuccess(actions.size() + " fichier(s) a deplacer");
         showPreview(actions);
 
         // Confirmation
-        String confirm = readInput("Appliquer ces changements ? (o/N)", "n");
+        String confirm = readInput("Appliquer ces changements? (o/N)", "n");
         if (!confirm.equalsIgnoreCase("o") && !confirm.equalsIgnoreCase("oui")) {
-            printWarning("Opération annulée.");
+            printWarning("Operation annulee.");
             waitForEnter();
             return;
         }
@@ -126,14 +126,14 @@ public final class InteractiveCLI {
         printInfo("Application des changements...");
         FileMover.Result result = FileMover.execute(actions, false);
 
-        // Résumé
+        // Resume
         showSummary(result);
         waitForEnter();
     }
 
     private void showPreview(List<FileMover.Action> actions) {
         System.out.println();
-        printSection("APERÇU DES CHANGEMENTS");
+        printSection("APERCU DES CHANGEMENTS");
         int preview = Math.min(10, actions.size());
         for (int i = 0; i < preview; i++) {
             FileMover.Action action = actions.get(i);
@@ -150,10 +150,10 @@ public final class InteractiveCLI {
 
     private void showSummary(FileMover.Result result) {
         System.out.println();
-        printSection("RÉSUMÉ");
-        printSuccess("Fichiers déplacés : " + result.moved());
+        printSection("RESUME");
+        printSuccess("Fichiers deplaces: " + result.moved());
         if (result.skipped() > 0) {
-            printWarning("Fichiers ignorés : " + result.skipped());
+            printWarning("Fichiers ignores: " + result.skipped());
         }
         if (!result.errors().isEmpty()) {
             printError("Erreurs : " + result.errors().size());
@@ -162,23 +162,23 @@ public final class InteractiveCLI {
     }
 
     private void createRulesFile() throws IOException {
-        printSection("CRÉER UN FICHIER DE RÈGLES");
+        printSection("CREER UN FICHIER DE REGLES");
 
         String filename = readInput("Nom du fichier", "custom-rules/my-rules.properties");
         Path rulesFile = Paths.get(filename);
 
         if (Files.exists(rulesFile)) {
-            String overwrite = readInput("Le fichier existe. Écraser ? (o/N)", "n");
+            String overwrite = readInput("Le fichier existe. Ecraser? (o/N)", "n");
             if (!overwrite.equalsIgnoreCase("o") && !overwrite.equalsIgnoreCase("oui")) {
-                printWarning("Opération annulée.");
+                printWarning("Operation annulee.");
                 waitForEnter();
                 return;
             }
         }
 
         String content = """
-            # Règles de rangement Neatify
-            # Format : extension=DossierCible
+            # Regles de rangement Neatify
+            # Format: extension=DossierCible
 
             # Images
             jpg=Images
@@ -194,7 +194,7 @@ public final class InteractiveCLI {
             zip=Archives
             rar=Archives
 
-            # Vidéos
+            # Videos
             mp4=Videos
             avi=Videos
 
@@ -212,9 +212,9 @@ public final class InteractiveCLI {
         }
 
         Files.writeString(rulesFile, content);
-        printSuccess("Fichier créé : " + rulesFile.toAbsolutePath());
-        printInfo("Vous pouvez maintenant l'éditer pour personnaliser les règles.");
-        printInfo("Note : Ce fichier ne sera pas versionné par Git.");
+        printSuccess("Fichier cree: " + rulesFile.toAbsolutePath());
+        printInfo("Vous pouvez maintenant l'editer pour personnaliser les regles.");
+        printInfo("Note: Ce fichier ne sera pas versionne par Git.");
         waitForEnter();
     }
 
@@ -231,9 +231,9 @@ public final class InteractiveCLI {
         System.out.println("  Sans arguments              Lance le mode interactif");
         System.out.println("  --interactive, -i           Lance le mode interactif");
         System.out.println();
-        System.out.println("OPTIONS (mode ligne de commande) :");
-        System.out.println("  --source, -s <dossier>      Dossier à ranger (obligatoire)");
-        System.out.println("  --rules, -r <fichier>       Fichier de règles (obligatoire)");
+        System.out.println("OPTIONS (mode ligne de commande):");
+        System.out.println("  --source, -s <dossier>      Dossier a ranger (obligatoire)");
+        System.out.println("  --rules, -r <fichier>       Fichier de regles (obligatoire)");
         System.out.println("  --apply, -a                 Applique les changements (sinon dry-run)");
         System.out.println("  --help, -h                  Affiche cette aide");
         System.out.println("  --version, -v               Affiche la version");
@@ -245,7 +245,7 @@ public final class InteractiveCLI {
         System.out.println("  # Simulation (dry-run)");
         System.out.println("  java -jar neatify.jar --source ~/Downloads --rules rules.properties");
         System.out.println();
-        System.out.println("  # Application réelle");
+        System.out.println("  # Application reelle");
         System.out.println("  java -jar neatify.jar --source ~/Downloads --rules rules.properties --apply");
         System.out.println();
     }

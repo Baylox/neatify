@@ -51,15 +51,14 @@ public final class Neatify {
             executeOrganization(config);
 
         } catch (IllegalArgumentException e) {
-            printError("Erreur : " + e.getMessage());
+            printError("Erreur: " + e.getMessage());
             System.err.println("Utilisez --help pour voir l'aide.");
             System.exit(1);
         } catch (IOException e) {
-            printError("Erreur I/O : " + e.getMessage());
+            printError("Erreur I/O: " + e.getMessage());
             System.exit(1);
         } catch (Exception e) {
-            printError("Erreur inattendue : " + e.getMessage());
-            e.printStackTrace();
+            printError("Erreur inattendue: " + e.getMessage());
             System.exit(1);
         }
     }
@@ -67,22 +66,22 @@ public final class Neatify {
     private static void executeOrganization(Config config) throws IOException {
         validatePaths(config);
 
-        // Chargement des règles
-        printInfo("Chargement des règles depuis : " + config.rulesFile);
+        // Chargement des regles
+        printInfo("Chargement des regles depuis: " + config.rulesFile);
         Map<String, String> rules = Rules.load(config.rulesFile);
-        printSuccess(rules.size() + " règle(s) chargée(s)");
+        printSuccess(rules.size() + " regle(s) chargee(s)");
         System.out.println();
 
         // Planification
-        printInfo("Analyse du dossier : " + config.sourceDir);
+        printInfo("Analyse du dossier: " + config.sourceDir);
         List<FileMover.Action> actions = FileMover.plan(config.sourceDir, rules);
 
         if (actions.isEmpty()) {
-            printWarning("Aucun fichier à déplacer.");
+            printWarning("Aucun fichier a deplacer.");
             return;
         }
 
-        printSuccess(actions.size() + " fichier(s) à déplacer");
+        printSuccess(actions.size() + " fichier(s) a deplacer");
         System.out.println();
 
         // Exécution
@@ -95,19 +94,19 @@ public final class Neatify {
 
         FileMover.Result result = FileMover.execute(actions, !config.apply);
 
-        // Résumé
+        // Resume
         System.out.println();
         printLine();
-        System.out.println("RÉSUMÉ");
+        System.out.println("RESUME");
         printLine();
-        printSuccess("Fichiers " + (config.apply ? "déplacés" : "à déplacer") + " : " + result.moved());
+        printSuccess("Fichiers " + (config.apply ? "deplaces" : "a deplacer") + ": " + result.moved());
 
         if (result.skipped() > 0) {
-            printWarning("Fichiers ignorés : " + result.skipped());
+            printWarning("Fichiers ignores: " + result.skipped());
         }
 
         if (!result.errors().isEmpty()) {
-            printError("Erreurs :");
+            printError("Erreurs:");
             result.errors().forEach(err -> System.out.println("  - " + err));
         }
 
@@ -123,11 +122,11 @@ public final class Neatify {
         for (int i = 0; i < args.length; i++) {
             switch (args[i]) {
                 case "--source", "-s" -> {
-                    if (i + 1 >= args.length) throw new IllegalArgumentException("--source nécessite un argument");
+                    if (i + 1 >= args.length) throw new IllegalArgumentException("--source necessite un argument");
                     config.sourceDir = Paths.get(args[++i]);
                 }
                 case "--rules", "-r" -> {
-                    if (i + 1 >= args.length) throw new IllegalArgumentException("--rules nécessite un argument");
+                    if (i + 1 >= args.length) throw new IllegalArgumentException("--rules necessite un argument");
                     config.rulesFile = Paths.get(args[++i]);
                 }
                 case "--apply", "-a" -> config.apply = true;
@@ -148,16 +147,16 @@ public final class Neatify {
 
     private static void validatePaths(Config config) {
         if (!Files.exists(config.sourceDir)) {
-            throw new IllegalArgumentException("Dossier inexistant : " + config.sourceDir);
+            throw new IllegalArgumentException("Dossier inexistant: " + config.sourceDir);
         }
         if (!Files.isDirectory(config.sourceDir)) {
-            throw new IllegalArgumentException("--source doit être un dossier : " + config.sourceDir);
+            throw new IllegalArgumentException("--source doit etre un dossier: " + config.sourceDir);
         }
         if (!Files.exists(config.rulesFile)) {
-            throw new IllegalArgumentException("Fichier inexistant : " + config.rulesFile);
+            throw new IllegalArgumentException("Fichier inexistant: " + config.rulesFile);
         }
         if (!Files.isRegularFile(config.rulesFile)) {
-            throw new IllegalArgumentException("--rules doit être un fichier : " + config.rulesFile);
+            throw new IllegalArgumentException("--rules doit etre un fichier: " + config.rulesFile);
         }
     }
 
@@ -174,9 +173,9 @@ public final class Neatify {
         System.out.println("  Sans arguments              Lance le mode interactif");
         System.out.println("  --interactive, -i           Lance le mode interactif");
         System.out.println();
-        System.out.println("OPTIONS (mode ligne de commande) :");
-        System.out.println("  --source, -s <dossier>      Dossier à ranger (obligatoire)");
-        System.out.println("  --rules, -r <fichier>       Fichier de règles (obligatoire)");
+        System.out.println("OPTIONS (mode ligne de commande):");
+        System.out.println("  --source, -s <dossier>      Dossier a ranger (obligatoire)");
+        System.out.println("  --rules, -r <fichier>       Fichier de regles (obligatoire)");
         System.out.println("  --apply, -a                 Applique les changements (sinon dry-run)");
         System.out.println("  --help, -h                  Affiche cette aide");
         System.out.println("  --version, -v               Affiche la version");
@@ -188,7 +187,7 @@ public final class Neatify {
         System.out.println("  # Simulation (dry-run)");
         System.out.println("  java -jar neatify.jar --source ~/Downloads --rules rules.properties");
         System.out.println();
-        System.out.println("  # Application réelle");
+        System.out.println("  # Application reelle");
         System.out.println("  java -jar neatify.jar --source ~/Downloads --rules rules.properties --apply");
         System.out.println();
     }

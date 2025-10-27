@@ -127,7 +127,7 @@ public final class FileMover {
                     moved++;
 
                 } catch (IOException e) {
-                    String errorMsg = String.format("Échec du déplacement de %s : %s",
+                    String errorMsg = String.format("Echec du deplacement de %s: %s",
                         action.source(),
                         e.getMessage()
                     );
