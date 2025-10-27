@@ -21,6 +21,104 @@ public final class Rules {
     }
 
     /**
+     * Retourne un ensemble de règles par défaut intégrées.
+     *
+     * @return une Map immuable [extension -> dossier cible] avec des règles sensées
+     */
+    public static Map<String, String> getDefaults() {
+        Map<String, String> defaults = new HashMap<>();
+
+        // Images
+        defaults.put("jpg", "Images");
+        defaults.put("jpeg", "Images");
+        defaults.put("png", "Images");
+        defaults.put("gif", "Images");
+        defaults.put("bmp", "Images");
+        defaults.put("svg", "Images");
+        defaults.put("webp", "Images");
+        defaults.put("ico", "Images");
+
+        // Documents
+        defaults.put("pdf", "Documents");
+        defaults.put("doc", "Documents");
+        defaults.put("docx", "Documents");
+        defaults.put("txt", "Documents");
+        defaults.put("odt", "Documents");
+        defaults.put("rtf", "Documents");
+        defaults.put("md", "Documents");
+
+        // Tableurs
+        defaults.put("xls", "Documents/Tableurs");
+        defaults.put("xlsx", "Documents/Tableurs");
+        defaults.put("csv", "Documents/Tableurs");
+        defaults.put("ods", "Documents/Tableurs");
+
+        // Présentations
+        defaults.put("ppt", "Documents/Presentations");
+        defaults.put("pptx", "Documents/Presentations");
+        defaults.put("odp", "Documents/Presentations");
+
+        // Archives
+        defaults.put("zip", "Archives");
+        defaults.put("rar", "Archives");
+        defaults.put("7z", "Archives");
+        defaults.put("tar", "Archives");
+        defaults.put("gz", "Archives");
+        defaults.put("bz2", "Archives");
+
+        // Vidéos
+        defaults.put("mp4", "Videos");
+        defaults.put("avi", "Videos");
+        defaults.put("mkv", "Videos");
+        defaults.put("mov", "Videos");
+        defaults.put("wmv", "Videos");
+        defaults.put("flv", "Videos");
+        defaults.put("webm", "Videos");
+
+        // Audio
+        defaults.put("mp3", "Musique");
+        defaults.put("wav", "Musique");
+        defaults.put("flac", "Musique");
+        defaults.put("aac", "Musique");
+        defaults.put("ogg", "Musique");
+        defaults.put("m4a", "Musique");
+
+        // Code source
+        defaults.put("java", "Code");
+        defaults.put("py", "Code");
+        defaults.put("js", "Code");
+        defaults.put("ts", "Code");
+        defaults.put("cpp", "Code");
+        defaults.put("c", "Code");
+        defaults.put("h", "Code");
+        defaults.put("cs", "Code");
+        defaults.put("go", "Code");
+        defaults.put("rs", "Code");
+        defaults.put("php", "Code");
+        defaults.put("rb", "Code");
+        defaults.put("html", "Code");
+        defaults.put("css", "Code");
+        defaults.put("json", "Code");
+        defaults.put("xml", "Code");
+        defaults.put("yaml", "Code");
+        defaults.put("yml", "Code");
+
+        // Exécutables
+        defaults.put("exe", "Executables");
+        defaults.put("msi", "Executables");
+        defaults.put("dmg", "Executables");
+        defaults.put("pkg", "Executables");
+        defaults.put("deb", "Executables");
+        defaults.put("rpm", "Executables");
+
+        // Autres
+        defaults.put("iso", "Images_Disque");
+        defaults.put("torrent", "Torrents");
+
+        return Collections.unmodifiableMap(defaults);
+    }
+
+    /**
      * Charge les règles depuis un fichier .properties.
      *
      * Format attendu :

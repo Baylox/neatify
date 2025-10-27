@@ -33,7 +33,7 @@ public final class Neatify {
             Config config = parseArguments(args);
 
             if (config.showHelp) {
-                new InteractiveCLI(VERSION).run(); // Utilise l'aide de InteractiveCLI
+                printHelp();
                 return;
             }
 
@@ -159,6 +159,38 @@ public final class Neatify {
         if (!Files.isRegularFile(config.rulesFile)) {
             throw new IllegalArgumentException("--rules doit être un fichier : " + config.rulesFile);
         }
+    }
+
+    private static void printHelp() {
+        System.out.println();
+        printLine();
+        System.out.println("AIDE - NEATIFY");
+        printLine();
+        System.out.println();
+        System.out.println("UTILISATION :");
+        System.out.println("  java -jar neatify.jar [options]");
+        System.out.println();
+        System.out.println("MODES :");
+        System.out.println("  Sans arguments              Lance le mode interactif");
+        System.out.println("  --interactive, -i           Lance le mode interactif");
+        System.out.println();
+        System.out.println("OPTIONS (mode ligne de commande) :");
+        System.out.println("  --source, -s <dossier>      Dossier à ranger (obligatoire)");
+        System.out.println("  --rules, -r <fichier>       Fichier de règles (obligatoire)");
+        System.out.println("  --apply, -a                 Applique les changements (sinon dry-run)");
+        System.out.println("  --help, -h                  Affiche cette aide");
+        System.out.println("  --version, -v               Affiche la version");
+        System.out.println();
+        System.out.println("EXEMPLES :");
+        System.out.println("  # Mode interactif");
+        System.out.println("  java -jar neatify.jar");
+        System.out.println();
+        System.out.println("  # Simulation (dry-run)");
+        System.out.println("  java -jar neatify.jar --source ~/Downloads --rules rules.properties");
+        System.out.println();
+        System.out.println("  # Application réelle");
+        System.out.println("  java -jar neatify.jar --source ~/Downloads --rules rules.properties --apply");
+        System.out.println();
     }
 
     private static class Config {

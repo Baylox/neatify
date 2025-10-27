@@ -77,19 +77,29 @@ public final class InteractiveCLI {
         }
 
         // Demander le fichier de règles
-        String rulesPath = readInput("Fichier de règles (.properties)", "rules.properties");
-        Path rulesFile = Paths.get(rulesPath);
+        String rulesPath = readInput("Fichier de règles (.properties) [Entrée = règles par défaut]", "");
 
-        if (!Files.exists(rulesFile)) {
-            printError("Fichier inexistant : " + rulesPath);
-            waitForEnter();
-            return;
+        Map<String, String> rules;
+
+        // Si vide, utiliser les règles par défaut
+        if (rulesPath.isBlank()) {
+            printInfo("Utilisation des règles par défaut intégrées...");
+            rules = Rules.getDefaults();
+            printSuccess(rules.size() + " règle(s) par défaut chargée(s)");
+        } else {
+            // Sinon, charger le fichier spécifié
+            Path rulesFile = Paths.get(rulesPath);
+
+            if (!Files.exists(rulesFile)) {
+                printError("Fichier inexistant : " + rulesPath);
+                waitForEnter();
+                return;
+            }
+
+            printInfo("Chargement des règles depuis le fichier...");
+            rules = Rules.load(rulesFile);
+            printSuccess(rules.size() + " règle(s) chargée(s)");
         }
-
-        // Charger et planifier
-        printInfo("Chargement des règles...");
-        Map<String, String> rules = Rules.load(rulesFile);
-        printSuccess(rules.size() + " règle(s) chargée(s)");
 
         printInfo("Analyse du dossier...");
         List<FileMover.Action> actions = FileMover.plan(sourceDir, rules);
