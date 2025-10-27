@@ -1,5 +1,8 @@
 package io.neatify.cli;
 
+import io.neatify.cli.util.Ansi;
+import io.neatify.cli.util.AsciiSymbols;
+import io.neatify.cli.util.PreviewRenderer;
 import io.neatify.core.FileMover;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

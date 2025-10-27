@@ -1,4 +1,4 @@
-package io.neatify.cli;
+package io.neatify.cli.util;
 
 /**
  * Utilitaire pour les symboles Unicode/ASCII selon le support du terminal.

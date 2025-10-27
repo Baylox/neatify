@@ -1,4 +1,6 @@
-package io.neatify.cli;
+package io.neatify.cli.ui;
+
+import io.neatify.cli.AppInfo;
 
 /**
  * Rendu pur du banner de l'application.

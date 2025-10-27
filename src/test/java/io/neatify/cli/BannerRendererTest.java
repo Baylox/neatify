@@ -1,5 +1,6 @@
 package io.neatify.cli;
 
+import io.neatify.cli.ui.BannerRenderer;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

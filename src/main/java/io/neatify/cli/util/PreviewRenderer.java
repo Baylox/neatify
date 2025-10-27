@@ -1,5 +1,6 @@
-package io.neatify.cli;
+package io.neatify.cli.util;
 
+import io.neatify.cli.ui.BannerRenderer;
 import io.neatify.core.FileMover;
 
 import java.nio.file.Path;
