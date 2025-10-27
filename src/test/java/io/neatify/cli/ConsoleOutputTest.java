@@ -65,7 +65,7 @@ class ConsoleOutputTest {
         output.printBanner(appInfo);
 
         String out = outWriter.toString();
-        assertTrue(out.contains("TestApp"));
+        assertTrue(out.contains("NEATIFY") || out.contains("███"));
         assertTrue(out.contains("1.0.0"));
         assertTrue(out.contains("Description"));
     }

@@ -16,11 +16,10 @@ class BannerRendererTest {
         String banner = BannerRenderer.renderBanner(appInfo);
 
         assertNotNull(banner);
-        assertTrue(banner.contains("TestApp"));
+        assertTrue(banner.contains("NEATIFY") || banner.contains("███"));
         assertTrue(banner.contains("1.0.0"));
         assertTrue(banner.contains("Test description"));
-        assertTrue(banner.contains("╔"));
-        assertTrue(banner.contains("╚"));
+        assertTrue(banner.contains("███") || banner.contains("╚═╝"));
     }
 
     @Test
@@ -123,7 +122,7 @@ class BannerRendererTest {
         String message = BannerRenderer.renderWaitForEnter();
 
         assertNotNull(message);
-        assertTrue(message.contains("Entrée"));
+        assertTrue(message.contains("Entree"));
         assertTrue(message.startsWith("\n"));
     }
 

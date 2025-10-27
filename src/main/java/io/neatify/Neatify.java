@@ -1,5 +1,6 @@
 package io.neatify;
 
+import io.neatify.cli.BannerRenderer;
 import io.neatify.cli.InteractiveCLI;
 import io.neatify.core.FileMover;
 import io.neatify.core.Rules;
@@ -95,18 +96,14 @@ public final class Neatify {
         FileMover.Result result = FileMover.execute(actions, !config.apply);
 
         // Resume
-        System.out.println();
-        printLine();
-        System.out.println("RESUME");
-        printLine();
-        printSuccess("Fichiers " + (config.apply ? "deplaces" : "a deplacer") + ": " + result.moved());
-
-        if (result.skipped() > 0) {
-            printWarning("Fichiers ignores: " + result.skipped());
-        }
+        System.out.println(BannerRenderer.renderResultTable(
+            result.moved(),
+            result.skipped(),
+            result.errors().size()
+        ));
 
         if (!result.errors().isEmpty()) {
-            printError("Erreurs:");
+            printError("Details des erreurs:");
             result.errors().forEach(err -> System.out.println("  - " + err));
         }
 

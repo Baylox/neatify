@@ -134,10 +134,17 @@ public final class InteractiveCLI {
     private void showPreview(List<FileMover.Action> actions) {
         System.out.println();
         printSection("APERCU DES CHANGEMENTS");
+
+        // Barre de progression visuelle
+        System.out.println(BannerRenderer.renderProgressBar(actions.size(), actions.size(), 40));
+        System.out.println();
+
+        // Apercu des fichiers
         int preview = Math.min(10, actions.size());
         for (int i = 0; i < preview; i++) {
             FileMover.Action action = actions.get(i);
-            System.out.printf("  %s -> %s%n",
+            System.out.printf("  [%d] %s\n      -> %s\n",
+                i + 1,
                 action.source().getFileName(),
                 action.target().getParent().getFileName() + "/" + action.target().getFileName()
             );
@@ -150,13 +157,14 @@ public final class InteractiveCLI {
 
     private void showSummary(FileMover.Result result) {
         System.out.println();
-        printSection("RESUME");
-        printSuccess("Fichiers deplaces: " + result.moved());
-        if (result.skipped() > 0) {
-            printWarning("Fichiers ignores: " + result.skipped());
-        }
+        System.out.println(BannerRenderer.renderResultTable(
+            result.moved(),
+            result.skipped(),
+            result.errors().size()
+        ));
+
         if (!result.errors().isEmpty()) {
-            printError("Erreurs : " + result.errors().size());
+            printError("Details des erreurs:");
             result.errors().forEach(err -> System.out.println("  - " + err));
         }
     }

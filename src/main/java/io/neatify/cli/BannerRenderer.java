@@ -20,10 +20,15 @@ public final class BannerRenderer {
      */
     public static String renderBanner(AppInfo appInfo) {
         return "\n" +
-                "╔════════════════════════════════════════════╗\n" +
-                String.format("║            %s v%-8s             ║\n", appInfo.name(), appInfo.version()) +
-                String.format("║   %-39s║\n", appInfo.description()) +
-                "╚════════════════════════════════════════════╝\n" +
+                "    ███╗   ██╗███████╗ █████╗ ████████╗██╗███████╗██╗   ██╗\n" +
+                "    ████╗  ██║██╔════╝██╔══██╗╚══██╔══╝██║██╔════╝╚██╗ ██╔╝\n" +
+                "    ██╔██╗ ██║█████╗  ███████║   ██║   ██║█████╗   ╚████╔╝ \n" +
+                "    ██║╚██╗██║██╔══╝  ██╔══██║   ██║   ██║██╔══╝    ╚██╔╝  \n" +
+                "    ██║ ╚████║███████╗██║  ██║   ██║   ██║██║        ██║   \n" +
+                "    ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝   ╚═╝   ╚═╝╚═╝        ╚═╝   \n" +
+                "\n" +
+                "    " + appInfo.description() + " - v" + appInfo.version() + "\n" +
+                "    ════════════════════════════════════════════════════════\n" +
                 "\n";
     }
 
@@ -109,6 +114,63 @@ public final class BannerRenderer {
      * @return le message formaté
      */
     public static String renderWaitForEnter() {
-        return "\nAppuyez sur Entrée pour continuer...";
+        return "\nAppuyez sur Entree pour continuer...";
+    }
+
+    /**
+     * Genere une barre de progression.
+     *
+     * @param current valeur actuelle
+     * @param total valeur totale
+     * @param width largeur de la barre
+     * @return la barre de progression formatee
+     */
+    public static String renderProgressBar(int current, int total, int width) {
+        if (total == 0) return "";
+
+        int percentage = (current * 100) / total;
+        int filled = (current * width) / total;
+        int empty = width - filled;
+
+        StringBuilder bar = new StringBuilder("[");
+        bar.append("█".repeat(filled));
+        bar.append("░".repeat(empty));
+        bar.append("] ").append(percentage).append("% (").append(current).append("/").append(total).append(")");
+
+        return bar.toString();
+    }
+
+    /**
+     * Genere un tableau de resultats.
+     *
+     * @param moved nombre de fichiers deplaces
+     * @param skipped nombre de fichiers ignores
+     * @param errors nombre d'erreurs
+     * @return le tableau formate
+     */
+    public static String renderResultTable(int moved, int skipped, int errors) {
+        int total = moved + skipped;
+
+        return "\n" +
+                "    ┌─────────────────────────────────────────┐\n" +
+                "    │           RESUME DE L'OPERATION         │\n" +
+                "    ├─────────────────────────────────────────┤\n" +
+                String.format("    │  Fichiers traites    │  %-15d │\n", total) +
+                String.format("    │  Deplaces            │  %-15d │\n", moved) +
+                String.format("    │  Ignores             │  %-15d │\n", skipped) +
+                String.format("    │  Erreurs             │  %-15d │\n", errors) +
+                "    └─────────────────────────────────────────┘\n";
+    }
+
+    /**
+     * Genere un spinner d'animation (pour les operations longues).
+     *
+     * @param frame numero de frame (0-3)
+     * @param message message a afficher
+     * @return le spinner formate
+     */
+    public static String renderSpinner(int frame, String message) {
+        String[] frames = {"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"};
+        return frames[frame % frames.length] + " " + message;
     }
 }
