@@ -194,11 +194,24 @@ public final class InteractiveCLI {
         String filename = readInput("Nom du fichier", "custom-rules/my-rules.properties");
         Path rulesFile = Paths.get(filename).toAbsolutePath().normalize();
 
+        if (!validateRulesFileSecurity(rulesFile, filename)) return;
+        if (!confirmOverwriteIfExists(rulesFile)) return;
+
+        String content = generateDefaultRulesContent();
+
+        createParentDirectoryIfNeeded(rulesFile);
+
+        if (!writeRulesFileSecurely(rulesFile, content)) return;
+
+        printRulesFileCreationSuccess(rulesFile);
+    }
+
+    private boolean validateRulesFileSecurity(Path rulesFile, String filename) {
         // SÉCURITÉ : Vérifier que ce n'est pas un symlink
         if (Files.exists(rulesFile) && Files.isSymbolicLink(rulesFile)) {
             printError("SECURITE : Les liens symboliques sont interdits");
             waitForEnter();
-            return;
+            return false;
         }
 
         // SÉCURITÉ : Restreindre à la zone custom-rules/
@@ -206,26 +219,33 @@ public final class InteractiveCLI {
         if (!rulesFile.startsWith(safeDir)) {
             printError("SECURITE : Le fichier doit etre dans le dossier custom-rules/");
             waitForEnter();
-            return;
+            return false;
         }
 
         // SÉCURITÉ : Bloquer path traversal
         if (filename.contains("..")) {
             printError("SECURITE : Path traversal interdit (..)");
             waitForEnter();
-            return;
+            return false;
         }
 
+        return true;
+    }
+
+    private boolean confirmOverwriteIfExists(Path rulesFile) {
         if (Files.exists(rulesFile)) {
             String overwrite = readInput("Le fichier existe. Ecraser? (o/N)", "n");
             if (!overwrite.equalsIgnoreCase("o") && !overwrite.equalsIgnoreCase("oui")) {
                 printWarning("Operation annulee.");
                 waitForEnter();
-                return;
+                return false;
             }
         }
+        return true;
+    }
 
-        String content = """
+    private String generateDefaultRulesContent() {
+        return """
             # Regles de rangement Neatify
             # Format: extension=DossierCible
 
@@ -252,34 +272,40 @@ public final class InteractiveCLI {
             py=Code
             js=Code
             """;
+    }
 
-        // Créer le dossier parent s'il n'existe pas
+    private void createParentDirectoryIfNeeded(Path rulesFile) throws IOException {
         Path parentDir = rulesFile.getParent();
         if (parentDir != null && !Files.exists(parentDir)) {
             Files.createDirectories(parentDir);
             printInfo("Dossier créé : " + parentDir);
         }
+    }
 
+    private boolean writeRulesFileSecurely(Path rulesFile, String content) throws IOException {
         // SÉCURITÉ : Vérifier les symlinks dans l'arborescence
         try {
             PathSecurity.assertNoSymlinkInAncestry(rulesFile);
         } catch (SecurityException e) {
             printError("SECURITE : " + e.getMessage());
             waitForEnter();
-            return;
+            return false;
         }
 
         // SÉCURITÉ : Écriture atomique avec CREATE_NEW (anti-TOCTOU)
         try {
             Files.writeString(rulesFile, content,
                 java.nio.file.StandardOpenOption.CREATE_NEW);
+            return true;
         } catch (java.nio.file.FileAlreadyExistsException e) {
             // Si on arrive ici, c'est que le fichier a été créé entre-temps (race condition)
             printError("SECURITE : Le fichier a ete cree par un autre processus");
             waitForEnter();
-            return;
+            return false;
         }
+    }
 
+    private void printRulesFileCreationSuccess(Path rulesFile) {
         printSuccess("Fichier cree: " + rulesFile.toAbsolutePath());
         printInfo("Vous pouvez maintenant l'editer pour personnaliser les regles.");
         printInfo("Note: Ce fichier ne sera pas versionne par Git.");
