@@ -111,6 +111,7 @@ public final class ConsoleUI {
      */
     public static String readInput(String prompt, String defaultValue) {
         output.print(BannerRenderer.renderPrompt(prompt, defaultValue));
+        output.flush(); // Force l'affichage immédiat du prompt
         String input = scanner.nextLine().trim();
         return input.isEmpty() && defaultValue != null ? defaultValue : input;
     }
@@ -120,6 +121,7 @@ public final class ConsoleUI {
      */
     public static void waitForEnter() {
         output.print(BannerRenderer.renderWaitForEnter());
+        output.flush(); // Force l'affichage immédiat du message
         scanner.nextLine();
     }
 }
