@@ -138,50 +138,83 @@ public final class Neatify {
         Config config = new Config();
 
         for (int i = 0; i < args.length; i++) {
-            switch (args[i]) {
-                case "--source", "-s" -> {
-                    if (i + 1 >= args.length) throw new IllegalArgumentException("--source necessite un argument");
-                    config.sourceDir = Paths.get(args[++i]);
-                }
-                case "--rules", "-r" -> {
-                    if (i + 1 >= args.length) throw new IllegalArgumentException("--rules necessite un argument");
-                    config.rulesFile = Paths.get(args[++i]);
-                }
-                case "--apply", "-a" -> config.apply = true;
-                case "--help", "-h" -> config.showHelp = true;
-                case "--version", "-v" -> config.showVersion = true;
-                case "--interactive", "-i" -> config.interactive = true;
-                case "--no-color" -> config.noColor = true;
-                case "--ascii" -> config.ascii = true;
-                case "--per-folder-preview" -> {
-                    if (i + 1 >= args.length) throw new IllegalArgumentException("--per-folder-preview necessite un argument");
-                    try {
-                        config.perFolderPreview = Integer.parseInt(args[++i]);
-                        if (config.perFolderPreview <= 0) {
-                            throw new IllegalArgumentException("--per-folder-preview doit etre positif");
-                        }
-                    } catch (NumberFormatException e) {
-                        throw new IllegalArgumentException("--per-folder-preview necessite un nombre");
-                    }
-                }
-                case "--sort" -> {
-                    if (i + 1 >= args.length) throw new IllegalArgumentException("--sort necessite un argument");
-                    String sort = args[++i].toLowerCase();
-                    if (!sort.matches("alpha|ext|size")) {
-                        throw new IllegalArgumentException("--sort doit etre: alpha, ext ou size");
-                    }
-                    config.sortMode = sort;
-                }
-                default -> throw new IllegalArgumentException("Argument inconnu : " + args[i]);
+            i = parseArgument(args, i, config);
+        }
+
+        validateRequiredArguments(config);
+        return config;
+    }
+
+    private static int parseArgument(String[] args, int index, Config config) {
+        return switch (args[index]) {
+            case "--source", "-s" -> parsePathArgument(args, index, "--source", path -> config.sourceDir = path);
+            case "--rules", "-r" -> parsePathArgument(args, index, "--rules", path -> config.rulesFile = path);
+            case "--apply", "-a" -> { config.apply = true; yield index; }
+            case "--help", "-h" -> { config.showHelp = true; yield index; }
+            case "--version", "-v" -> { config.showVersion = true; yield index; }
+            case "--interactive", "-i" -> { config.interactive = true; yield index; }
+            case "--no-color" -> { config.noColor = true; yield index; }
+            case "--ascii" -> { config.ascii = true; yield index; }
+            case "--per-folder-preview" -> parsePerFolderPreviewArgument(args, index, config);
+            case "--sort" -> parseSortArgument(args, index, config);
+            default -> throw new IllegalArgumentException("Argument inconnu : " + args[index]);
+        };
+    }
+
+    private static int parsePathArgument(String[] args, int index, String argName, PathConsumer consumer) {
+        if (index + 1 >= args.length) {
+            throw new IllegalArgumentException(argName + " necessite un argument");
+        }
+        consumer.accept(Paths.get(args[index + 1]));
+        return index + 1;
+    }
+
+    private static int parsePerFolderPreviewArgument(String[] args, int index, Config config) {
+        if (index + 1 >= args.length) {
+            throw new IllegalArgumentException("--per-folder-preview necessite un argument");
+        }
+        try {
+            int value = Integer.parseInt(args[index + 1]);
+            if (value <= 0) {
+                throw new IllegalArgumentException("--per-folder-preview doit etre positif");
+            }
+            config.perFolderPreview = value;
+            return index + 1;
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("--per-folder-preview necessite un nombre");
+        }
+    }
+
+    private static int parseSortArgument(String[] args, int index, Config config) {
+        if (index + 1 >= args.length) {
+            throw new IllegalArgumentException("--sort necessite un argument");
+        }
+        String sort = args[index + 1].toLowerCase();
+        if (!sort.matches("alpha|ext|size")) {
+            throw new IllegalArgumentException("--sort doit etre: alpha, ext ou size");
+        }
+        config.sortMode = sort;
+        return index + 1;
+    }
+
+    private static void validateRequiredArguments(Config config) {
+        if (requiresSourceAndRules(config)) {
+            if (config.sourceDir == null) {
+                throw new IllegalArgumentException("--source est obligatoire");
+            }
+            if (config.rulesFile == null) {
+                throw new IllegalArgumentException("--rules est obligatoire");
             }
         }
+    }
 
-        if (!config.showHelp && !config.showVersion && !config.interactive) {
-            if (config.sourceDir == null) throw new IllegalArgumentException("--source est obligatoire");
-            if (config.rulesFile == null) throw new IllegalArgumentException("--rules est obligatoire");
-        }
+    private static boolean requiresSourceAndRules(Config config) {
+        return !config.showHelp && !config.showVersion && !config.interactive;
+    }
 
-        return config;
+    @FunctionalInterface
+    private interface PathConsumer {
+        void accept(Path path);
     }
 
     private static PreviewRenderer.SortMode parseSortMode(String mode) {
@@ -193,22 +226,32 @@ public final class Neatify {
     }
 
     private static void validatePaths(Config config) {
-        if (!Files.exists(config.sourceDir)) {
-            throw new IllegalArgumentException("Dossier inexistant: " + config.sourceDir);
-        }
-        if (!Files.isDirectory(config.sourceDir)) {
-            throw new IllegalArgumentException("--source doit etre un dossier: " + config.sourceDir);
-        }
-        if (!Files.exists(config.rulesFile)) {
-            throw new IllegalArgumentException("Fichier inexistant: " + config.rulesFile);
-        }
-        if (!Files.isRegularFile(config.rulesFile)) {
-            throw new IllegalArgumentException("--rules doit etre un fichier: " + config.rulesFile);
-        }
+        validateSourceDir(config.sourceDir);
+        validateRulesFile(config.rulesFile);
+        validateSourceDirSecurity(config.sourceDir);
+    }
 
-        // SÉCURITÉ : Valider que le dossier source est sûr
+    private static void validateSourceDir(Path sourceDir) {
+        if (!Files.exists(sourceDir)) {
+            throw new IllegalArgumentException("Dossier inexistant: " + sourceDir);
+        }
+        if (!Files.isDirectory(sourceDir)) {
+            throw new IllegalArgumentException("--source doit etre un dossier: " + sourceDir);
+        }
+    }
+
+    private static void validateRulesFile(Path rulesFile) {
+        if (!Files.exists(rulesFile)) {
+            throw new IllegalArgumentException("Fichier inexistant: " + rulesFile);
+        }
+        if (!Files.isRegularFile(rulesFile)) {
+            throw new IllegalArgumentException("--rules doit etre un fichier: " + rulesFile);
+        }
+    }
+
+    private static void validateSourceDirSecurity(Path sourceDir) {
         try {
-            PathSecurity.validateSourceDir(config.sourceDir);
+            PathSecurity.validateSourceDir(sourceDir);
         } catch (IOException e) {
             throw new IllegalArgumentException("Erreur lors de la validation: " + e.getMessage(), e);
         }
