@@ -16,6 +16,12 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class FileMoverTest {
 
+    private Path createTestFile(Path dir, String name, String content) throws IOException {
+        Path file = dir.resolve(name);
+        Files.writeString(file, content);
+        return file;
+    }
+
     @Test
     void testPlan_BasicFunctionality(@TempDir Path tempDir) throws IOException {
         Files.writeString(tempDir.resolve("image.jpg"), "test");
@@ -60,9 +66,7 @@ class FileMoverTest {
 
     @Test
     void testExecute_DryRun(@TempDir Path tempDir) throws IOException {
-        Path source = tempDir.resolve("test.jpg");
-        Files.writeString(source, "content");
-
+        Path source = createTestFile(tempDir, "test.jpg", "content");
         Path target = tempDir.resolve("Images").resolve("test.jpg");
         FileMover.Action action = new FileMover.Action(source, target, "test");
 
@@ -75,9 +79,7 @@ class FileMoverTest {
 
     @Test
     void testExecute_RealMove(@TempDir Path tempDir) throws IOException {
-        Path source = tempDir.resolve("test.jpg");
-        Files.writeString(source, "content");
-
+        Path source = createTestFile(tempDir, "test.jpg", "content");
         Path target = tempDir.resolve("Images").resolve("test.jpg");
         FileMover.Action action = new FileMover.Action(source, target, "test");
 
@@ -91,9 +93,7 @@ class FileMoverTest {
 
     @Test
     void testExecute_CreatesTargetDirectory(@TempDir Path tempDir) throws IOException {
-        Path source = tempDir.resolve("test.jpg");
-        Files.writeString(source, "content");
-
+        Path source = createTestFile(tempDir, "test.jpg", "content");
         Path targetDir = tempDir.resolve("NewFolder").resolve("Images");
         Path target = targetDir.resolve("test.jpg");
         FileMover.Action action = new FileMover.Action(source, target, "test");

@@ -48,6 +48,11 @@ class FileMetadataTest {
 
     @Test
     void testFrom_RejectsDirectory(@TempDir Path tempDir) {
-        assertThrows(IllegalArgumentException.class, () -> FileMetadata.from(tempDir));
+        IllegalArgumentException exception = assertThrows(
+            IllegalArgumentException.class,
+            () -> FileMetadata.from(tempDir)
+        );
+
+        assertNotNull(exception.getMessage());
     }
 }
