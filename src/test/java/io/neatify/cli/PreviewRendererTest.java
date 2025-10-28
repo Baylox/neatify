@@ -1,5 +1,6 @@
 package io.neatify.cli;
 
+import io.neatify.TestHelper;
 import io.neatify.cli.util.Ansi;
 import io.neatify.cli.util.AsciiSymbols;
 import io.neatify.cli.util.PreviewRenderer;
@@ -16,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Tests essentiels pour PreviewRenderer - Focus sur les cas critiques uniquement.
  */
-class PreviewRendererTest {
+class PreviewRendererTest extends TestHelper {
 
     @BeforeEach
     void setUp() {
@@ -38,7 +39,7 @@ class PreviewRendererTest {
     void testRender_SingleFile() {
         Path source = Paths.get("/tmp/test.txt");
         Path target = Paths.get("/tmp/Documents/test.txt");
-        FileMover.Action action = new FileMover.Action(source, target, "test");
+        FileMover.Action action = createAction(source, target);
 
         List<FileMover.Action> actions = List.of(action);
         PreviewRenderer.Config config = new PreviewRenderer.Config();
@@ -54,15 +55,13 @@ class PreviewRendererTest {
     @Test
     void testRender_MultipleFolders() {
         List<FileMover.Action> actions = List.of(
-            new FileMover.Action(
+            createAction(
                 Paths.get("/tmp/doc.pdf"),
-                Paths.get("/tmp/Documents/doc.pdf"),
-                "test"
+                Paths.get("/tmp/Documents/doc.pdf")
             ),
-            new FileMover.Action(
+            createAction(
                 Paths.get("/tmp/photo.jpg"),
-                Paths.get("/tmp/Images/photo.jpg"),
-                "test"
+                Paths.get("/tmp/Images/photo.jpg")
             )
         );
 
@@ -79,9 +78,9 @@ class PreviewRendererTest {
     @Test
     void testRender_DuplicateCounting() {
         List<FileMover.Action> actions = List.of(
-            new FileMover.Action(Paths.get("/tmp/1/photo.jpg"), Paths.get("/tmp/Images/photo.jpg"), "test"),
-            new FileMover.Action(Paths.get("/tmp/2/photo.jpg"), Paths.get("/tmp/Images/photo.jpg"), "test"),
-            new FileMover.Action(Paths.get("/tmp/3/photo.jpg"), Paths.get("/tmp/Images/photo.jpg"), "test")
+            createAction(Paths.get("/tmp/1/photo.jpg"), Paths.get("/tmp/Images/photo.jpg")),
+            createAction(Paths.get("/tmp/2/photo.jpg"), Paths.get("/tmp/Images/photo.jpg")),
+            createAction(Paths.get("/tmp/3/photo.jpg"), Paths.get("/tmp/Images/photo.jpg"))
         );
 
         PreviewRenderer.Config config = new PreviewRenderer.Config().showDuplicates(true);

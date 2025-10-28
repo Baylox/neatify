@@ -1,5 +1,6 @@
 package io.neatify.core.security;
 
+import io.neatify.TestHelper;
 import io.neatify.core.FileMover;
 
 import java.io.IOException;
@@ -12,27 +13,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Classe de base pour les tests de sécurité de FileMover.
- * Fournit des méthodes utilitaires communes.
+ * Fournit des méthodes utilitaires spécifiques à la sécurité.
+ * Hérite des helpers communs de TestHelper.
  */
-public abstract class FileMoverSecurityTestBase {
-
-    // =====================================================
-    // HELPER METHODS - Création de fichiers
-    // =====================================================
-
-    protected void createTestFile(Path tempDir, String filename, String content) throws IOException {
-        Files.writeString(tempDir.resolve(filename), content);
-    }
-
-    protected void createTestFile(Path tempDir, String filename) throws IOException {
-        createTestFile(tempDir, filename, "content");
-    }
-
-    protected void createMultipleFiles(Path tempDir, String prefix, String extension, int count) throws IOException {
-        for (int i = 1; i <= count; i++) {
-            createTestFile(tempDir, prefix + i + "." + extension);
-        }
-    }
+public abstract class FileMoverSecurityTestBase extends TestHelper {
 
     // =====================================================
     // HELPER METHODS - Assertions sur les actions

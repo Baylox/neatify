@@ -1,5 +1,6 @@
 package io.neatify.core;
 
+import io.neatify.TestHelper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -14,18 +15,12 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Tests essentiels pour FileMover.
  */
-class FileMoverTest {
-
-    private Path createTestFile(Path dir, String name, String content) throws IOException {
-        Path file = dir.resolve(name);
-        Files.writeString(file, content);
-        return file;
-    }
+class FileMoverTest extends TestHelper {
 
     @Test
     void testPlan_BasicFunctionality(@TempDir Path tempDir) throws IOException {
-        Files.writeString(tempDir.resolve("image.jpg"), "test");
-        Files.writeString(tempDir.resolve("document.pdf"), "test");
+        createTestFile(tempDir, "image.jpg", "test");
+        createTestFile(tempDir, "document.pdf", "test");
 
         Map<String, String> rules = Map.of(
             "jpg", "Images",
@@ -43,7 +38,7 @@ class FileMoverTest {
 
     @Test
     void testPlan_IgnoresHiddenFiles(@TempDir Path tempDir) throws IOException {
-        Files.writeString(tempDir.resolve(".hidden.jpg"), "test");
+        createTestFile(tempDir, ".hidden.jpg", "test");
 
         Map<String, String> rules = Map.of("jpg", "Images");
         List<FileMover.Action> actions = FileMover.plan(tempDir, rules);
@@ -55,7 +50,7 @@ class FileMoverTest {
     void testPlan_WithNestedFolders(@TempDir Path tempDir) throws IOException {
         Path subDir = tempDir.resolve("subfolder");
         Files.createDirectory(subDir);
-        Files.writeString(subDir.resolve("nested.jpg"), "test");
+        createTestFile(subDir, "nested.jpg", "test");
 
         Map<String, String> rules = Map.of("jpg", "Images");
         List<FileMover.Action> actions = FileMover.plan(tempDir, rules);
@@ -66,9 +61,10 @@ class FileMoverTest {
 
     @Test
     void testExecute_DryRun(@TempDir Path tempDir) throws IOException {
-        Path source = createTestFile(tempDir, "test.jpg", "content");
+        createTestFile(tempDir, "test.jpg", "content");
+        Path source = tempDir.resolve("test.jpg");
         Path target = tempDir.resolve("Images").resolve("test.jpg");
-        FileMover.Action action = new FileMover.Action(source, target, "test");
+        FileMover.Action action = createAction(source, target);
 
         FileMover.Result result = FileMover.execute(List.of(action), true);
 
@@ -79,9 +75,10 @@ class FileMoverTest {
 
     @Test
     void testExecute_RealMove(@TempDir Path tempDir) throws IOException {
-        Path source = createTestFile(tempDir, "test.jpg", "content");
+        createTestFile(tempDir, "test.jpg", "content");
+        Path source = tempDir.resolve("test.jpg");
         Path target = tempDir.resolve("Images").resolve("test.jpg");
-        FileMover.Action action = new FileMover.Action(source, target, "test");
+        FileMover.Action action = createAction(source, target);
 
         FileMover.Result result = FileMover.execute(List.of(action), false);
 
@@ -93,10 +90,11 @@ class FileMoverTest {
 
     @Test
     void testExecute_CreatesTargetDirectory(@TempDir Path tempDir) throws IOException {
-        Path source = createTestFile(tempDir, "test.jpg", "content");
+        createTestFile(tempDir, "test.jpg", "content");
+        Path source = tempDir.resolve("test.jpg");
         Path targetDir = tempDir.resolve("NewFolder").resolve("Images");
         Path target = targetDir.resolve("test.jpg");
-        FileMover.Action action = new FileMover.Action(source, target, "test");
+        FileMover.Action action = createAction(source, target);
 
         FileMover.Result result = FileMover.execute(List.of(action), false);
 
@@ -107,18 +105,18 @@ class FileMoverTest {
 
     @Test
     void testExecute_MultipleFiles(@TempDir Path tempDir) throws IOException {
+        createTestFile(tempDir, "image1.jpg", "image1");
+        createTestFile(tempDir, "image2.jpg", "image2");
+        createTestFile(tempDir, "doc.pdf", "document");
+
         Path file1 = tempDir.resolve("image1.jpg");
         Path file2 = tempDir.resolve("image2.jpg");
         Path file3 = tempDir.resolve("doc.pdf");
 
-        Files.writeString(file1, "image1");
-        Files.writeString(file2, "image2");
-        Files.writeString(file3, "document");
-
         List<FileMover.Action> actions = List.of(
-            new FileMover.Action(file1, tempDir.resolve("Images/image1.jpg"), "test"),
-            new FileMover.Action(file2, tempDir.resolve("Images/image2.jpg"), "test"),
-            new FileMover.Action(file3, tempDir.resolve("Docs/doc.pdf"), "test")
+            createAction(file1, tempDir.resolve("Images/image1.jpg")),
+            createAction(file2, tempDir.resolve("Images/image2.jpg")),
+            createAction(file3, tempDir.resolve("Docs/doc.pdf"))
         );
 
         FileMover.Result result = FileMover.execute(actions, false);
