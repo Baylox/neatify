@@ -78,37 +78,37 @@ class PathSecurityTest {
     void testValidateSourceDir_RejectsSystemDirs() {
         // Ce test vérifie que les dossiers système sont bien bloqués
         // mais est tolérant aux différences d'environnement
+        boolean tested = isUnixLikeSystem() ? testUnixSystemDirectory() : testWindowsSystem();
+
+        assertTrue(tested, "At least one system directory test should have been performed");
+    }
+
+    private boolean isUnixLikeSystem() {
         String os = System.getProperty("os.name").toLowerCase();
+        return os.contains("nix") || os.contains("nux") || os.contains("mac");
+    }
 
-        boolean tested = false;
-
-        // Tester /bin sur Unix/Linux
-        if (os.contains("nix") || os.contains("nux") || os.contains("mac")) {
-            Path binDir = Path.of("/bin");
-            if (Files.exists(binDir) && Files.isDirectory(binDir)) {
-                try {
-                    PathSecurity.validateSourceDir(binDir);
-                    // Si on arrive ici, le blocage n'a pas fonctionné
-                    System.err.println("WARNING: /bin should have been blocked but wasn't");
-                } catch (SecurityException e) {
-                    // Parfait, le dossier système est bien bloqué
-                    assertTrue(e.getMessage().contains("Dossier système interdit"));
-                    tested = true;
-                } catch (IOException e) {
-                    // Erreur I/O, on peut ignorer
-                }
-            }
+    private boolean testUnixSystemDirectory() {
+        Path binDir = Path.of("/bin");
+        if (!Files.exists(binDir) || !Files.isDirectory(binDir)) {
+            return false;
         }
 
+        try {
+            PathSecurity.validateSourceDir(binDir);
+            System.err.println("WARNING: /bin should have been blocked but wasn't");
+            return false;
+        } catch (SecurityException e) {
+            assertTrue(e.getMessage().contains("Dossier système interdit"));
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    private boolean testWindowsSystem() {
         // Sur Windows, on teste juste que la validation fonctionne sans planter
         // Le blocage spécifique des dossiers Windows est difficile à tester de manière portable
-        if (os.contains("win")) {
-            // Test basique : un dossier temporaire devrait passer
-            tested = true;  // On considère le test comme fait sur Windows
-        }
-
-        // Au moins un test devrait avoir été effectué
-        assertTrue(tested || !os.contains("win") && !os.contains("nix") && !os.contains("nux"),
-            "At least one system directory test should have been performed");
+        return true;
     }
 }
