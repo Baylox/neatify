@@ -9,10 +9,12 @@ Outil de rangement automatique de fichiers basé sur des règles.
 Neatify est un utilitaire en ligne de commande écrit en Java qui organise automatiquement vos fichiers dans des dossiers catégorisés selon des règles d'extension personnalisables. Conçu avec simplicité et sécurité à l'esprit, il propose un mode simulation par défaut pour prévisualiser les changements avant de les appliquer.
 
 **Caractéristiques principales :**
-- Architecture simple : 4 classes principales, aucune dépendance externe
-- Opérations sécurisées : mode dry-run par défaut, gestion des collisions avec renommage automatique
-- Extensible : configuration par règles via fichiers `.properties`
-- Robuste : validation complète des entrées et gestion des erreurs
+- Architecture modulaire : packages organisés (cli, core, ui, util), aucune dépendance externe
+- Sécurité renforcée : protections contre path traversal, quota anti-DOS, validation stricte des chemins
+- Opérations sécurisées : mode dry-run par défaut, gestion atomique des collisions (anti-TOCTOU)
+- Interface utilisateur : mode interactif avec aperçu visuel et confirmation
+- Extensible : configuration par règles via fichiers `.properties` avec règles par défaut incluses
+- Robuste : validation complète des entrées, gestion des erreurs, 60+ tests unitaires
 
 ---
 
@@ -127,34 +129,110 @@ pptx=Documents/Presentations
 
 ```
 src/main/java/io/neatify/
-├── Neatify.java          # Point d'entrée CLI (parsing des arguments)
-├── FileMetadata.java     # Record des métadonnées de fichier
-├── Rules.java            # Chargement et validation des règles
-└── FileMover.java        # Logique métier principale (plan + execute)
+├── Neatify.java                          # Point d'entrée principal
+├── cli/                                   # Interface ligne de commande
+│   ├── args/
+│   │   ├── ArgumentParser.java           # Parsing des arguments CLI
+│   │   └── CLIConfig.java                # Configuration CLI
+│   ├── core/
+│   │   ├── FileOrganizer.java            # Orchestration de l'organisation
+│   │   └── RulesFileCreator.java         # Création assistée de règles
+│   ├── ui/
+│   │   ├── BannerRenderer.java           # Affichage de la bannière
+│   │   ├── ConsoleOutput.java            # Sortie console formatée
+│   │   ├── ConsoleUI.java                # Interface console
+│   │   ├── HelpPrinter.java              # Affichage de l'aide
+│   │   └── InteractiveCLI.java           # Mode interactif
+│   ├── util/
+│   │   ├── Ansi.java                     # Couleurs ANSI
+│   │   ├── AsciiSymbols.java             # Symboles ASCII/Unicode
+│   │   └── PreviewRenderer.java          # Rendu de l'aperçu
+│   ├── FileOrganizationExecutor.java     # Exécution de l'organisation
+│   └── AppInfo.java                      # Informations de version
+└── core/                                  # Logique métier
+    ├── DefaultRules.java                 # Règles par défaut incluses
+    ├── FileMetadata.java                 # Métadonnées de fichier
+    ├── FileMover.java                    # Déplacement de fichiers (plan + execute)
+    ├── PathSecurity.java                 # Validation sécurité des chemins
+    └── Rules.java                        # Chargement et validation des règles
 ```
 
 **Principe de conception :**
-1. **Phase de planification :** Scanne le répertoire et calcule les actions nécessaires
-2. **Phase d'exécution :** Applique les actions (ou simule en mode dry-run)
+1. **Séparation CLI/Core :** L'interface utilisateur (cli) est séparée de la logique métier (core)
+2. **Phase de planification :** Scanne le répertoire et calcule les actions nécessaires
+3. **Phase d'exécution :** Applique les actions (ou simule en mode dry-run)
+4. **Validation de sécurité :** Chaque chemin est validé avant toute opération
 
 ---
 
 ## Tests
 
+### Exécution des tests
+
 ```bash
-# Lancer les tests unitaires
+# Lancer tous les tests
 mvn test
+
+# Lancer un test spécifique
+mvn test -Dtest=FileMoverTest
+
+# Lancer les tests de sécurité uniquement
+mvn test -Dtest=io.neatify.core.security.*Test
 ```
+
+### Architecture des tests
+
+```
+src/test/java/io/neatify/
+├── TestHelper.java                      # Classe de base avec helpers communs
+├── cli/
+│   ├── args/ArgumentParserTest.java     # Tests du parser d'arguments
+│   └── PreviewRendererTest.java         # Tests du rendu d'aperçu
+└── core/
+    ├── FileMetadataTest.java            # Tests des métadonnées
+    ├── FileMoverTest.java               # Tests du déplacement de fichiers
+    ├── RulesTest.java                   # Tests du chargement de règles
+    └── security/                        # Package dédié aux tests de sécurité
+        ├── FileMoverSecurityTestBase.java        # Base pour tests de sécurité
+        ├── FileMoverPathTraversalTest.java       # Tests anti path traversal
+        ├── FileMoverQuotaTest.java               # Tests anti-DOS (quota)
+        ├── FileMoverCollisionTest.java           # Tests anti-TOCTOU
+        ├── PathSecurityTest.java                 # Tests de validation de chemins
+        └── RulesSecurityTest.java                # Tests de validation de règles
+```
+
+**60+ tests couvrant :**
+- ✓ Fonctionnalités principales (plan, execute, dry-run)
+- ✓ Sécurité (path traversal, quota, collisions)
+- ✓ Interface CLI (parsing, interactivité)
+- ✓ Rendu et formatage (aperçu, couleurs)
 
 ---
 
 ## Fonctionnalités de sécurité
 
+### Protection des opérations
 - **Dry-run par défaut :** Aucun fichier n'est déplacé sans le flag explicite `--apply`
-- **Pas d'écrasement :** Les collisions de fichiers sont résolues avec des suffixes `_1`, `_2`, etc.
-- **Validation stricte :** Tous les chemins et règles sont validés avant exécution
-- **Fichiers cachés ignorés :** Les fichiers commençant par `.` sont ignorés par défaut
+- **Gestion atomique des collisions (Anti-TOCTOU) :** Les collisions détectées au moment de l'exécution sont résolues avec des suffixes `_1`, `_2`, etc.
 - **Déplacements atomiques :** Utilise `ATOMIC_MOVE` quand disponible pour des opérations plus sûres
+- **Fichiers cachés ignorés :** Les fichiers commençant par `.` sont ignorés par défaut
+
+### Protection contre les attaques par chemin (Path Traversal)
+- **Validation stricte des chemins :** `PathSecurity` bloque les tentatives de path traversal (`../`, `..\\`)
+- **Blocage des chemins absolus :** Chemins Unix (`/etc`) et Windows (`C:\`) interdits dans les règles
+- **Validation des dossiers système :** Interdiction d'utiliser des dossiers système sensibles comme source
+- **Double niveau de protection :** Validation au niveau de `Rules` ET de `FileMover`
+- **Vérification des symlinks :** Détection et blocage des liens symboliques dans l'arborescence
+
+### Protection anti-DOS
+- **Quota de fichiers :** Limite configurable du nombre de fichiers traités (défaut: 100 000)
+- **Validation stricte des règles :** Format et contenu des fichiers de règles vérifiés
+- **Gestion des erreurs robuste :** Échec contrôlé en cas d'entrée malveillante
+
+### Architecture de test sécurisée
+- **60+ tests unitaires** organisés en packages fonctionnels
+- **Tests de sécurité dédiés** : PathSecurityTest, RulesSecurityTest, FileMoverSecurityTest
+- **Tests de scénarios d'attaque** : Path traversal, quota, collisions, règles malveillantes
 
 ---
 
@@ -204,10 +282,21 @@ neatify/
 ├── LICENSE                       # Licence MIT
 └── src/
     ├── main/
-    │   ├── java/io/neatify/     # Code source
+    │   ├── java/io/neatify/
+    │   │   ├── cli/             # Interface ligne de commande
+    │   │   │   ├── args/        # Parsing des arguments
+    │   │   │   ├── core/        # Orchestration CLI
+    │   │   │   ├── ui/          # Interface utilisateur
+    │   │   │   └── util/        # Utilitaires d'affichage
+    │   │   ├── core/            # Logique métier
+    │   │   └── Neatify.java     # Point d'entrée
     │   └── resources/            # Ressources
     └── test/
-        └── java/io/neatify/     # Tests unitaires
+        └── java/io/neatify/     # Tests unitaires (60+)
+            ├── TestHelper.java   # Helpers communs
+            ├── cli/             # Tests CLI
+            └── core/            # Tests métier
+                └── security/    # Tests de sécurité
 ```
 
 ### Évolutions futures
@@ -235,9 +324,3 @@ Les contributions, problèmes et demandes de fonctionnalités sont les bienvenus
 ## Avertissement
 
 Testez toujours en mode dry-run avant d'appliquer des changements sur des données importantes. Cet outil ne crée pas de sauvegardes automatiques.
-
----
-
-## Documentation
-
-- [English documentation](README.en.md)
