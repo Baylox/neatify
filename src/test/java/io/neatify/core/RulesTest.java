@@ -79,7 +79,12 @@ class RulesTest {
         Path rulesFile = tempDir.resolve("rules.properties");
         Files.writeString(rulesFile, "");
 
-        assertThrows(IllegalArgumentException.class, () -> Rules.load(rulesFile));
+        IllegalArgumentException exception = assertThrows(
+            IllegalArgumentException.class,
+            () -> Rules.load(rulesFile)
+        );
+
+        assertNotNull(exception.getMessage(), "Exception should have a message");
     }
 
     @Test
