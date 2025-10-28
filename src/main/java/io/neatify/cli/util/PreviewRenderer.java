@@ -1,6 +1,7 @@
 package io.neatify.cli.util;
 
 import io.neatify.cli.ui.BannerRenderer;
+import io.neatify.core.FileMetadata;
 import io.neatify.core.FileMover;
 
 import java.nio.file.Path;
@@ -128,7 +129,7 @@ public final class PreviewRenderer {
         List<FileEntry> entries = counts.entrySet().stream()
             .map(e -> {
                 String name = e.getKey();
-                String ext = extractExtension(name);
+                String ext = FileMetadata.extensionOf(name);
                 int count = e.getValue().intValue();
                 return new FileEntry(name, ext, count);
             })
@@ -138,17 +139,6 @@ public final class PreviewRenderer {
         List<FileEntry> sorted = sortEntries(entries, config.sortMode);
 
         return new FolderGroup(folderName, sorted);
-    }
-
-    /**
-     * Extrait l'extension d'un nom de fichier.
-     */
-    private static String extractExtension(String fileName) {
-        int dotIndex = fileName.lastIndexOf('.');
-        if (dotIndex > 0 && dotIndex < fileName.length() - 1) {
-            return fileName.substring(dotIndex + 1).toLowerCase();
-        }
-        return "";
     }
 
     /**

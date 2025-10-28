@@ -52,14 +52,23 @@ public record FileMetadata(
      * @return l'extension en minuscules, ou une chaîne vide si pas d'extension
      */
     private static String extractExtension(Path filePath) {
-        String fileName = filePath.getFileName().toString();
+        return extensionOf(filePath.getFileName().toString());
+    }
+
+    /**
+     * Extrait l'extension à partir d'un nom de fichier.
+     *
+     * @param fileName nom du fichier
+     * @return l'extension en minuscules, ou une chaîne vide si aucune extension
+     */
+    public static String extensionOf(String fileName) {
         int dotIndex = fileName.lastIndexOf('.');
 
         if (dotIndex > 0 && dotIndex < fileName.length() - 1) {
             return fileName.substring(dotIndex + 1).toLowerCase();
         }
 
-        return ""; // Pas d'extension
+        return "";
     }
 
     /**

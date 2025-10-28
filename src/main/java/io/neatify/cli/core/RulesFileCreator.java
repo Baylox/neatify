@@ -27,7 +27,7 @@ public final class RulesFileCreator {
         String filename = readInput("Nom du fichier", "custom-rules/my-rules.properties");
         Path rulesFile = Paths.get(filename).toAbsolutePath().normalize();
 
-        if (!validateSecurity(rulesFile, filename)) return;
+        if (!validateSecurity(rulesFile)) return;
         if (!confirmOverwriteIfExists(rulesFile)) return;
 
         String content = generateDefaultContent();
@@ -39,25 +39,21 @@ public final class RulesFileCreator {
         printSuccess(rulesFile);
     }
 
-    private static boolean validateSecurity(Path rulesFile, String filename) {
-        // SÉCURITÉ : Vérifier que ce n'est pas un symlink
-        if (Files.exists(rulesFile) && Files.isSymbolicLink(rulesFile)) {
-            printError("SECURITE : Les liens symboliques sont interdits");
-            waitForEnter();
-            return false;
-        }
-
-        // SÉCURITÉ : Restreindre à la zone custom-rules/
+    private static boolean validateSecurity(Path rulesFile) {
         Path safeDir = Paths.get("custom-rules").toAbsolutePath().normalize();
-        if (!rulesFile.startsWith(safeDir)) {
+        Path target = rulesFile.toAbsolutePath().normalize();
+
+        if (!target.startsWith(safeDir)) {
             printError("SECURITE : Le fichier doit etre dans le dossier custom-rules/");
             waitForEnter();
             return false;
         }
 
-        // SÉCURITÉ : Bloquer path traversal
-        if (filename.contains("..")) {
-            printError("SECURITE : Path traversal interdit (..)");
+        Path relativeTarget = safeDir.relativize(target);
+        try {
+            PathSecurity.validateRelativeSubpath(relativeTarget.toString());
+        } catch (SecurityException | IllegalArgumentException e) {
+            printError("SECURITE : " + e.getMessage());
             waitForEnter();
             return false;
         }

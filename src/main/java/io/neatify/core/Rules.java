@@ -130,22 +130,13 @@ public final class Rules {
      * @throws IllegalArgumentException si le chemin contient des tentatives de path traversal
      */
     private static String sanitizeFolderName(String folderName) {
-        // 1. Bloquer explicitement ".." pour éviter les path traversal
-        if (folderName.contains("..")) {
-            throw new IllegalArgumentException("Path traversal interdit (\"..\" détecté) : " + folderName);
+        try {
+            PathSecurity.validateRelativeSubpath(folderName);
+        } catch (SecurityException | IllegalArgumentException e) {
+            throw new IllegalArgumentException(e.getMessage(), e);
         }
 
-        // 2. Bloquer les chemins absolus Unix/Linux (commence par /)
-        if (folderName.startsWith("/")) {
-            throw new IllegalArgumentException("Chemin absolu Unix interdit : " + folderName);
-        }
-
-        // 3. Bloquer les chemins absolus Windows (ex: C:\, D:\)
-        if (folderName.matches("^[A-Za-z]:.*")) {
-            throw new IllegalArgumentException("Chemin absolu Windows interdit : " + folderName);
-        }
-
-        // 4. Supprime les caractères interdits sur Windows/Linux : < > : " \ | ? *
+        // Supprime les caractères interdits sur Windows/Linux : < > : " \ | ? *
         // Le slash (/) est conservé pour les sous-dossiers
         return folderName.replaceAll("[<>:\"\\\\|?*]", "_");
     }

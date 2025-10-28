@@ -1,10 +1,11 @@
 package io.neatify.cli;
 
 import io.neatify.cli.args.CLIConfig;
-import io.neatify.cli.ui.BannerRenderer;
 import io.neatify.cli.util.Ansi;
 import io.neatify.cli.util.AsciiSymbols;
+import io.neatify.cli.util.PreviewPrinter;
 import io.neatify.cli.util.PreviewRenderer;
+import io.neatify.cli.util.ResultPrinter;
 import io.neatify.core.FileMover;
 import io.neatify.core.PathSecurity;
 import io.neatify.core.Rules;
@@ -108,8 +109,7 @@ public class FileOrganizationExecutor {
             .sortMode(parseSortMode(config.getSortMode()))
             .showDuplicates(true);
 
-        List<String> previewLines = PreviewRenderer.render(actions, rendererConfig);
-        previewLines.forEach(System.out::println);
+        PreviewPrinter.print(actions, rendererConfig);
     }
 
     private FileMover.Result executeActions(CLIConfig config, List<FileMover.Action> actions) {
@@ -124,16 +124,7 @@ public class FileOrganizationExecutor {
     }
 
     private void showSummary(CLIConfig config, FileMover.Result result) {
-        System.out.println(BannerRenderer.renderResultTable(
-            result.moved(),
-            result.skipped(),
-            result.errors().size()
-        ));
-
-        if (!result.errors().isEmpty()) {
-            printError("Details des erreurs:");
-            result.errors().forEach(err -> System.out.println("  - " + err));
-        }
+        ResultPrinter.print(result);
 
         if (!config.isApply() && result.moved() > 0) {
             System.out.println();

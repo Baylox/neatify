@@ -1,7 +1,8 @@
 package io.neatify.cli.core;
 
-import io.neatify.cli.ui.BannerRenderer;
+import io.neatify.cli.util.PreviewPrinter;
 import io.neatify.cli.util.PreviewRenderer;
+import io.neatify.cli.util.ResultPrinter;
 import io.neatify.core.FileMover;
 import io.neatify.core.PathSecurity;
 import io.neatify.core.Rules;
@@ -115,8 +116,7 @@ public final class FileOrganizer {
             .sortMode(PreviewRenderer.SortMode.ALPHA)
             .showDuplicates(true);
 
-        List<String> lines = PreviewRenderer.render(actions, config);
-        lines.forEach(System.out::println);
+        PreviewPrinter.print(actions, config);
     }
 
     private static void executeIfConfirmed(List<FileMover.Action> actions) throws IOException {
@@ -137,15 +137,6 @@ public final class FileOrganizer {
 
     private static void showSummary(FileMover.Result result) {
         System.out.println();
-        System.out.println(BannerRenderer.renderResultTable(
-            result.moved(),
-            result.skipped(),
-            result.errors().size()
-        ));
-
-        if (!result.errors().isEmpty()) {
-            printError("Details des erreurs:");
-            result.errors().forEach(err -> System.out.println("  - " + err));
-        }
+        ResultPrinter.print(result);
     }
 }
