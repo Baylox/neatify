@@ -172,10 +172,12 @@ class RulesSecurityTest {
             """);
 
         // L'ensemble du chargement devrait échouer si une règle est malveillante
-        assertThrows(
+        IllegalArgumentException exception = assertThrows(
             IllegalArgumentException.class,
             () -> Rules.load(rulesFile),
             "Le chargement devrait échouer si au moins une règle est malveillante"
         );
+
+        assertNotNull(exception.getMessage(), "Exception should have a message");
     }
 }

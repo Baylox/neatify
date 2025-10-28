@@ -259,7 +259,10 @@ class FileMoverSecurityTest {
         FileMover.Result result = FileMover.execute(actions, false);
 
         assertEquals(1, result.moved());
+        assertMultipleCollisionFilesExist(targetDir, "v3");
+    }
 
+    private void assertMultipleCollisionFilesExist(Path targetDir, String expectedNewContent) throws IOException {
         // Tous les fichiers existent
         assertTrue(Files.exists(targetDir.resolve("test.txt")));
         assertTrue(Files.exists(targetDir.resolve("test_1.txt")));
@@ -267,6 +270,6 @@ class FileMoverSecurityTest {
         assertTrue(Files.exists(targetDir.resolve("test_3.txt")));
 
         // Le nouveau a le bon contenu
-        assertEquals("v3", Files.readString(targetDir.resolve("test_3.txt")));
+        assertEquals(expectedNewContent, Files.readString(targetDir.resolve("test_3.txt")));
     }
 }
