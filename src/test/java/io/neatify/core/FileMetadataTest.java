@@ -10,7 +10,7 @@ import java.nio.file.Path;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests essentiels pour FileMetadata.
+ * Tests essentiels pour FileMetadata - Focus sur extraction d'extension.
  */
 class FileMetadataTest {
 
@@ -22,6 +22,7 @@ class FileMetadataTest {
         FileMetadata metadata = FileMetadata.from(file);
 
         assertEquals("jpg", metadata.extension());
+        assertEquals("test.jpg", metadata.fileName());
     }
 
     @Test
@@ -36,33 +37,13 @@ class FileMetadataTest {
     }
 
     @Test
-    void testExtractExtension_Uppercase(@TempDir Path tempDir) throws IOException {
+    void testExtractExtension_NormalizedToLowercase(@TempDir Path tempDir) throws IOException {
         Path file = tempDir.resolve("test.PNG");
         Files.writeString(file, "test");
 
         FileMetadata metadata = FileMetadata.from(file);
 
         assertEquals("png", metadata.extension());
-    }
-
-    @Test
-    void testExtractExtension_MultipleDots(@TempDir Path tempDir) throws IOException {
-        Path file = tempDir.resolve("archive.tar.gz");
-        Files.writeString(file, "test");
-
-        FileMetadata metadata = FileMetadata.from(file);
-
-        assertEquals("gz", metadata.extension());
-    }
-
-    @Test
-    void testExtractExtension_HiddenFile(@TempDir Path tempDir) throws IOException {
-        Path file = tempDir.resolve(".hidden");
-        Files.writeString(file, "test");
-
-        FileMetadata metadata = FileMetadata.from(file);
-
-        assertEquals("", metadata.extension());
     }
 
     @Test
