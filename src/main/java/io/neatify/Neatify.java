@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -135,81 +136,126 @@ public final class Neatify {
     }
 
     private static Config parseArguments(String[] args) {
-        Config config = new Config();
-
-        for (int i = 0; i < args.length; i++) {
-            i = parseArgument(args, i, config);
-        }
-
-        validateRequiredArguments(config);
-        return config;
+        ArgumentParser parser = new ArgumentParser();
+        return parser.parse(args);
     }
 
-    private static int parseArgument(String[] args, int index, Config config) {
-        return switch (args[index]) {
-            case "--source", "-s" -> parsePathArgument(args, index, "--source", path -> config.sourceDir = path);
-            case "--rules", "-r" -> parsePathArgument(args, index, "--rules", path -> config.rulesFile = path);
-            case "--apply", "-a" -> { config.apply = true; yield index; }
-            case "--help", "-h" -> { config.showHelp = true; yield index; }
-            case "--version", "-v" -> { config.showVersion = true; yield index; }
-            case "--interactive", "-i" -> { config.interactive = true; yield index; }
-            case "--no-color" -> { config.noColor = true; yield index; }
-            case "--ascii" -> { config.ascii = true; yield index; }
-            case "--per-folder-preview" -> parsePerFolderPreviewArgument(args, index, config);
-            case "--sort" -> parseSortArgument(args, index, config);
-            default -> throw new IllegalArgumentException("Argument inconnu : " + args[index]);
-        };
-    }
+    /**
+     * Classe interne pour parser les arguments de ligne de commande.
+     * Utilise un Map de handlers pour éviter la complexité cyclomatique d'un gros switch.
+     */
+    private static class ArgumentParser {
+        private final Map<String, ArgumentHandler> handlers;
+        private Config config;
+        private String[] args;
+        private int index;
 
-    private static int parsePathArgument(String[] args, int index, String argName, PathConsumer consumer) {
-        if (index + 1 >= args.length) {
-            throw new IllegalArgumentException(argName + " necessite un argument");
+        ArgumentParser() {
+            this.handlers = createHandlers();
         }
-        consumer.accept(Paths.get(args[index + 1]));
-        return index + 1;
-    }
 
-    private static int parsePerFolderPreviewArgument(String[] args, int index, Config config) {
-        if (index + 1 >= args.length) {
-            throw new IllegalArgumentException("--per-folder-preview necessite un argument");
-        }
-        try {
-            int value = Integer.parseInt(args[index + 1]);
-            if (value <= 0) {
-                throw new IllegalArgumentException("--per-folder-preview doit etre positif");
+        Config parse(String[] arguments) {
+            this.config = new Config();
+            this.args = arguments;
+
+            for (index = 0; index < args.length; index++) {
+                String arg = args[index];
+                ArgumentHandler handler = handlers.get(arg);
+
+                if (handler == null) {
+                    throw new IllegalArgumentException("Argument inconnu : " + arg);
+                }
+
+                index = handler.handle(index);
             }
-            config.perFolderPreview = value;
-            return index + 1;
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("--per-folder-preview necessite un nombre");
-        }
-    }
 
-    private static int parseSortArgument(String[] args, int index, Config config) {
-        if (index + 1 >= args.length) {
-            throw new IllegalArgumentException("--sort necessite un argument");
+            validateRequiredArguments();
+            return config;
         }
-        String sort = args[index + 1].toLowerCase();
-        if (!sort.matches("alpha|ext|size")) {
-            throw new IllegalArgumentException("--sort doit etre: alpha, ext ou size");
-        }
-        config.sortMode = sort;
-        return index + 1;
-    }
 
-    private static void validateRequiredArguments(Config config) {
-        if (requiresSourceAndRules(config)) {
-            if (config.sourceDir == null) {
-                throw new IllegalArgumentException("--source est obligatoire");
+        private Map<String, ArgumentHandler> createHandlers() {
+            Map<String, ArgumentHandler> map = new HashMap<>();
+
+            // Arguments avec chemins
+            map.put("--source", i -> parsePathArgument(i, "--source", path -> config.sourceDir = path));
+            map.put("-s", map.get("--source"));
+            map.put("--rules", i -> parsePathArgument(i, "--rules", path -> config.rulesFile = path));
+            map.put("-r", map.get("--rules"));
+
+            // Flags booléens simples
+            map.put("--apply", i -> { config.apply = true; return i; });
+            map.put("-a", map.get("--apply"));
+            map.put("--help", i -> { config.showHelp = true; return i; });
+            map.put("-h", map.get("--help"));
+            map.put("--version", i -> { config.showVersion = true; return i; });
+            map.put("-v", map.get("--version"));
+            map.put("--interactive", i -> { config.interactive = true; return i; });
+            map.put("-i", map.get("--interactive"));
+            map.put("--no-color", i -> { config.noColor = true; return i; });
+            map.put("--ascii", i -> { config.ascii = true; return i; });
+
+            // Arguments avec valeurs complexes
+            map.put("--per-folder-preview", this::parsePerFolderPreview);
+            map.put("--sort", this::parseSort);
+
+            return map;
+        }
+
+        private int parsePathArgument(int i, String argName, PathConsumer consumer) {
+            requireNextArgument(i, argName);
+            consumer.accept(Paths.get(args[i + 1]));
+            return i + 1;
+        }
+
+        private int parsePerFolderPreview(int i) {
+            requireNextArgument(i, "--per-folder-preview");
+            try {
+                int value = Integer.parseInt(args[i + 1]);
+                if (value <= 0) {
+                    throw new IllegalArgumentException("--per-folder-preview doit etre positif");
+                }
+                config.perFolderPreview = value;
+                return i + 1;
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("--per-folder-preview necessite un nombre");
             }
-            if (config.rulesFile == null) {
-                throw new IllegalArgumentException("--rules est obligatoire");
+        }
+
+        private int parseSort(int i) {
+            requireNextArgument(i, "--sort");
+            String sort = args[i + 1].toLowerCase();
+            if (!sort.matches("alpha|ext|size")) {
+                throw new IllegalArgumentException("--sort doit etre: alpha, ext ou size");
             }
+            config.sortMode = sort;
+            return i + 1;
+        }
+
+        private void requireNextArgument(int i, String argName) {
+            if (i + 1 >= args.length) {
+                throw new IllegalArgumentException(argName + " necessite un argument");
+            }
+        }
+
+        private void validateRequiredArguments() {
+            if (requiresSourceAndRules()) {
+                if (config.sourceDir == null) {
+                    throw new IllegalArgumentException("--source est obligatoire");
+                }
+                if (config.rulesFile == null) {
+                    throw new IllegalArgumentException("--rules est obligatoire");
+                }
+            }
+        }
+
+        private boolean requiresSourceAndRules() {
+            return !config.showHelp && !config.showVersion && !config.interactive;
         }
     }
 
-    private static boolean requiresSourceAndRules(Config config) {
-        return !config.showHelp && !config.showVersion && !config.interactive;
+    @FunctionalInterface
+    private interface ArgumentHandler {
+        int handle(int index);
     }
 
     @FunctionalInterface
