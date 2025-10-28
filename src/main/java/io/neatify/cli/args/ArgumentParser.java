@@ -1,0 +1,132 @@
+package io.neatify.cli.args;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Parser pour les arguments de ligne de commande de Neatify.
+ * Utilise un Map de handlers pour éviter la complexité cyclomatique d'un gros switch.
+ */
+public class ArgumentParser {
+    private final Map<String, ArgumentHandler> handlers;
+    private CLIConfig config;
+    private String[] args;
+    private int index;
+
+    public ArgumentParser() {
+        this.handlers = createHandlers();
+    }
+
+    /**
+     * Parse les arguments et retourne une configuration.
+     *
+     * @param arguments arguments de ligne de commande
+     * @return configuration parsée
+     * @throws IllegalArgumentException si les arguments sont invalides
+     */
+    public CLIConfig parse(String[] arguments) {
+        this.config = new CLIConfig();
+        this.args = arguments;
+
+        for (index = 0; index < args.length; index++) {
+            String arg = args[index];
+            ArgumentHandler handler = handlers.get(arg);
+
+            if (handler == null) {
+                throw new IllegalArgumentException("Argument inconnu : " + arg);
+            }
+
+            index = handler.handle(index);
+        }
+
+        validateRequiredArguments();
+        return config;
+    }
+
+    private Map<String, ArgumentHandler> createHandlers() {
+        Map<String, ArgumentHandler> map = new HashMap<>();
+
+        // Arguments avec chemins
+        map.put("--source", i -> parsePathArgument(i, "--source", config::setSourceDir));
+        map.put("-s", map.get("--source"));
+        map.put("--rules", i -> parsePathArgument(i, "--rules", config::setRulesFile));
+        map.put("-r", map.get("--rules"));
+
+        // Flags booléens simples
+        map.put("--apply", i -> { config.setApply(true); return i; });
+        map.put("-a", map.get("--apply"));
+        map.put("--help", i -> { config.setShowHelp(true); return i; });
+        map.put("-h", map.get("--help"));
+        map.put("--version", i -> { config.setShowVersion(true); return i; });
+        map.put("-v", map.get("--version"));
+        map.put("--interactive", i -> { config.setInteractive(true); return i; });
+        map.put("-i", map.get("--interactive"));
+        map.put("--no-color", i -> { config.setNoColor(true); return i; });
+        map.put("--ascii", i -> { config.setAscii(true); return i; });
+
+        // Arguments avec valeurs complexes
+        map.put("--per-folder-preview", this::parsePerFolderPreview);
+        map.put("--sort", this::parseSort);
+
+        return map;
+    }
+
+    private int parsePathArgument(int i, String argName, PathConsumer consumer) {
+        requireNextArgument(i, argName);
+        consumer.accept(Paths.get(args[i + 1]));
+        return i + 1;
+    }
+
+    private int parsePerFolderPreview(int i) {
+        requireNextArgument(i, "--per-folder-preview");
+        try {
+            int value = Integer.parseInt(args[i + 1]);
+            if (value <= 0) {
+                throw new IllegalArgumentException("--per-folder-preview doit etre positif");
+            }
+            config.setPerFolderPreview(value);
+            return i + 1;
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("--per-folder-preview necessite un nombre");
+        }
+    }
+
+    private int parseSort(int i) {
+        requireNextArgument(i, "--sort");
+        String sort = args[i + 1].toLowerCase();
+        if (!sort.matches("alpha|ext|size")) {
+            throw new IllegalArgumentException("--sort doit etre: alpha, ext ou size");
+        }
+        config.setSortMode(sort);
+        return i + 1;
+    }
+
+    private void requireNextArgument(int i, String argName) {
+        if (i + 1 >= args.length) {
+            throw new IllegalArgumentException(argName + " necessite un argument");
+        }
+    }
+
+    private void validateRequiredArguments() {
+        if (config.requiresSourceAndRules()) {
+            if (config.getSourceDir() == null) {
+                throw new IllegalArgumentException("--source est obligatoire");
+            }
+            if (config.getRulesFile() == null) {
+                throw new IllegalArgumentException("--rules est obligatoire");
+            }
+        }
+    }
+
+    @FunctionalInterface
+    private interface ArgumentHandler {
+        int handle(int index);
+    }
+
+    @FunctionalInterface
+    private interface PathConsumer {
+        void accept(Path path);
+    }
+}
