@@ -110,6 +110,12 @@ public final class FileMover {
 
             if (targetFolder != null) {
                 Path targetDir = sourceRoot.resolve(targetFolder).normalize();
+                try {
+                    targetDir = PathSecurity.safeResolveWithin(sourceRoot, targetFolder);
+                } catch (SecurityException se) {
+                    System.err.println("[SECURITE] " + se.getMessage());
+                    return FileVisitResult.CONTINUE;
+                }
 
                 if (!targetDir.startsWith(sourceRoot.normalize())) {
                     System.err.println("[SECURITE] Tentative de path traversal bloquée : " + targetFolder);
