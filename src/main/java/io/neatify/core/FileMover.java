@@ -2,6 +2,8 @@ package io.neatify.core;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -14,6 +16,7 @@ import java.util.*;
 public final class FileMover {
 
     private static final Logger logger = LoggerFactory.getLogger(FileMover.class);
+    private static final Marker SECURITY_MARKER = MarkerFactory.getMarker("SECURITY");
     private static final int DEFAULT_MAX_FILES = 100_000; // Anti-DoS
 
     public enum CollisionStrategy { RENAME, SKIP, OVERWRITE }
@@ -89,7 +92,7 @@ public final class FileMover {
             try {
                 targetDir = PathSecurity.safeResolveWithin(sourceRoot, targetFolder);
             } catch (SecurityException se) {
-                logger.warn("Security violation detected: {}", se.getMessage());
+                logger.warn(SECURITY_MARKER, "Security violation detected: {}", se.getMessage());
                 return FileVisitResult.CONTINUE;
             }
             if (!targetDir.startsWith(sourceRoot.normalize())) return FileVisitResult.CONTINUE;

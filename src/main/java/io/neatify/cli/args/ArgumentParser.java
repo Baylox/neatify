@@ -67,6 +67,12 @@ public class ArgumentParser {
         map.put("--ascii", i -> { config.setAscii(true); return i; });
         map.put("--json", i -> { config.setJson(true); return i; });
 
+        // Logging levels
+        map.put("--quiet", i -> { config.setQuiet(true); return i; });
+        map.put("-q", map.get("--quiet"));
+        map.put("--verbose", i -> { config.setVerbose(true); return i; });
+        map.put("--debug", i -> { config.setDebug(true); return i; });
+
         // Arguments with values
         map.put("--per-folder-preview", this::parsePerFolderPreview);
         map.put("--sort", this::parseSort);

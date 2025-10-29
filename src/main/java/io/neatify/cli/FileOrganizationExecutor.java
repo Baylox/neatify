@@ -10,6 +10,7 @@ import io.neatify.core.PathSecurity;
 import io.neatify.core.Rules;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -34,29 +35,39 @@ public class FileOrganizationExecutor {
      * @throws IOException on I/O errors during execution
      */
     public void execute(CLIConfig config) throws IOException {
-        validatePaths(config);
-        applyDisplayOptions(config);
+        // Set run ID for correlation in logs
+        String runId = String.valueOf(System.currentTimeMillis());
+        MDC.put("runId", runId);
+        logger.debug("Starting execution with runId: {}", runId);
 
-        if (config.isUndo()) {
-            performUndo(config);
-            return;
-        }
+        try {
+            validatePaths(config);
+            applyDisplayOptions(config);
 
-        Map<String, String> rules = loadRules(config);
-        List<FileMover.Action> actions = planActions(config, rules);
+            if (config.isUndo()) {
+                performUndo(config);
+                return;
+            }
 
-        if (actions.isEmpty()) {
-            printWarning("No files to move.");
-            return;
-        }
+            Map<String, String> rules = loadRules(config);
+            List<FileMover.Action> actions = planActions(config, rules);
 
-        if (config.isJson()) {
-            FileMover.Result result = executeActions(config, actions);
-            printJson(config, actions, result);
-        } else {
-            showPreview(config, actions);
-            FileMover.Result result = executeActions(config, actions);
-            showSummary(config, result);
+            if (actions.isEmpty()) {
+                printWarning("No files to move.");
+                return;
+            }
+
+            if (config.isJson()) {
+                FileMover.Result result = executeActions(config, actions);
+                printJson(config, actions, result);
+            } else {
+                showPreview(config, actions);
+                FileMover.Result result = executeActions(config, actions);
+                showSummary(config, result);
+            }
+        } finally {
+            MDC.remove("runId");
+            logger.debug("Execution completed, runId cleared");
         }
     }
 

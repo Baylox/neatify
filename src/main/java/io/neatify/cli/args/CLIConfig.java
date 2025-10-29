@@ -29,6 +29,11 @@ public class CLIConfig {
     private String onCollision = "rename"; // rename | skip | overwrite
     private int maxFiles = 100_000;
 
+    // Logging options
+    private boolean quiet = false;    // WARN+ only
+    private boolean verbose = false;  // INFO level (default)
+    private boolean debug = false;    // DEBUG level
+
     // Filters
     private java.util.List<String> includes = new java.util.ArrayList<>();
     private java.util.List<String> excludes = new java.util.ArrayList<>();
@@ -51,6 +56,9 @@ public class CLIConfig {
     public boolean isJson() { return json; }
     public String getOnCollision() { return onCollision; }
     public int getMaxFiles() { return maxFiles; }
+    public boolean isQuiet() { return quiet; }
+    public boolean isVerbose() { return verbose; }
+    public boolean isDebug() { return debug; }
     public java.util.List<String> getIncludes() { return includes; }
     public java.util.List<String> getExcludes() { return excludes; }
 
@@ -72,6 +80,9 @@ public class CLIConfig {
     void setJson(boolean json) { this.json = json; }
     void setOnCollision(String onCollision) { this.onCollision = onCollision; }
     void setMaxFiles(int maxFiles) { this.maxFiles = maxFiles; }
+    void setQuiet(boolean quiet) { this.quiet = quiet; }
+    void setVerbose(boolean verbose) { this.verbose = verbose; }
+    void setDebug(boolean debug) { this.debug = debug; }
     void addInclude(String pattern) { this.includes.add(pattern); }
     void addExclude(String pattern) { this.excludes.add(pattern); }
 
