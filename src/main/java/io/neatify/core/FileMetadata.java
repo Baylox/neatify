@@ -9,8 +9,8 @@ import java.time.ZoneId;
 import java.util.Objects;
 
 /**
- * Représente les métadonnées d'un fichier.
- * Record simple et immutable pour stocker les informations essentielles.
+ * Represents file metadata.
+ * Simple immutable record for essential information.
  */
 public record FileMetadata(
     Path path,
@@ -20,17 +20,17 @@ public record FileMetadata(
 ) {
 
     /**
-     * Crée un FileMetadata à partir d'un chemin de fichier.
+     * Creates FileMetadata from a file path.
      *
-     * @param filePath le chemin du fichier à analyser
-     * @return les métadonnées du fichier
-     * @throws IOException si le fichier n'existe pas ou n'est pas accessible
+     * @param filePath file path to analyze
+     * @return metadata for the file
+     * @throws IOException if the file does not exist or is not accessible
      */
     public static FileMetadata from(Path filePath) throws IOException {
-        Objects.requireNonNull(filePath, "Le chemin du fichier ne peut pas être null");
+        Objects.requireNonNull(filePath, "File path cannot be null");
 
         if (!Files.isRegularFile(filePath)) {
-            throw new IllegalArgumentException("Le chemin doit pointer vers un fichier régulier : " + filePath);
+            throw new IllegalArgumentException("Path must point to a regular file: " + filePath);
         }
 
         BasicFileAttributes attrs = Files.readAttributes(filePath, BasicFileAttributes.class);
@@ -46,20 +46,20 @@ public record FileMetadata(
     }
 
     /**
-     * Extrait l'extension d'un fichier (sans le point).
+     * Extracts a file extension (without the dot).
      *
-     * @param filePath le chemin du fichier
-     * @return l'extension en minuscules, ou une chaîne vide si pas d'extension
+     * @param filePath file path
+     * @return lowercase extension or empty string if none
      */
     private static String extractExtension(Path filePath) {
         return extensionOf(filePath.getFileName().toString());
     }
 
     /**
-     * Extrait l'extension à partir d'un nom de fichier.
+     * Extracts the extension from a file name.
      *
-     * @param fileName nom du fichier
-     * @return l'extension en minuscules, ou une chaîne vide si aucune extension
+     * @param fileName file name
+     * @return lowercase extension or empty string if none
      */
     public static String extensionOf(String fileName) {
         int dotIndex = fileName.lastIndexOf('.');
@@ -72,21 +72,21 @@ public record FileMetadata(
     }
 
     /**
-     * @return le nom du fichier (avec extension)
+     * @return file name (with extension)
      */
     public String fileName() {
         return path.getFileName().toString();
     }
 
     /**
-     * @return true si le fichier n'a pas d'extension
+     * @return true if the file has no extension
      */
     public boolean hasNoExtension() {
         return extension.isEmpty();
     }
 
     /**
-     * Formate la taille en une chaîne lisible (KB, MB, GB).
+     * Formats the size into a human-readable string (KB, MB, GB).
      */
     public String formattedSize() {
         if (sizeInBytes < 1024) return sizeInBytes + " B";

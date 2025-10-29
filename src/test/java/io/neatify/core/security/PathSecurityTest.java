@@ -27,7 +27,7 @@ class PathSecurityTest {
         SecurityException exception = assertThrows(SecurityException.class,
             () -> PathSecurity.validateRelativeSubpath("../etc"));
 
-        assertTrue(exception.getMessage().contains("Path traversal interdit"));
+        assertTrue(exception.getMessage().contains("Path traversal not allowed"));
     }
 
     @Test
@@ -35,7 +35,7 @@ class PathSecurityTest {
         SecurityException exception = assertThrows(SecurityException.class,
             () -> PathSecurity.validateRelativeSubpath("/etc/passwd"));
 
-        assertTrue(exception.getMessage().contains("Chemin absolu Unix interdit"));
+        assertTrue(exception.getMessage().contains("Absolute Unix path not allowed"));
     }
 
     @Test
@@ -43,7 +43,7 @@ class PathSecurityTest {
         SecurityException exception = assertThrows(SecurityException.class,
             () -> PathSecurity.validateRelativeSubpath("C:\\Windows"));
 
-        assertTrue(exception.getMessage().contains("Chemin absolu Windows interdit"));
+        assertTrue(exception.getMessage().contains("Absolute Windows path not allowed"));
     }
 
     @Test
@@ -100,7 +100,7 @@ class PathSecurityTest {
             System.err.println("WARNING: /bin should have been blocked but wasn't");
             return false;
         } catch (SecurityException e) {
-            assertTrue(e.getMessage().contains("Dossier système interdit"));
+            assertTrue(e.getMessage().contains("Forbidden system directory"));
             return true;
         } catch (IOException e) {
             return false;

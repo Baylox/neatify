@@ -4,12 +4,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Définit les règles par défaut pour l'organisation des fichiers.
+ * Defines default rules for file organization.
  */
 final class DefaultRules {
 
     private DefaultRules() {
-        // Classe utilitaire
+        // Utility class
     }
 
     static Map<String, String> create() {

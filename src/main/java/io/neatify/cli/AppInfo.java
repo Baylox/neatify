@@ -1,41 +1,41 @@
 package io.neatify.cli;
 
 /**
- * Informations sur l'application.
- * Record immuable contenant les métadonnées de l'application.
+ * Application information.
+ * Immutable record carrying application metadata.
  *
- * @param name le nom de l'application
- * @param version la version de l'application
- * @param description une brève description de l'application
+ * @param name application name
+ * @param version application version
+ * @param description short application description
  */
 public record AppInfo(String name, String version, String description) {
 
     /**
-     * Constructeur compact avec validation.
+     * Compact constructor with validation.
      */
     public AppInfo {
         if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException("Le nom de l'application ne peut pas être vide");
+            throw new IllegalArgumentException("Application name cannot be empty");
         }
         if (version == null || version.isBlank()) {
-            throw new IllegalArgumentException("La version ne peut pas être vide");
+            throw new IllegalArgumentException("Version cannot be empty");
         }
         if (description == null || description.isBlank()) {
-            throw new IllegalArgumentException("La description ne peut pas être vide");
+            throw new IllegalArgumentException("Description cannot be empty");
         }
     }
 
     /**
-     * Crée une instance pour Neatify.
+     * Creates an AppInfo instance for Neatify.
      *
-     * @param version la version de l'application
-     * @return une instance d'AppInfo pour Neatify
+     * @param version application version
+     * @return AppInfo instance for Neatify
      */
     public static AppInfo neatify(String version) {
         return new AppInfo(
             "NEATIFY",
             version,
-            "Outil de rangement automatique"
+            "Automatic organization tool"
         );
     }
 }

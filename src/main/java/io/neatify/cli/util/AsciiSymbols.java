@@ -1,8 +1,8 @@
 package io.neatify.cli.util;
 
 /**
- * Utilitaire pour les symboles Unicode/ASCII selon le support du terminal.
- * Utilise des sequences Unicode echappees pour eviter les problemes d'encodage.
+ * Utility for Unicode/ASCII symbols depending on terminal support.
+ * Uses escaped Unicode sequences to avoid encoding issues.
  */
 public final class AsciiSymbols {
 
@@ -13,7 +13,7 @@ public final class AsciiSymbols {
     }
 
     /**
-     * Detecte si le terminal supporte Unicode.
+     * Detects if the terminal likely supports Unicode.
      */
     private static boolean detectUnicodeSupport() {
         String encoding = System.getProperty("file.encoding");
@@ -23,43 +23,43 @@ public final class AsciiSymbols {
 
         String os = System.getProperty("os.name").toLowerCase();
         if (os.contains("win")) {
-            // Windows recent: Unicode generalement supporte
+            // Recent Windows: Unicode generally supported
             return true;
         }
 
-        // Par defaut, on suppose support present
+        // Assume support by default
         return true;
     }
 
-    /** Active ou desactive Unicode (force ASCII si false). */
+    /** Enables or disables Unicode (forces ASCII if false). */
     public static void setUseUnicode(boolean value) {
         useUnicode = value;
     }
 
-    /** Indique si le mode Unicode est actif. */
+    /** Returns whether Unicode mode is active. */
     public static boolean useUnicode() {
         return useUnicode;
     }
 
-    /** Symbole de puce (bullet point). */
+    /** Bullet point symbol. */
     public static String bullet() {
         // \u2022 = '•'
         return useUnicode ? "\u2022" : "-";
     }
 
-    /** Symbole de fleche droite. */
+    /** Right arrow symbol. */
     public static String arrow() {
         // \u2192 = '→'
         return useUnicode ? "\u2192" : "->";
     }
 
-    /** Symbole de multiplication (pour les duplicatas). */
+    /** Multiplication symbol (for duplicates). */
     public static String times() {
         // \u00D7 = '×'
         return useUnicode ? "\u00D7" : "x";
     }
 
-    /** Symbole de plus (pour "N autres..."). */
+    /** Plus symbol (for "N more..."). */
     public static String plus() {
         return "+";
     }

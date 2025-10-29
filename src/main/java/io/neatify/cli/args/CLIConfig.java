@@ -3,8 +3,8 @@ package io.neatify.cli.args;
 import java.nio.file.Path;
 
 /**
- * Configuration pour l'exécution en ligne de commande.
- * Contient tous les paramètres parsés depuis les arguments CLI.
+ * Configuration for command-line execution.
+ * Holds all parameters parsed from CLI arguments.
  */
 public class CLIConfig {
     private Path sourceDir;
@@ -18,17 +18,17 @@ public class CLIConfig {
     private boolean undoList = false;
     private String undoRun = null;
 
-    // Options de preview
+    // Preview options
     private boolean noColor = false;
     private boolean ascii = false;
     private int perFolderPreview = 5;
     private String sortMode = "alpha";
 
-    // Sorties et execution
+    // Output and execution
     private boolean json = false;
     private String onCollision = "rename"; // rename | skip | overwrite
 
-    // Filtres
+    // Filters
     private java.util.List<String> includes = new java.util.ArrayList<>();
     private java.util.List<String> excludes = new java.util.ArrayList<>();
 
@@ -52,7 +52,7 @@ public class CLIConfig {
     public java.util.List<String> getIncludes() { return includes; }
     public java.util.List<String> getExcludes() { return excludes; }
 
-    // Setters (package-private pour être utilisés seulement par ArgumentParser)
+    // Setters (package-private, intended for ArgumentParser only)
     void setSourceDir(Path sourceDir) { this.sourceDir = sourceDir; }
     void setRulesFile(Path rulesFile) { this.rulesFile = rulesFile; }
     void setUseDefaultRules(boolean useDefaultRules) { this.useDefaultRules = useDefaultRules; }
@@ -73,12 +73,12 @@ public class CLIConfig {
     void addExclude(String pattern) { this.excludes.add(pattern); }
 
     /**
-     * Vérifie si la configuration nécessite sourceDir et rulesFile.
-     * @return true si on est en mode commande (pas help/version/interactive)
+     * Indicates if both sourceDir and rulesFile are required
+     * (i.e. CLI command mode, not help/version/interactive).
      */
     public boolean requiresSourceAndRules() {
-        // Renvoie true uniquement quand la CLI requiert à la fois --source et --rules.
-        // Avec --use-default-rules, le fichier de règles n'est pas requis.
+        // True only when the CLI requires both --source and --rules.
+        // With --use-default-rules, the rules file is not required.
         return !showHelp && !showVersion && !interactive && !undo && !useDefaultRules;
     }
 }

@@ -5,8 +5,8 @@ import io.neatify.cli.AppInfo;
 import java.util.Scanner;
 
 /**
- * Utilitaire simplifie pour l'affichage console.
- * Regroupe banniere, sorties formatees et saisie utilisateur.
+ * Lightweight console display utility.
+ * Provides banner, formatted outputs and user input helpers.
  */
 public final class Display {
 
@@ -14,10 +14,10 @@ public final class Display {
     private static final Scanner scanner = new Scanner(System.in);
 
     private Display() {
-        // Classe utilitaire
+        // Utility class
     }
 
-    // ============ Affichage de base ============
+    // ============ Basic output ============
 
     public static void print(String text) {
         System.out.print(text);
@@ -35,7 +35,7 @@ public final class Display {
         System.err.println(text);
     }
 
-    // ============ Messages formates ============
+    // ============ Formatted messages ============
 
     public static void printSuccess(String message) {
         println("[OK] " + message);
@@ -61,9 +61,7 @@ public final class Display {
         return "=".repeat(LINE_WIDTH);
     }
 
-    public static void printSection(String title) {
-        printSectionCentered(title);
-    }
+    public static void printSection(String title) { printSectionCentered(title); }
 
     public static void printSectionCentered(String title) {
         println();
@@ -80,7 +78,7 @@ public final class Display {
         return " ".repeat(padding) + trimmed;
     }
 
-    // ============ Banniere ============
+    // ============ Banner ============
 
     public static void printBanner(AppInfo appInfo) {
         println();
@@ -114,13 +112,7 @@ public final class Display {
         return "by " + user;
     }
 
-    /**
-     * Version de compatibilite (depreciee).
-     */
-    @Deprecated
-    public static void printBanner(String version) {
-        printBanner(AppInfo.neatify(version));
-    }
+    // Note: removed deprecated printBanner(String) overload to keep API lean
 
     // ============ Tableaux et barres ============
 
@@ -129,16 +121,16 @@ public final class Display {
 
         println();
         println(line());
-        println(center("RESUME DE L'OPERATION"));
+        println(center("OPERATION SUMMARY"));
         println(line());
-        println(String.format("  Fichiers traites   : %-15d", total));
-        println(String.format("  Deplaces           : %-15d", moved));
-        println(String.format("  Ignores            : %-15d", skipped));
-        println(String.format("  Erreurs            : %-15d", errors));
+        println(String.format("  Files processed    : %-15d", total));
+        println(String.format("  Moved              : %-15d", moved));
+        println(String.format("  Skipped            : %-15d", skipped));
+        println(String.format("  Errors             : %-15d", errors));
         println("-".repeat(LINE_WIDTH));
     }
 
-    // ============ Input utilisateur ============
+    // ============ User input ============
 
     public static String readInput(String prompt) {
         return readInput(prompt, null);
@@ -155,7 +147,7 @@ public final class Display {
     }
 
     public static void waitForEnter() {
-        print("\nAppuyez sur Entree pour continuer...");
+        print("\nPress Enter to continue...");
         scanner.nextLine();
     }
 }

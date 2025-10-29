@@ -6,8 +6,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Parser pour les arguments de ligne de commande de Neatify.
- * Construit une configuration immuable via des handlers simples.
+ * Command-line arguments parser for Neatify.
+ * Builds an immutable configuration via simple handlers.
  */
 public class ArgumentParser {
     private final Map<String, ArgumentHandler> handlers;
@@ -20,9 +20,9 @@ public class ArgumentParser {
     }
 
     /**
-     * Parse les arguments et retourne une configuration.
-     * @param arguments arguments de ligne de commande
-     * @return configuration parsée
+     * Parses arguments and returns a configuration.
+     * @param arguments CLI arguments
+     * @return parsed configuration
      */
     public CLIConfig parse(String[] arguments) {
         this.config = new CLIConfig();
@@ -32,7 +32,7 @@ public class ArgumentParser {
             String arg = args[index];
             ArgumentHandler handler = handlers.get(arg);
             if (handler == null) {
-                throw new IllegalArgumentException("Argument inconnu : " + arg);
+                throw new IllegalArgumentException("Unknown argument: " + arg);
             }
             index = handler.handle(index);
         }
@@ -44,14 +44,14 @@ public class ArgumentParser {
     private Map<String, ArgumentHandler> createHandlers() {
         Map<String, ArgumentHandler> map = new HashMap<>();
 
-        // Arguments avec chemins
+        // Path-based arguments
         map.put("--source", i -> parsePathArgument(i, "--source", config::setSourceDir));
         map.put("-s", map.get("--source"));
         map.put("--rules", i -> parsePathArgument(i, "--rules", config::setRulesFile));
         map.put("-r", map.get("--rules"));
         map.put("--use-default-rules", i -> { config.setUseDefaultRules(true); return i; });
 
-        // Flags booléens simples
+        // Simple boolean flags
         map.put("--apply", i -> { config.setApply(true); return i; });
         map.put("-a", map.get("--apply"));
         map.put("--help", i -> { config.setShowHelp(true); return i; });
@@ -67,7 +67,7 @@ public class ArgumentParser {
         map.put("--ascii", i -> { config.setAscii(true); return i; });
         map.put("--json", i -> { config.setJson(true); return i; });
 
-        // Arguments avec valeurs
+        // Arguments with values
         map.put("--per-folder-preview", this::parsePerFolderPreview);
         map.put("--sort", this::parseSort);
         map.put("--on-collision", this::parseCollision);
@@ -88,12 +88,12 @@ public class ArgumentParser {
         try {
             int value = Integer.parseInt(args[i + 1]);
             if (value <= 0) {
-                throw new IllegalArgumentException("--per-folder-preview doit etre positif");
+                throw new IllegalArgumentException("--per-folder-preview must be positive");
             }
             config.setPerFolderPreview(value);
             return i + 1;
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("--per-folder-preview necessite un nombre");
+            throw new IllegalArgumentException("--per-folder-preview requires a number");
         }
     }
 
@@ -101,7 +101,7 @@ public class ArgumentParser {
         requireNextArgument(i, "--sort");
         String sort = args[i + 1].toLowerCase();
         if (!sort.matches("alpha|ext|size")) {
-            throw new IllegalArgumentException("--sort doit etre: alpha, ext ou size");
+            throw new IllegalArgumentException("--sort must be one of: alpha, ext or size");
         }
         config.setSortMode(sort);
         return i + 1;
@@ -111,7 +111,7 @@ public class ArgumentParser {
         requireNextArgument(i, "--on-collision");
         String strategy = args[i + 1].toLowerCase();
         if (!strategy.matches("rename|skip|overwrite")) {
-            throw new IllegalArgumentException("--on-collision doit etre: rename, skip ou overwrite");
+            throw new IllegalArgumentException("--on-collision must be one of: rename, skip or overwrite");
         }
         config.setOnCollision(strategy);
         return i + 1;
@@ -131,7 +131,7 @@ public class ArgumentParser {
 
     private void requireNextArgument(int i, String argName) {
         if (i + 1 >= args.length) {
-            throw new IllegalArgumentException(argName + " necessite un argument");
+            throw new IllegalArgumentException(argName + " requires a value");
         }
     }
 
@@ -139,12 +139,12 @@ public class ArgumentParser {
         boolean needsSource = !config.isShowHelp() && !config.isShowVersion() && !config.isInteractive();
 
         if (needsSource && config.getSourceDir() == null) {
-            throw new IllegalArgumentException("--source est obligatoire");
+            throw new IllegalArgumentException("--source is required");
         }
 
         boolean needsRules = needsSource && !config.isUndo() && !config.isUseDefaultRules();
         if (needsRules && config.getRulesFile() == null) {
-            throw new IllegalArgumentException("--rules est obligatoire");
+            throw new IllegalArgumentException("--rules is required");
         }
     }
 

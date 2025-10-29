@@ -10,7 +10,7 @@ import java.io.IOException;
 import static io.neatify.cli.ui.Display.*;
 
 /**
- * Gere le mode interactif de Neatify - Menu principal et coordination.
+ * Handles Neatify interactive mode – main menu and coordination.
  */
 public final class InteractiveCLI {
 
@@ -25,7 +25,7 @@ public final class InteractiveCLI {
 
         while (true) {
             printMenu();
-            String choice = readInput("Votre choix");
+            String choice = readInput("Your choice");
 
             switch (choice) {
                 case "1" -> FileOrganizer.organize();
@@ -33,22 +33,22 @@ public final class InteractiveCLI {
                 case "3" -> { performUndo(); waitForEnter(); }
                 case "4" -> { HelpPrinter.print(); waitForEnter(); }
                 case "5" -> { printVersion(); waitForEnter(); }
-                case "6", "q", "Q" -> { printSuccess("Au revoir !"); return; }
-                default -> printWarning("Choix invalide. Veuillez reessayer.");
+                case "6", "q", "Q" -> { printSuccess("Goodbye!"); return; }
+                default -> printWarning("Invalid choice. Please try again.");
             }
         }
     }
 
     private void printMenu() {
         System.out.println();
-        System.out.println(center("MENU PRINCIPAL"));
+        System.out.println(center("MAIN MENU"));
         printLine();
-        System.out.println("  1. Organiser des fichiers");
-        System.out.println("  2. Creer un fichier de regles");
-        System.out.println("  3. Annuler la derniere execution");
-        System.out.println("  4. Afficher l'aide");
-        System.out.println("  5. Afficher la version");
-        System.out.println("  6. Quitter    (ou 'q')");
+        System.out.println("  1. Organize files");
+        System.out.println("  2. Create a rules file");
+        System.out.println("  3. Undo last run");
+        System.out.println("  4. Show help");
+        System.out.println("  5. Show version");
+        System.out.println("  6. Quit       (or 'q')");
         printLine();
     }
 
@@ -58,17 +58,17 @@ public final class InteractiveCLI {
     }
 
     private void performUndo() throws java.io.IOException {
-        printSection("ANNULER LA DERNIERE EXECUTION");
-        String sourcePath = readInput("Dossier source (utilise lors de l'organisation)");
+        printSection("UNDO LAST RUN");
+        String sourcePath = readInput("Source folder (used during organization)");
         java.nio.file.Path sourceDir = java.nio.file.Paths.get(sourcePath);
         UndoExecutor.UndoResult r = UndoExecutor.undoLastV2(sourceDir);
         if (r == null) {
-            printWarning("Aucun journal trouve. Rien a annuler.");
+            printWarning("No journal found. Nothing to undo.");
             return;
         }
-        printSuccess("Restaures: " + r.restored() + ", ignores: " + r.skipped() + ", erreurs: " + r.errors().size());
+        printSuccess("Restored: " + r.restored() + ", skipped: " + r.skipped() + ", errors: " + r.errors().size());
         if (!r.errors().isEmpty()) {
-            printErr("Erreurs:");
+            printErr("Errors:");
             r.errors().forEach(e -> println("  - " + e));
         }
     }

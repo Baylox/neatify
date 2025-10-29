@@ -7,16 +7,16 @@ import java.nio.file.Paths;
 import java.util.List;
 
 /**
- * Utilitaires de sécurité pour la validation des chemins.
- * Protège contre: path traversal, symlink attacks, accès système.
+ * Security utilities for validating paths.
+ * Protects against: path traversal, symlink attacks, system access.
  */
 public final class PathSecurity {
 
     private PathSecurity() {
-        // Classe utilitaire
+        // Utility class
     }
 
-    // Dossiers système interdits
+    // System directories that are forbidden
     private static final List<String> FORBIDDEN_PATHS_UNIX = List.of(
         "/etc", "/bin", "/sbin", "/usr/bin", "/usr/sbin",
         "/var", "/sys", "/proc", "/dev", "/boot", "/root"
@@ -28,16 +28,16 @@ public final class PathSecurity {
     );
 
     /**
-     * Valide qu'un chemin est sûr pour être utilisé comme source d'organisation.
-     * Bloque les dossiers système et les symlinks.
+     * Validates that a path is safe to use as the organization source.
+     * Blocks system directories and symlinks.
      *
-     * @param sourcePath le chemin à valider
-     * @throws SecurityException si le chemin n'est pas sûr
-     * @throws IOException si erreur I/O
+     * @param sourcePath path to validate
+     * @throws SecurityException if the path is not safe
+     * @throws IOException on I/O error
      */
     public static void validateSourceDir(Path sourcePath) throws IOException {
         if (sourcePath == null) {
-            throw new IllegalArgumentException("Le chemin ne peut pas être null");
+            throw new IllegalArgumentException("Path cannot be null");
         }
 
         Path normalized = sourcePath.toAbsolutePath().normalize();
@@ -48,7 +48,7 @@ public final class PathSecurity {
     }
 
     /**
-     * Vérifie qu'un chemin ne correspond pas à une liste de chemins interdits.
+     * Verifies a path does not match a forbidden directories list.
      */
     private static void checkNotForbiddenPath(Path normalized, List<String> forbiddenPaths) {
         for (String forbidden : forbiddenPaths) {
@@ -56,24 +56,24 @@ public final class PathSecurity {
                 Path forbiddenPath = Paths.get(forbidden).toAbsolutePath().normalize();
                 if (normalized.equals(forbiddenPath) || normalized.startsWith(forbiddenPath)) {
                     throw new SecurityException(
-                        "Dossier système interdit : " + normalized + " (zone: " + forbidden + ")"
+                        "Forbidden system directory: " + normalized + " (area: " + forbidden + ")"
                     );
                 }
             } catch (java.nio.file.InvalidPathException e) {
-                // Ignore si le chemin n'est pas valide sur ce système (ex: chemin Windows sur Unix)
+                // Ignore if path is invalid on this system (e.g., Windows path on Unix)
             }
         }
     }
 
     /**
-     * Valide qu'un sous-chemin relatif est sûr (pas de .., pas de chemin absolu).
+     * Validates a relative subpath is safe (no .., not absolute).
      *
-     * @param subpath le sous-chemin à valider
-     * @throws SecurityException si le sous-chemin contient des éléments dangereux
+     * @param subpath subpath to validate
+     * @throws SecurityException if it contains dangerous elements
      */
     public static void validateRelativeSubpath(String subpath) {
         if (subpath == null || subpath.isBlank()) {
-            throw new IllegalArgumentException("Le sous-chemin ne peut pas être vide");
+            throw new IllegalArgumentException("Subpath cannot be empty");
         }
 
         checkNoPathTraversal(subpath);
@@ -81,33 +81,33 @@ public final class PathSecurity {
     }
 
     /**
-     * Vérifie qu'un chemin ne contient pas de path traversal (..).
+     * Verifies a path does not contain path traversal (..).
      */
     private static void checkNoPathTraversal(String subpath) {
         if (subpath.contains("..")) {
-            throw new SecurityException("Path traversal interdit (..) : " + subpath);
+            throw new SecurityException("Path traversal not allowed (..): " + subpath);
         }
     }
 
     /**
-     * Vérifie qu'un chemin n'est pas absolu (Unix ou Windows).
+     * Verifies a path is not absolute (Unix or Windows).
      */
     private static void checkNotAbsolutePath(String subpath) {
         if (subpath.startsWith("/")) {
-            throw new SecurityException("Chemin absolu Unix interdit : " + subpath);
+            throw new SecurityException("Absolute Unix path not allowed: " + subpath);
         }
         if (subpath.matches("^[A-Za-z]:.*")) {
-            throw new SecurityException("Chemin absolu Windows interdit : " + subpath);
+            throw new SecurityException("Absolute Windows path not allowed: " + subpath);
         }
     }
 
     /**
-     * Résout un sous-chemin de manière sûre, en garantissant qu'il reste dans root.
+     * Safely resolves a subpath ensuring it remains within root.
      *
-     * @param root le dossier racine
-     * @param subpath le sous-chemin à résoudre
-     * @return le chemin résolu
-     * @throws SecurityException si le chemin sort de root
+     * @param root root directory
+     * @param subpath subpath to resolve
+     * @return resolved path
+     * @throws SecurityException if the path escapes root
      */
     public static Path safeResolveWithin(Path root, String subpath) {
         validateRelativeSubpath(subpath);
@@ -117,7 +117,7 @@ public final class PathSecurity {
 
         if (!resolved.toAbsolutePath().normalize().startsWith(normalizedRoot)) {
             throw new SecurityException(
-                "Le chemin résolu sort de la zone autorisée : " + subpath
+                "Resolved path escapes the allowed area: " + subpath
             );
         }
 
@@ -125,12 +125,12 @@ public final class PathSecurity {
     }
 
     /**
-     * Vérifie qu'aucun ancêtre du chemin n'est un symlink.
-     * Protège contre les attaques par symlink dans le chemin.
+     * Verifies no ancestor of the path is a symlink.
+     * Protects against symlink attacks along the path.
      *
-     * @param path le chemin à vérifier
-     * @throws SecurityException si un symlink est détecté
-     * @throws IOException si erreur I/O
+     * @param path path to check
+     * @throws SecurityException if a symlink is detected
+     * @throws IOException on I/O error
      */
     public static void assertNoSymlinkInAncestry(Path path) throws IOException {
         if (path == null) {
@@ -142,23 +142,23 @@ public final class PathSecurity {
     }
 
     /**
-     * Vérifie que le chemin lui-même n'est pas un symlink.
+     * Verifies that the path itself is not a symlink.
      */
     private static void checkSymlinkSelf(Path path) throws IOException {
         if (Files.exists(path) && Files.isSymbolicLink(path)) {
-            throw new SecurityException("Symlink interdit : " + path);
+            throw new SecurityException("Symlink not allowed: " + path);
         }
     }
 
     /**
-     * Vérifie qu'aucun ancêtre du chemin n'est un symlink.
+     * Verifies that no ancestor of the path is a symlink.
      */
     private static void checkSymlinkAncestors(Path path) throws IOException {
         Path current = path.getParent();
         while (current != null) {
             if (Files.exists(current) && Files.isSymbolicLink(current)) {
                 throw new SecurityException(
-                    "Symlink détecté dans le chemin parent : " + current + " (chemin complet: " + path + ")"
+                    "Symlink detected in parent path: " + current + " (full path: " + path + ")"
                 );
             }
             current = current.getParent();

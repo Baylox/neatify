@@ -16,7 +16,7 @@ import java.util.Map;
 import static io.neatify.cli.ui.Display.*;
 
 /**
- * Gère la logique d'organisation des fichiers en mode interactif.
+ * Handles file organization flow in interactive mode.
  */
 public final class FileOrganizer {
 
@@ -25,10 +25,10 @@ public final class FileOrganizer {
     }
 
     /**
-     * Lance le processus complet d'organisation de fichiers.
+     * Starts the full interactive organization process.
      */
     public static void organize() throws IOException {
-        printSection("ORGANISATION DE FICHIERS");
+        printSection("FILE ORGANIZATION");
 
         Path sourceDir = promptAndValidateSourceDir();
         if (sourceDir == null) return;
@@ -45,11 +45,11 @@ public final class FileOrganizer {
     }
 
     private static Path promptAndValidateSourceDir() throws IOException {
-        String sourcePath = readInput("Dossier a organiser (chemin complet)");
+        String sourcePath = readInput("Folder to organize (full path)");
         Path sourceDir = Paths.get(sourcePath);
 
         if (!Files.exists(sourceDir) || !Files.isDirectory(sourceDir)) {
-            printError("Dossier invalide : " + sourcePath);
+            printError("Invalid folder: " + sourcePath);
             waitForEnter();
             return null;
         }
@@ -58,14 +58,14 @@ public final class FileOrganizer {
             PathSecurity.validateSourceDir(sourceDir);
             return sourceDir;
         } catch (SecurityException e) {
-            printError("SECURITE : " + e.getMessage());
+            printError("SECURITY: " + e.getMessage());
             waitForEnter();
             return null;
         }
     }
 
     private static Map<String, String> promptAndLoadRules() throws IOException {
-        String rulesPath = readInput("Fichier de regles (.properties) [Entree = regles par defaut]", "");
+        String rulesPath = readInput("Rules file (.properties) [Enter = default rules]", "");
 
         if (rulesPath.isBlank()) {
             return loadDefaultRules();
@@ -75,9 +75,9 @@ public final class FileOrganizer {
     }
 
     private static Map<String, String> loadDefaultRules() {
-        printInfo("Utilisation des regles par defaut integrees...");
+        printInfo("Using built-in default rules...");
         Map<String, String> rules = Rules.getDefaults();
-        printSuccess(rules.size() + " regle(s) par defaut chargee(s)");
+        printSuccess(rules.size() + " default rule(s) loaded");
         return rules;
     }
 
@@ -85,19 +85,19 @@ public final class FileOrganizer {
         Path rulesFile = Paths.get(rulesPath);
 
         if (!Files.exists(rulesFile)) {
-            printError("Fichier inexistant : " + rulesPath);
+            printError("File does not exist: " + rulesPath);
             waitForEnter();
             return null;
         }
 
-        printInfo("Chargement des regles depuis le fichier...");
+        printInfo("Loading rules from file...");
         Map<String, String> rules = Rules.load(rulesFile);
-        printSuccess(rules.size() + " regle(s) chargee(s)");
+        printSuccess(rules.size() + " rule(s) loaded");
         return rules;
     }
 
     private static List<FileMover.Action> planActions(Path sourceDir, Map<String, String> rules, Filters filters) throws IOException {
-        printInfo("Analyse du dossier...");
+        printInfo("Scanning folder...");
         List<FileMover.Action> actions = FileMover.plan(
             sourceDir,
             rules,
@@ -107,12 +107,12 @@ public final class FileOrganizer {
         );
 
         if (actions.isEmpty()) {
-            printWarning("Aucun fichier à déplacer.");
+            printWarning("No files to move.");
             waitForEnter();
             return null;
         }
 
-        printSuccess(actions.size() + " fichier(s) a deplacer");
+        printSuccess(actions.size() + " file(s) to move");
         showPreview(actions);
         return actions;
     }
@@ -127,16 +127,16 @@ public final class FileOrganizer {
     }
 
     private static void executeIfConfirmed(List<FileMover.Action> actions, Path sourceDir) throws IOException {
-        String confirm = readInput("Appliquer ces changements? (o/N)", "n");
+        String confirm = readInput("Apply these changes? (y/N)", "n");
 
-        if (!confirm.equalsIgnoreCase("o") && !confirm.equalsIgnoreCase("oui")) {
-            printWarning("Operation annulee.");
+        if (!confirm.equalsIgnoreCase("y") && !confirm.equalsIgnoreCase("yes")) {
+            printWarning("Operation cancelled.");
             waitForEnter();
             return;
         }
 
         FileMover.CollisionStrategy strategy = promptCollisionStrategy();
-        printInfo("Application des changements...");
+        printInfo("Applying changes...");
         java.util.List<io.neatify.cli.core.UndoExecutor.Move> moves = new java.util.ArrayList<>();
         FileMover.Result result = FileMover.execute(actions, false, strategy, (src, dst) -> {
             moves.add(new io.neatify.cli.core.UndoExecutor.Move(src, dst));
@@ -144,10 +144,10 @@ public final class FileOrganizer {
         try {
             java.nio.file.Path runPath = io.neatify.cli.core.UndoExecutor.appendRun(sourceDir, strategy.name().toLowerCase(), moves);
             if (runPath != null) {
-                printInfo("Journal ecrit: " + runPath.toAbsolutePath());
+                printInfo("Journal written: " + runPath.toAbsolutePath());
             }
         } catch (IOException e) {
-            printErr("Journal d'undo non ecrit: " + e.getMessage());
+            printErr("Undo journal not written: " + e.getMessage());
         }
 
         showSummary(result);
@@ -163,8 +163,8 @@ public final class FileOrganizer {
     private record Filters(java.util.List<String> includes, java.util.List<String> excludes) {}
 
     private static Filters promptFilters() {
-        String inc = readInput("Inclure (glob, separes par ,) [Entree = aucun]", "");
-        String exc = readInput("Exclure (glob, separes par ,) [Entree = aucun]", "");
+        String inc = readInput("Include (glob, comma-separated) [Enter = none]", "");
+        String exc = readInput("Exclude (glob, comma-separated) [Enter = none]", "");
         java.util.List<String> includes = new java.util.ArrayList<>();
         java.util.List<String> excludes = new java.util.ArrayList<>();
         if (!inc.isBlank()) for (String p : inc.split(",")) { String s=p.trim(); if(!s.isEmpty()) includes.add(s); }
@@ -173,7 +173,7 @@ public final class FileOrganizer {
     }
 
     private static FileMover.CollisionStrategy promptCollisionStrategy() {
-        String s = readInput("Strategie de collision [rename|skip|overwrite]", "rename");
+        String s = readInput("Collision strategy [rename|skip|overwrite]", "rename");
         return switch (s.toLowerCase()) {
             case "skip" -> FileMover.CollisionStrategy.SKIP;
             case "overwrite" -> FileMover.CollisionStrategy.OVERWRITE;

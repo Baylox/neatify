@@ -11,28 +11,28 @@ import java.util.Objects;
 import java.util.Properties;
 
 /**
- * Gère le chargement et la validation des règles de rangement.
- * Les règles sont définies dans un fichier.properties au format : extension=DossierCible
+ * Loads and validates file-organization rules.
+ * Rules are defined in a .properties file as: extension=TargetFolder
  */
 public final class Rules {
 
     private Rules() {
-        // Classe utilitaire, pas d'instanciation
+        // Utility class, no instantiation
     }
 
     /**
-     * Retourne un ensemble de règles par défaut intégrées.
+     * Returns a set of built-in sensible default rules.
      *
-     * @return une Map immuable [extension → dossier cible] avec des règles sensées
+     * @return immutable Map [extension → target folder]
      */
     public static Map<String, String> getDefaults() {
         return Collections.unmodifiableMap(DefaultRules.create());
     }
 
     /**
-     * Charge les règles depuis un fichier.properties.
+     * Loads rules from a .properties file.
      *
-     * Format attendu :
+     * Expected format:
      * <pre>
      * jpg=Images
      * png=Images
@@ -41,39 +41,39 @@ public final class Rules {
      * mp4=Videos
      * </pre>
      *
-     * @param propertiesFile chemin vers le fichier rules.properties
-     * @return une Map immuable [extension -> dossier cible]
-     * @throws IOException si le fichier n'existe pas ou ne peut pas être lu
-     * @throws IllegalArgumentException si le format est invalide
+     * @param propertiesFile path to rules.properties
+     * @return immutable Map [extension -> target folder]
+     * @throws IOException if file does not exist or cannot be read
+     * @throws IllegalArgumentException if the format is invalid
      */
     public static Map<String, String> load(Path propertiesFile) throws IOException {
-        Objects.requireNonNull(propertiesFile, "Le chemin du fichier de règles ne peut pas être null");
+        Objects.requireNonNull(propertiesFile, "Rules file path cannot be null");
         validateFileExists(propertiesFile);
 
         Properties props = loadProperties(propertiesFile);
         Map<String, String> rules = parseRules(props);
 
         if (rules.isEmpty()) {
-            throw new IllegalArgumentException("Aucune règle valide trouvée dans le fichier : " + propertiesFile);
+            throw new IllegalArgumentException("No valid rules found in file: " + propertiesFile);
         }
 
         return Collections.unmodifiableMap(rules);
     }
 
     /**
-     * Valide que le fichier existe et est un fichier régulier.
+     * Validates that the file exists and is a regular file.
      */
     private static void validateFileExists(Path file) throws IOException {
         if (!Files.exists(file)) {
-            throw new IOException("Fichier de règles introuvable : " + file);
+            throw new IOException("Rules file not found: " + file);
         }
         if (!Files.isRegularFile(file)) {
-            throw new IllegalArgumentException("Le chemin doit pointer vers un fichier : " + file);
+            throw new IllegalArgumentException("Path must point to a regular file: " + file);
         }
     }
 
     /**
-     * Charge les propriétés depuis le fichier.
+     * Loads properties from file.
      */
     private static Properties loadProperties(Path file) throws IOException {
         Properties props = new Properties();
@@ -84,7 +84,7 @@ public final class Rules {
     }
 
     /**
-     * Parse les propriétés et construit la map de règles.
+     * Parses properties and builds the rules map.
      */
     private static Map<String, String> parseRules(Properties props) {
         Map<String, String> rules = new HashMap<>();
@@ -103,31 +103,31 @@ public final class Rules {
     }
 
     /**
-     * Valide une règle (extension + dossier).
+     * Validates a single rule (extension + folder).
      */
     private static void validateRule(String key, String value) {
         if (key.isBlank()) {
-            throw new IllegalArgumentException("Extension vide détectée dans les règles");
+            throw new IllegalArgumentException("Empty extension found in rules");
         }
         if (value.isBlank()) {
-            throw new IllegalArgumentException("Dossier cible vide pour l'extension : " + key);
+            throw new IllegalArgumentException("Empty target folder for extension: " + key);
         }
     }
 
     /**
-     * Normalise une extension (sans point, en minuscules).
+     * Normalizes an extension (no dot, lowercase).
      */
     private static String normalizeExtension(String extension) {
         return extension.trim().toLowerCase().replaceFirst("^\\.", "");
     }
 
     /**
-     * Nettoie un nom de dossier pour éviter les caractères interdits et les path traversal.
-     * Note : le slash (/) est conservé pour permettre les sous-dossiers.
+     * Sanitizes a folder name to avoid illegal characters and path traversal.
+     * Note: slash (/) is kept to allow subfolders.
      *
-     * @param folderName le nom du dossier à nettoyer
-     * @return le nom nettoyé
-     * @throws IllegalArgumentException si le chemin contient des tentatives de path traversal
+     * @param folderName folder name to sanitize
+     * @return sanitized name
+     * @throws IllegalArgumentException if the path attempts traversal
      */
     private static String sanitizeFolderName(String folderName) {
         try {
@@ -136,20 +136,20 @@ public final class Rules {
             throw new IllegalArgumentException(e.getMessage(), e);
         }
 
-        // Supprime les caractères interdits sur Windows/Linux : < > : " \ | ? *
-        // Le slash (/) est conservé pour les sous-dossiers
+        // Remove illegal characters on Windows/Linux: < > : " \ | ? *
+        // Slash (/) is kept for subfolders
         return folderName.replaceAll("[<>:\"\\\\|?*]", "_");
     }
 
     /**
-     * Trouve le dossier cible pour une extension donnée.
+     * Finds the target folder for a given extension.
      *
-     * @param rules la map de règles
-     * @param extension l'extension à chercher (sans point, minuscules)
-     * @return le dossier cible, ou null si aucune règle ne correspond
+     * @param rules rules map
+     * @param extension extension to look for (no dot, lowercase)
+     * @return target folder, or null if no rule matches
      */
     public static String getTargetFolder(Map<String, String> rules, String extension) {
-        Objects.requireNonNull(rules, "Les règles ne peuvent pas être null");
+        Objects.requireNonNull(rules, "Rules cannot be null");
 
         if (extension == null || extension.isBlank()) {
             return null;

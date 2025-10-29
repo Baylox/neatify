@@ -10,21 +10,21 @@ import java.nio.file.Paths;
 import static io.neatify.cli.ui.Display.*;
 
 /**
- * Gère la création de fichiers de règles en mode interactif.
+ * Handles creating rules files in interactive mode.
  */
 public final class RulesFileCreator {
 
     private RulesFileCreator() {
-        // Classe utilitaire
+        // Utility class
     }
 
     /**
-     * Lance le processus complet de création d'un fichier de règles.
+     * Starts the full flow to create a rules file.
      */
     public static void create() throws IOException {
-        printSection("CREER UN FICHIER DE REGLES");
+        printSection("CREATE A RULES FILE");
 
-        String filename = readInput("Nom du fichier", "custom-rules/my-rules.properties");
+        String filename = readInput("File name", "custom-rules/my-rules.properties");
         Path rulesFile = Paths.get(filename).toAbsolutePath().normalize();
 
         if (!validateSecurity(rulesFile)) return;
@@ -44,7 +44,7 @@ public final class RulesFileCreator {
         Path target = rulesFile.toAbsolutePath().normalize();
 
         if (!target.startsWith(safeDir)) {
-            printError("SECURITE : Le fichier doit etre dans le dossier custom-rules/");
+            printError("SECURITY: The file must be inside the custom-rules/ folder");
             waitForEnter();
             return false;
         }
@@ -53,7 +53,7 @@ public final class RulesFileCreator {
         try {
             PathSecurity.validateRelativeSubpath(relativeTarget.toString());
         } catch (SecurityException | IllegalArgumentException e) {
-            printError("SECURITE : " + e.getMessage());
+            printError("SECURITY: " + e.getMessage());
             waitForEnter();
             return false;
         }
@@ -63,9 +63,9 @@ public final class RulesFileCreator {
 
     private static boolean confirmOverwriteIfExists(Path rulesFile) {
         if (Files.exists(rulesFile)) {
-            String overwrite = readInput("Le fichier existe. Ecraser? (o/N)", "n");
-            if (!overwrite.equalsIgnoreCase("o") && !overwrite.equalsIgnoreCase("oui")) {
-                printWarning("Operation annulee.");
+            String overwrite = readInput("File already exists. Overwrite? (y/N)", "n");
+            if (!overwrite.equalsIgnoreCase("y") && !overwrite.equalsIgnoreCase("yes")) {
+                printWarning("Operation cancelled.");
                 waitForEnter();
                 return false;
             }
@@ -75,8 +75,8 @@ public final class RulesFileCreator {
 
     private static String generateDefaultContent() {
         return """
-            # Regles de rangement Neatify
-            # Format: extension=DossierCible
+            # Neatify organization rules
+            # Format: extension=TargetFolder
 
             # Images
             jpg=Images
@@ -107,37 +107,37 @@ public final class RulesFileCreator {
         Path parentDir = rulesFile.getParent();
         if (parentDir != null && !Files.exists(parentDir)) {
             Files.createDirectories(parentDir);
-            printInfo("Dossier créé : " + parentDir);
+            printInfo("Directory created: " + parentDir);
         }
     }
 
     private static boolean writeSecurely(Path rulesFile, String content) throws IOException {
-        // SÉCURITÉ : Vérifier les symlinks dans l'arborescence
+        // SECURITY: check for symlinks in ancestry
         try {
             PathSecurity.assertNoSymlinkInAncestry(rulesFile);
         } catch (SecurityException e) {
-            printError("SECURITE : " + e.getMessage());
+            printError("SECURITY: " + e.getMessage());
             waitForEnter();
             return false;
         }
 
-        // SÉCURITÉ : Écriture atomique avec CREATE_NEW (anti-TOCTOU)
+        // SECURITY: Atomic write via CREATE_NEW (anti-TOCTOU)
         try {
             Files.writeString(rulesFile, content,
                 java.nio.file.StandardOpenOption.CREATE_NEW);
             return true;
         } catch (java.nio.file.FileAlreadyExistsException e) {
-            // Si on arrive ici, c'est que le fichier a été créé entre-temps (race condition)
-            printError("SECURITE : Le fichier a ete cree par un autre processus");
+            // If we get here, another process created the file meanwhile (race condition)
+            printError("SECURITY: File was created by another process");
             waitForEnter();
             return false;
         }
     }
 
     private static void printSuccess(Path rulesFile) {
-        io.neatify.cli.ui.Display.printSuccess("Fichier cree: " + rulesFile.toAbsolutePath());
-        printInfo("Vous pouvez maintenant l'editer pour personnaliser les regles.");
-        printInfo("Note: Ce fichier ne sera pas versionne par Git.");
+        io.neatify.cli.ui.Display.printSuccess("File created: " + rulesFile.toAbsolutePath());
+        printInfo("You can now edit it to customize rules.");
+        printInfo("Note: This file will not be versioned by Git.");
         waitForEnter();
     }
 }

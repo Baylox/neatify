@@ -6,7 +6,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 
 /**
- * Planifie et exécute des déplacements de fichiers selon des règles.
+ * Plans and executes file moves according to rules.
  */
 public final class FileMover {
 
@@ -27,15 +27,15 @@ public final class FileMover {
         return plan(sourceRoot, rules, maxFiles, List.of(), List.of());
     }
 
-    /** Planifie en appliquant des filtres glob include/exclude sur chemins relatifs. */
+    /** Plans with include/exclude glob filters on relative paths. */
     public static List<Action> plan(Path sourceRoot, Map<String, String> rules, int maxFiles,
                                     List<String> includes, List<String> excludes) throws IOException {
-        Objects.requireNonNull(sourceRoot, "Le dossier source ne peut pas être null");
-        Objects.requireNonNull(rules, "Les règles ne peuvent pas être null");
+        Objects.requireNonNull(sourceRoot, "Source directory cannot be null");
+        Objects.requireNonNull(rules, "Rules cannot be null");
 
-        if (maxFiles <= 0) throw new IllegalArgumentException("Le quota doit être positif : " + maxFiles);
+        if (maxFiles <= 0) throw new IllegalArgumentException("Max files quota must be positive: " + maxFiles);
         if (!Files.isDirectory(sourceRoot)) {
-            throw new IllegalArgumentException("Le chemin source doit être un dossier : " + sourceRoot);
+            throw new IllegalArgumentException("Source path must be a directory: " + sourceRoot);
         }
 
         List<Action> actions = new ArrayList<>();
@@ -48,7 +48,7 @@ public final class FileMover {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
                 if (++fileCount[0] > maxFiles) {
-                    throw new IllegalStateException("Quota de fichiers dépassé : " + maxFiles);
+                    throw new IllegalStateException("File quota exceeded: " + maxFiles);
                 }
                 return processFile(file, sourceRoot, rules, actions, includeMatchers, excludeMatchers);
             }
@@ -66,7 +66,7 @@ public final class FileMover {
         if (baseName.startsWith(".")) return FileVisitResult.CONTINUE; // ignore hidden
 
         try {
-            // Filtres
+            // Filters
             Path rel = sourceRoot.relativize(file);
             if (!includes.isEmpty()) {
                 boolean ok = false;
@@ -85,7 +85,7 @@ public final class FileMover {
             try {
                 targetDir = PathSecurity.safeResolveWithin(sourceRoot, targetFolder);
             } catch (SecurityException se) {
-                System.err.println("[SECURITE] " + se.getMessage());
+                System.err.println("[SECURITY] " + se.getMessage());
                 return FileVisitResult.CONTINUE;
             }
             if (!targetDir.startsWith(sourceRoot.normalize())) return FileVisitResult.CONTINUE;
@@ -95,7 +95,7 @@ public final class FileMover {
             actions.add(new Action(file, targetFile, reason));
 
         } catch (IOException e) {
-            System.err.println("Erreur lors de la lecture de " + file + " : " + e.getMessage());
+            System.err.println("Error while reading " + file + ": " + e.getMessage());
         }
         return FileVisitResult.CONTINUE;
     }
@@ -107,7 +107,7 @@ public final class FileMover {
             if (p == null || p.isBlank()) continue;
             // principal
             list.add(base.getFileSystem().getPathMatcher("glob:" + p));
-            // compat: **/X doit aussi matcher X (zéro dossier)
+            // compatibility: **/X should also match X (zero folders)
             if (p.startsWith("**/")) {
                 String tail = p.substring(3);
                 if (!tail.isBlank()) {
@@ -123,7 +123,7 @@ public final class FileMover {
     }
 
     public static Result execute(List<Action> actions, boolean dryRun, CollisionStrategy strategy) {
-        Objects.requireNonNull(actions, "La liste d'actions ne peut pas être null");
+        Objects.requireNonNull(actions, "Action list cannot be null");
 
         int moved = 0;
         int skipped = 0;
@@ -144,14 +144,14 @@ public final class FileMover {
                 };
                 if (finalTarget == null) {
                     // Skipped due to existing target
-                    System.out.printf("[SKIPPED] %s (cible existe)%n", action.source().getFileName());
+                    System.out.printf("[SKIPPED] %s (target exists)%n", action.source().getFileName());
                     skipped++;
                 } else {
                     System.out.printf("[MOVED] %s -> %s%n", action.source().getFileName(), finalTarget);
                     moved++;
                 }
             } catch (IOException e) {
-                String msg = String.format("Echec du deplacement de %s: %s", action.source(), e.getMessage());
+                String msg = String.format("Failed to move %s: %s", action.source(), e.getMessage());
                 errors.add(msg);
                 System.err.println("[ERROR] " + msg);
                 skipped++;
@@ -164,7 +164,7 @@ public final class FileMover {
     public interface MoveListener { void onMoved(Path source, Path finalTarget); }
 
     public static Result execute(List<Action> actions, boolean dryRun, CollisionStrategy strategy, MoveListener listener) {
-        Objects.requireNonNull(actions, "La liste d'actions ne peut pas être null");
+        Objects.requireNonNull(actions, "Action list cannot be null");
 
         int moved = 0;
         int skipped = 0;
@@ -184,7 +184,7 @@ public final class FileMover {
                     case OVERWRITE -> moveOverwrite(action.source(), action.target());
                 };
                 if (finalTarget == null) {
-                    System.out.printf("[SKIPPED] %s (cible existe)%n", action.source().getFileName());
+                    System.out.printf("[SKIPPED] %s (target exists)%n", action.source().getFileName());
                     skipped++;
                 } else {
                     System.out.printf("[MOVED] %s -> %s%n", action.source().getFileName(), finalTarget);
@@ -192,7 +192,7 @@ public final class FileMover {
                     if (listener != null) listener.onMoved(action.source(), finalTarget);
                 }
             } catch (IOException e) {
-                String msg = String.format("Echec du deplacement de %s: %s", action.source(), e.getMessage());
+                String msg = String.format("Failed to move %s: %s", action.source(), e.getMessage());
                 errors.add(msg);
                 System.err.println("[ERROR] " + msg);
                 skipped++;
@@ -241,6 +241,6 @@ public final class FileMover {
                 counter++;
             }
         }
-        throw new IOException("Impossible de trouver un nom unique après " + MAX_RETRIES + " tentatives");
+        throw new IOException("Could not find a unique name after " + MAX_RETRIES + " attempts");
     }
 }

@@ -1,45 +1,45 @@
 package io.neatify.cli.util;
 
 /**
- * Utilitaire pour les codes ANSI (couleurs terminal).
- * Détection automatique du support ANSI avec possibilité de désactivation.
+ * ANSI codes utility (terminal colors).
+ * Auto-detects ANSI support with ability to disable.
  */
 public final class Ansi {
 
     private static boolean enabled = detectAnsiSupport();
 
     private Ansi() {
-        // Classe utilitaire
+        // Utility class
     }
 
     /**
-     * Détecte si le terminal supporte les codes ANSI.
-     * Vérifie les variables d'environnement et la sortie standard.
+     * Detects whether the terminal supports ANSI codes.
+     * Checks environment variables and standard output hints.
      */
     private static boolean detectAnsiSupport() {
-        // Si NO_COLOR est défini, désactiver les couleurs
+        // If NO_COLOR is set, disable colors
         if (System.getenv("NO_COLOR") != null) {
             return false;
         }
 
-        // Si TERM est défini et contient "dumb", désactiver
+        // If TERM is defined and equals "dumb", disable
         String term = System.getenv("TERM");
         if ("dumb".equals(term)) {
             return false;
         }
 
-        // Windows 10+ supporte ANSI par défaut
+        // Windows 10+ generally supports ANSI
         String os = System.getProperty("os.name").toLowerCase();
         if (os.contains("win")) {
             return true;
         }
 
-        // Sur Unix/Linux/Mac, généralement supporté
+        // On Unix/Linux/Mac, usually supported
         return term != null && !term.isEmpty();
     }
 
     /**
-     * Active ou désactive les codes ANSI.
+     * Enables or disables ANSI codes.
      */
     public static void setEnabled(boolean value) {
         enabled = value;
@@ -47,7 +47,7 @@ public final class Ansi {
 
 
     /**
-     * Applique une couleur au texte si ANSI est activé.
+     * Applies a color to text if ANSI is enabled.
      */
     private static String colorize(String text, String code) {
         if (!enabled) {
@@ -64,7 +64,7 @@ public final class Ansi {
     private static final String GREEN = "\u001B[32m";
     private static final String RED = "\u001B[31m";
 
-    // Méthodes publiques
+    // Public helpers
     public static String cyan(String text) {
         return colorize(text, CYAN);
     }

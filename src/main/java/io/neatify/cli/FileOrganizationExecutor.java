@@ -18,16 +18,16 @@ import java.util.Map;
 import static io.neatify.cli.ui.Display.*;
 
 /**
- * Exécuteur du workflow d'organisation de fichiers en mode CLI.
- * Encapsule toute la logique d'exécution : validation, planification, preview, exécution.
+ * Executes the CLI file-organization workflow.
+ * Encapsulates validation, planning, preview, and execution.
  */
 public class FileOrganizationExecutor {
 
     /**
-     * Exécute le workflow complet d'organisation de fichiers.
+     * Executes the full file-organization workflow.
      *
-     * @param config configuration CLI
-     * @throws IOException si erreur I/O durant l'exécution
+     * @param config CLI configuration
+     * @throws IOException on I/O errors during execution
      */
     public void execute(CLIConfig config) throws IOException {
         validatePaths(config);
@@ -42,7 +42,7 @@ public class FileOrganizationExecutor {
         List<FileMover.Action> actions = planActions(config, rules);
 
         if (actions.isEmpty()) {
-            printWarning("Aucun fichier a deplacer.");
+            printWarning("No files to move.");
             return;
         }
 
@@ -66,19 +66,19 @@ public class FileOrganizationExecutor {
 
     private void validateSourceDir(Path sourceDir) {
         if (!Files.exists(sourceDir)) {
-            throw new IllegalArgumentException("Dossier inexistant: " + sourceDir);
+            throw new IllegalArgumentException("Directory does not exist: " + sourceDir);
         }
         if (!Files.isDirectory(sourceDir)) {
-            throw new IllegalArgumentException("--source doit etre un dossier: " + sourceDir);
+            throw new IllegalArgumentException("--source must be a directory: " + sourceDir);
         }
     }
 
     private void validateRulesFile(Path rulesFile) {
         if (!Files.exists(rulesFile)) {
-            throw new IllegalArgumentException("Fichier inexistant: " + rulesFile);
+            throw new IllegalArgumentException("File does not exist: " + rulesFile);
         }
         if (!Files.isRegularFile(rulesFile)) {
-            throw new IllegalArgumentException("--rules doit etre un fichier: " + rulesFile);
+            throw new IllegalArgumentException("--rules must be a file: " + rulesFile);
         }
     }
 
@@ -86,7 +86,7 @@ public class FileOrganizationExecutor {
         try {
             PathSecurity.validateSourceDir(sourceDir);
         } catch (IOException e) {
-            throw new IllegalArgumentException("Erreur lors de la validation: " + e.getMessage(), e);
+            throw new IllegalArgumentException("Error during validation: " + e.getMessage(), e);
         }
     }
 
@@ -101,22 +101,22 @@ public class FileOrganizationExecutor {
 
     private Map<String, String> loadRules(CLIConfig config) throws IOException {
         if (config.isUseDefaultRules()) {
-            printInfo("Utilisation des regles par defaut integrees...");
+            printInfo("Using built-in default rules...");
             Map<String, String> rules = Rules.getDefaults();
-            printSuccess(rules.size() + " regle(s) par defaut chargee(s)");
+            printSuccess(rules.size() + " default rule(s) loaded");
             System.out.println();
             return rules;
         } else {
-            printInfo("Chargement des regles depuis: " + config.getRulesFile());
+            printInfo("Loading rules from: " + config.getRulesFile());
             Map<String, String> rules = Rules.load(config.getRulesFile());
-            printSuccess(rules.size() + " regle(s) chargee(s)");
+            printSuccess(rules.size() + " rule(s) loaded");
             System.out.println();
             return rules;
         }
     }
 
     private List<FileMover.Action> planActions(CLIConfig config, Map<String, String> rules) throws IOException {
-        printInfo("Analyse du dossier: " + config.getSourceDir());
+        printInfo("Scanning folder: " + config.getSourceDir());
         List<FileMover.Action> actions = FileMover.plan(
             config.getSourceDir(),
             rules,
@@ -124,7 +124,7 @@ public class FileOrganizationExecutor {
             config.getIncludes(),
             config.getExcludes()
         );
-        printSuccess(actions.size() + " fichier(s) a deplacer");
+        printSuccess(actions.size() + " file(s) to move");
         return actions;
     }
 
@@ -139,9 +139,9 @@ public class FileOrganizationExecutor {
 
     private FileMover.Result executeActions(CLIConfig config, List<FileMover.Action> actions) {
         if (config.isApply()) {
-            printInfo("Application des changements...");
+            printInfo("Applying changes...");
         } else {
-            printInfo("Mode DRY-RUN - Utilisez --apply pour appliquer");
+            printInfo("DRY-RUN mode - Use --apply to apply");
         }
         System.out.println();
 
@@ -154,10 +154,10 @@ public class FileOrganizationExecutor {
             try {
                 java.nio.file.Path runPath = io.neatify.cli.core.UndoExecutor.appendRun(config.getSourceDir(), config.getOnCollision(), moves);
                 if (runPath != null) {
-                    printInfo("Journal ecrit: " + runPath.toAbsolutePath());
+                    printInfo("Journal written: " + runPath.toAbsolutePath());
                 }
             } catch (java.io.IOException e) {
-                printErr("Impossible d'ecrire le journal d'undo: " + e.getMessage());
+                printErr("Unable to write undo journal: " + e.getMessage());
             }
             return res;
         } else {
@@ -170,7 +170,7 @@ public class FileOrganizationExecutor {
 
         if (!config.isApply() && result.moved() > 0) {
             System.out.println();
-            printInfo("Relancez avec --apply pour appliquer");
+            printInfo("Re-run with --apply to apply");
         }
     }
 
@@ -232,9 +232,9 @@ public class FileOrganizationExecutor {
         if (config.isUndoList()) {
             var runs = io.neatify.cli.core.UndoExecutor.listRuns(config.getSourceDir());
             if (runs.isEmpty()) {
-                printWarning("Aucune execution precedente.");
+                printWarning("No previous runs.");
             } else {
-                printSection("JOURNAUX DISPONIBLES (.neatify/runs)");
+                printSection("AVAILABLE JOURNALS (.neatify/runs)");
                 for (var m : runs) {
                     println("  - " + m.time() + " (" + m.movesCount() + " moves, collision=" + m.onCollision() + ")");
                 }
@@ -246,24 +246,24 @@ public class FileOrganizationExecutor {
             try {
                 long ts = Long.parseLong(config.getUndoRun());
                 var r = io.neatify.cli.core.UndoExecutor.undoRun(config.getSourceDir(), ts);
-                if (r == null) { printWarning("Run introuvable: " + ts); return; }
-                printSuccess("Restaures: " + r.restored() + ", ignores: " + r.skipped() + ", erreurs: " + r.errors().size());
-                if (!r.errors().isEmpty()) { printErr("Erreurs pendant l'undo:"); r.errors().forEach(e -> println("  - " + e)); }
+                if (r == null) { printWarning("Run not found: " + ts); return; }
+                printSuccess("Restored: " + r.restored() + ", skipped: " + r.skipped() + ", errors: " + r.errors().size());
+                if (!r.errors().isEmpty()) { printErr("Errors during undo:"); r.errors().forEach(e -> println("  - " + e)); }
                 return;
             } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("--undo-run necessite un timestamp numerique");
+                throw new IllegalArgumentException("--undo-run requires a numeric timestamp");
             }
         }
 
-        printInfo("Annulation de la derniere execution...");
+        printInfo("Undoing last run...");
         var r = io.neatify.cli.core.UndoExecutor.undoLast(config.getSourceDir());
         if (r == null) {
-            printWarning("Aucune execution precedente dans le journal.");
+            printWarning("No previous run found in the journal.");
             return;
         }
-        printSuccess("Restaures: " + r.restored() + ", ignores: " + r.skipped() + ", erreurs: " + r.errors().size());
+        printSuccess("Restored: " + r.restored() + ", skipped: " + r.skipped() + ", errors: " + r.errors().size());
         if (!r.errors().isEmpty()) {
-            printErr("Erreurs pendant l'undo:");
+            printErr("Errors during undo:");
             r.errors().forEach(e -> println("  - " + e));
         }
     }

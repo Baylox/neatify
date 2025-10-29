@@ -11,8 +11,8 @@ import java.io.IOException;
 import static io.neatify.cli.ui.Display.printErr;
 
 /**
- * Point d'entrée principal de Neatify.
- * Supporte deux modes : interactif (par défaut) et ligne de commande.
+ * Neatify main entry point.
+ * Supports two modes: interactive (default) and CLI.
  */
 public final class Neatify {
 
@@ -20,13 +20,13 @@ public final class Neatify {
 
     public static void main(String[] args) {
         try {
-            // Mode interactif si aucun argument
+            // Interactive mode when no arguments
             if (args.length == 0) {
                 new InteractiveCLI(VERSION).run();
                 return;
             }
 
-            // Mode ligne de commande
+            // CLI mode
             CLIConfig config = parseArguments(args);
 
             if (config.isShowHelp()) {
@@ -44,18 +44,18 @@ public final class Neatify {
                 return;
             }
 
-            // Exécution normale
+            // Normal execution
             new FileOrganizationExecutor().execute(config);
 
         } catch (IllegalArgumentException e) {
-            printErr("Erreur: " + e.getMessage());
-            System.err.println("Utilisez --help pour voir l'aide.");
+            printErr("Error: " + e.getMessage());
+            System.err.println("Use --help to see usage.");
             System.exit(1);
         } catch (IOException e) {
-            printErr("Erreur I/O: " + e.getMessage());
+            printErr("I/O Error: " + e.getMessage());
             System.exit(1);
         } catch (Exception e) {
-            printErr("Erreur inattendue: " + e.getMessage());
+            printErr("Unexpected error: " + e.getMessage());
             System.exit(1);
         }
     }

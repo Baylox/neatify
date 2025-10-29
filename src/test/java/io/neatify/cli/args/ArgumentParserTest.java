@@ -23,12 +23,12 @@ class ArgumentParserTest {
 
     @Test
     void testParse_MissingRequiredArguments() {
-        String[] args = {"--source", "/tmp/source"}; // Manque --rules
+        String[] args = {"--source", "/tmp/source"}; // Missing --rules
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
             () -> parser.parse(args));
 
-        assertTrue(exception.getMessage().contains("--rules est obligatoire"));
+        assertTrue(exception.getMessage().contains("--rules is required"));
     }
 
     @Test
@@ -47,7 +47,7 @@ class ArgumentParserTest {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
             () -> parser.parse(args));
 
-        assertTrue(exception.getMessage().contains("Argument inconnu"));
+        assertTrue(exception.getMessage().contains("Unknown argument"));
     }
 
     @Test
@@ -57,7 +57,7 @@ class ArgumentParserTest {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
             () -> parser.parse(args));
 
-        assertTrue(exception.getMessage().contains("necessite un nombre"));
+        assertTrue(exception.getMessage().contains("requires a number"));
     }
 
     @Test
@@ -67,7 +67,7 @@ class ArgumentParserTest {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
             () -> parser.parse(args));
 
-        assertTrue(exception.getMessage().contains("alpha, ext ou size"));
+        assertTrue(exception.getMessage().contains("alpha, ext or size"));
     }
 
     @Test

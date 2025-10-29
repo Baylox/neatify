@@ -8,7 +8,7 @@ import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Gestion du journal et de l'annulation des operations. */
+/** Handles journaling and undoing operations. */
 public final class UndoExecutor {
 
     private UndoExecutor() {}
@@ -60,12 +60,12 @@ public final class UndoExecutor {
         } catch (IOException ignored) {}
     }
 
-    // ===== Nouveau stockage par run (.neatify/runs/<timestamp>.json) =====
+    // ===== New per-run storage (.neatify/runs/<timestamp>.json) =====
 
     public static UndoResult undoLast(Path sourceRoot) throws IOException {
         UndoResult v2 = undoLastV2(sourceRoot);
         if (v2 != null) return v2;
-        // Fallback legacy manifest.json (pour compat)
+        // Fallback to legacy manifest.json (compatibility)
         return undoLastFromLegacyManifest(sourceRoot);
     }
 

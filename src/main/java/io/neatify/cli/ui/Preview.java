@@ -11,18 +11,18 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Utilitaire pour generer et afficher l'apercu des changements.
+ * Utility to generate and display a preview of planned changes.
  */
 public final class Preview {
 
-    /** Options de tri pour l'affichage. */
+    /** Sorting options for display. */
     public enum SortMode {
-        ALPHA,   // Alphabetique
-        EXT,     // Par extension
-        SIZE     // Par taille (necessite metadonnees supplementaires)
+        ALPHA,   // Alphabetical
+        EXT,     // By extension
+        SIZE     // By size (best-effort metadata)
     }
 
-    /** Configuration du rendu. */
+    /** Rendering configuration. */
     public static class Config {
         public int maxFilesPerFolder = 5;
         public SortMode sortMode = SortMode.ALPHA;
@@ -33,44 +33,44 @@ public final class Preview {
         public Config showDuplicates(boolean value) { this.showDuplicates = value; return this; }
     }
 
-    /** Element de fichier avec metadonnees pour l'affichage. */
+    /** File entry with metadata for display. */
     private record FileEntry(String name, String extension, int count, long totalBytes) {}
 
-    /** Groupe de fichiers par dossier. */
+    /** Group of files per folder. */
     private record FolderGroup(String folderName, List<FileEntry> files) {}
 
     private Preview() { }
 
-    // ============ API Publique ============
+    // ============ Public API ============
 
-    /** Affiche l'apercu des actions avec configuration personnalisee. */
+    /** Prints the preview for actions with a custom configuration. */
     public static void print(List<FileMover.Action> actions, Config config) {
         render(actions, config).forEach(System.out::println);
     }
 
     /**
-     * Genere l'apercu formate des changements (pour tests ou usage avance).
-     * @param actions liste des actions planifiees
-     * @param config configuration du rendu
-     * @return lignes a afficher
+     * Generates a formatted preview of changes (for tests or advanced usage).
+     * @param actions planned actions
+     * @param config rendering configuration
+     * @return lines to display
      */
     public static List<String> render(List<FileMover.Action> actions, Config config) {
         if (actions.isEmpty()) {
             return List.of();
         }
 
-        // Grouper par dossier de destination
+        // Group by destination folder
         Map<String, List<FileMover.Action>> byFolder = groupByFolder(actions);
 
-        // Convertir en FolderGroup avec comptage des duplicatas
+        // Convert to FolderGroup with duplicate counting
         List<FolderGroup> groups = byFolder.entrySet().stream()
             .map(entry -> createFolderGroup(entry.getKey(), entry.getValue(), config))
             .toList();
 
-        // Generer les lignes de sortie
+        // Generate output lines
         List<String> lines = new ArrayList<>();
         lines.add("");
-        lines.add(formatSection("APERCU DES CHANGEMENTS"));
+        lines.add(formatSection("CHANGES PREVIEW"));
 
         for (FolderGroup group : groups) {
             lines.addAll(renderFolderGroup(group, config));
@@ -83,22 +83,22 @@ public final class Preview {
         return lines;
     }
 
-    // ============ Logique interne ============
+    // ============ Internal logic ============
 
-    /** Groupe les actions par dossier de destination. */
+    /** Groups actions by destination folder. */
     private static Map<String, List<FileMover.Action>> groupByFolder(List<FileMover.Action> actions) {
         Map<String, List<FileMover.Action>> grouped = new LinkedHashMap<>();
         for (FileMover.Action action : actions) {
             Path parent = action.target().getParent();
-            String folderName = parent != null ? parent.getFileName().toString() : "(racine)";
+            String folderName = parent != null ? parent.getFileName().toString() : "(root)";
             grouped.computeIfAbsent(folderName, k -> new ArrayList<>()).add(action);
         }
         return grouped;
     }
 
-    /** Cree un FolderGroup avec comptage des duplicatas. */
+    /** Creates a FolderGroup with duplicate counting. */
     private static FolderGroup createFolderGroup(String folderName, List<FileMover.Action> actions, Config config) {
-        // regrouper par nom de fichier
+        // group by file name
         Map<String, List<FileMover.Action>> byName = actions.stream()
             .collect(Collectors.groupingBy(a -> a.source().getFileName().toString(), LinkedHashMap::new, Collectors.toList()));
 
@@ -118,7 +118,7 @@ public final class Preview {
         return new FolderGroup(folderName, sorted);
     }
 
-    /** Trie les entrees selon le mode demande. */
+    /** Sorts entries according to requested mode. */
     private static List<FileEntry> sortEntries(List<FileEntry> entries, SortMode mode) {
         return switch (mode) {
             case ALPHA -> entries.stream()
@@ -133,12 +133,12 @@ public final class Preview {
         };
     }
 
-    /** Genere les lignes pour un groupe de dossier. */
+    /** Generates lines for a folder group. */
     private static List<String> renderFolderGroup(FolderGroup group, Config config) {
         List<String> lines = new ArrayList<>();
 
         int totalFiles = group.files.stream().mapToInt(FileEntry::count).sum();
-        String header = String.format("\n%s %s/  (%d fichier%s)",
+        String header = String.format("\n%s %s/  (%d file%s)",
             Ansi.cyan(AsciiSymbols.arrow()),
             Ansi.cyan(group.folderName),
             totalFiles,
@@ -154,13 +154,13 @@ public final class Preview {
 
         if (group.files.size() > maxShow) {
             int remaining = group.files.size() - maxShow;
-            lines.add(Ansi.dim(String.format("  %s %d autre(s)...", AsciiSymbols.plus(), remaining)));
+            lines.add(Ansi.dim(String.format("  %s %d more...", AsciiSymbols.plus(), remaining)));
         }
 
         return lines;
     }
 
-    /** Formate une entree de fichier. */
+    /** Formats a file entry. */
     private static String formatFileEntry(FileEntry entry, boolean showDuplicates) {
         StringBuilder sb = new StringBuilder();
         sb.append("  ").append(Ansi.dim(AsciiSymbols.bullet())).append(" ");
@@ -171,13 +171,13 @@ public final class Preview {
         return sb.toString();
     }
 
-    /** Formate la section header. */
+    /** Formats the section header. */
     private static String formatSection(String title) {
         String line = Display.line();
         return line + "\n" + Display.center(title) + "\n" + line;
     }
 
-    /** Formate la barre de progression (100% apres planification). */
+    /** Formats the progress bar (100% after planning). */
     private static String formatProgressBar(int fileCount) {
         int percentage = 100;
         int width = 40;

@@ -4,7 +4,7 @@ import io.neatify.cli.ui.Display;
 import io.neatify.core.FileMover;
 
 /**
- * Helper pour afficher le résumé d'exécution.
+ * Helper to print the execution summary.
  */
 public final class ResultPrinter {
 
@@ -20,7 +20,7 @@ public final class ResultPrinter {
         );
 
         if (!result.errors().isEmpty()) {
-            Display.printErr("Details des erreurs:");
+            Display.printErr("Error details:");
             result.errors().forEach(err -> Display.println("  - " + err));
         }
     }
