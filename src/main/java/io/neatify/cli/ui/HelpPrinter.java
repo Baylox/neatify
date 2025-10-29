@@ -1,6 +1,6 @@
 package io.neatify.cli.ui;
 
-import static io.neatify.cli.ui.ConsoleUI.printLine;
+import static io.neatify.cli.ui.Display.printLine;
 
 /**
  * Affiche l'aide de l'application.

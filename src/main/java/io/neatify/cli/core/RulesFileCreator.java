@@ -7,7 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import static io.neatify.cli.ui.ConsoleUI.*;
+import static io.neatify.cli.ui.Display.*;
 
 /**
  * Gère la création de fichiers de règles en mode interactif.
@@ -135,7 +135,7 @@ public final class RulesFileCreator {
     }
 
     private static void printSuccess(Path rulesFile) {
-        io.neatify.cli.ui.ConsoleUI.printSuccess("Fichier cree: " + rulesFile.toAbsolutePath());
+        io.neatify.cli.ui.Display.printSuccess("Fichier cree: " + rulesFile.toAbsolutePath());
         printInfo("Vous pouvez maintenant l'editer pour personnaliser les regles.");
         printInfo("Note: Ce fichier ne sera pas versionne par Git.");
         waitForEnter();
