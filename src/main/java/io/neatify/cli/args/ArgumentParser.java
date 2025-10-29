@@ -73,6 +73,7 @@ public class ArgumentParser {
         map.put("--on-collision", this::parseCollision);
         map.put("--include", this::parseInclude);
         map.put("--exclude", this::parseExclude);
+        map.put("--max-files", this::parseMaxFiles);
 
         return map;
     }
@@ -94,6 +95,18 @@ public class ArgumentParser {
             return i + 1;
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("--per-folder-preview requires a number");
+        }
+    }
+
+    private int parseMaxFiles(int i) {
+        requireNextArgument(i, "--max-files");
+        try {
+            int value = Integer.parseInt(args[i + 1]);
+            if (value <= 0) throw new IllegalArgumentException("--max-files must be positive");
+            config.setMaxFiles(value);
+            return i + 1;
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("--max-files requires a number");
         }
     }
 

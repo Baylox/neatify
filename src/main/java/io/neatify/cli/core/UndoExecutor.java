@@ -1,6 +1,8 @@
 package io.neatify.cli.core;
 
 import io.neatify.core.PathSecurity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -10,6 +12,8 @@ import java.util.List;
 
 /** Handles journaling and undoing operations. */
 public final class UndoExecutor {
+
+    private static final Logger logger = LoggerFactory.getLogger(UndoExecutor.class);
 
     private UndoExecutor() {}
 
@@ -43,8 +47,7 @@ public final class UndoExecutor {
               .append('}');
             if (i < moves.size() - 1) sb.append(',');
         }
-        sb.append("]}");
-        sb.append('}');
+        sb.append(']').append('}');
 
         Files.writeString(runFile, sb.toString(), StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW);
         return runFile;
@@ -57,7 +60,9 @@ public final class UndoExecutor {
                 Files.createDirectories(gi.getParent());
                 Files.writeString(gi, "*\n!.gitignore\n", StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW);
             }
-        } catch (IOException ignored) {}
+        } catch (IOException e) {
+            logger.warn("Failed to create .gitignore file in .neatify directory: {}", e.getMessage());
+        }
     }
 
     // ===== New per-run storage (.neatify/runs/<timestamp>.json) =====
@@ -91,11 +96,11 @@ public final class UndoExecutor {
              .forEach(p -> {
                  try {
                      String c = Files.readString(p, StandardCharsets.UTF_8);
-                     long t = extractLong(c, "time");
-                     String oc = extract(c, "onCollision");
-                     int mc = countMoves(c);
-                     metas.add(new RunMeta(t, oc, mc, p));
-                 } catch (Exception ignored) { }
+                     RunDoc rd = parseRun(c);
+                     if (rd != null) metas.add(new RunMeta(rd.time, rd.onCollision, rd.moves.size(), p));
+                 } catch (Exception e) {
+                     logger.debug("Failed to parse run file {}: {}", p, e.getMessage());
+                 }
              });
         }
         return metas;
@@ -109,13 +114,9 @@ public final class UndoExecutor {
 
     private static UndoResult undoRunFile(Path sourceRoot, Path runFile) throws IOException {
         String content = Files.readString(runFile, StandardCharsets.UTF_8).trim();
-        int ms = content.indexOf("\"moves\"");
-        if (ms < 0) return null;
-        int arrStart = content.indexOf('[', ms);
-        int arrEnd = content.indexOf(']', arrStart);
-        if (arrStart < 0 || arrEnd < 0) return null;
-        String movesArr = content.substring(arrStart + 1, arrEnd).trim();
-        List<Move> moves = parseMoves(movesArr);
+        RunDoc rd = parseRun(content);
+        if (rd == null) return null;
+        List<Move> moves = rd.moves;
 
         int restored = 0, skipped = 0; List<String> errors = new ArrayList<>();
         Path normalizedRoot = sourceRoot.toAbsolutePath().normalize();
@@ -135,7 +136,11 @@ public final class UndoExecutor {
             } catch (IOException e) { skipped++; errors.add(e.getMessage()); }
         }
 
-        try { Files.deleteIfExists(runFile); } catch (IOException ignored) {}
+        try {
+            Files.deleteIfExists(runFile);
+        } catch (IOException e) {
+            logger.warn("Failed to delete run file after undo {}: {}", runFile, e.getMessage());
+        }
         return new UndoResult(restored, skipped, errors);
     }
 
@@ -235,5 +240,25 @@ public final class UndoExecutor {
 
     private static String escape(String s) {
         return s.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+
+    // Minimal JSON handling for fixed run schema
+    private static final class RunDoc {
+        final long time; final String onCollision; final List<Move> moves;
+        RunDoc(long t, String oc, List<Move> m) { this.time=t; this.onCollision=oc; this.moves=m; }
+    }
+
+    private static RunDoc parseRun(String json) {
+        if (json == null) return null;
+        long t = extractLong(json, "time");
+        String oc = extract(json, "onCollision");
+        int ms = json.indexOf("\"moves\"");
+        if (ms < 0) return null;
+        int arrStart = json.indexOf('[', ms);
+        int arrEnd = json.indexOf(']', arrStart);
+        if (arrStart < 0 || arrEnd < 0) return null;
+        String movesArr = json.substring(arrStart + 1, arrEnd).trim();
+        List<Move> moves = parseMoves(movesArr);
+        return new RunDoc(t, oc, moves);
     }
 }

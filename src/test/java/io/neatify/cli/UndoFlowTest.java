@@ -35,7 +35,7 @@ class UndoFlowTest {
             assertTrue(Files.exists(src.resolve("Documents").resolve("doc1.pdf")));
             assertTrue(Files.exists(src.resolve("Images").resolve("img1.jpg"))
                     || Files.exists(src.resolve("Images").resolve("img1.JPG")));
-            assertTrue(Files.exists(src.resolve("Musique").resolve("song.mp3")));
+            assertTrue(Files.exists(src.resolve("Music").resolve("song.mp3")));
 
             // There should be at least one run file
             Path runs = src.resolve(".neatify").resolve("runs");

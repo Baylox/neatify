@@ -58,7 +58,7 @@ class PathSecurityTest {
         SecurityException exception = assertThrows(SecurityException.class,
             () -> PathSecurity.safeResolveWithin(tempDir, "../../etc/passwd"));
 
-        assertTrue(exception.getMessage().contains("Path traversal interdit"));
+        assertTrue(exception.getMessage().contains("Path traversal not allowed"));
     }
 
     @Test

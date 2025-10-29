@@ -34,6 +34,7 @@ public final class HelpPrinter {
         System.out.println("  --apply, -a                 Apply changes (otherwise dry-run)");
         System.out.println("  --json                      JSON output (preview + result)");
         System.out.println("  --on-collision <mode>       Collision: rename (default), skip, overwrite");
+        System.out.println("  --max-files <n>             Max files to scan (default: 100000)");
         System.out.println("  --include <glob>            Include (repeatable), e.g. **/*.pdf");
         System.out.println("  --exclude <glob>            Exclude (repeatable), e.g. **/node_modules/**");
         System.out.println("  --help, -h                  Show this help");

@@ -27,6 +27,7 @@ public class CLIConfig {
     // Output and execution
     private boolean json = false;
     private String onCollision = "rename"; // rename | skip | overwrite
+    private int maxFiles = 100_000;
 
     // Filters
     private java.util.List<String> includes = new java.util.ArrayList<>();
@@ -49,6 +50,7 @@ public class CLIConfig {
     public String getSortMode() { return sortMode; }
     public boolean isJson() { return json; }
     public String getOnCollision() { return onCollision; }
+    public int getMaxFiles() { return maxFiles; }
     public java.util.List<String> getIncludes() { return includes; }
     public java.util.List<String> getExcludes() { return excludes; }
 
@@ -69,6 +71,7 @@ public class CLIConfig {
     void setSortMode(String sortMode) { this.sortMode = sortMode; }
     void setJson(boolean json) { this.json = json; }
     void setOnCollision(String onCollision) { this.onCollision = onCollision; }
+    void setMaxFiles(int maxFiles) { this.maxFiles = maxFiles; }
     void addInclude(String pattern) { this.includes.add(pattern); }
     void addExclude(String pattern) { this.excludes.add(pattern); }
 

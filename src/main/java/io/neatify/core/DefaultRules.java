@@ -24,14 +24,14 @@ final class DefaultRules {
         addRules(rules, "Archives", "zip", "rar", "7z", "tar", "gz", "bz2");
 
         addRules(rules, "Videos", "mp4", "avi", "mkv", "mov", "wmv", "flv", "webm");
-        addRules(rules, "Musique", "mp3", "wav", "flac", "aac", "ogg", "m4a");
+        addRules(rules, "Music", "mp3", "wav", "flac", "aac", "ogg", "m4a");
 
         addRules(rules, "Code", "java", "py", "js", "ts", "cpp", "c", "h", "cs", "go",
                  "rs", "php", "rb", "html", "css", "json", "xml", "yaml", "yml");
 
         addRules(rules, "Executables", "exe", "msi", "dmg", "pkg", "deb", "rpm");
 
-        rules.put("iso", "Images_Disque");
+        rules.put("iso", "DiskImages");
         rules.put("torrent", "Torrents");
 
         return rules;

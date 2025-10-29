@@ -40,7 +40,7 @@ class FileMoverQuotaTest extends FileMoverSecurityTestBase {
         IllegalStateException exception = assertThrows(IllegalStateException.class,
             () -> FileMover.plan(tempDir, rules, 10));
 
-        assertTrue(exception.getMessage().contains("Quota de fichiers dépassé"));
+        assertTrue(exception.getMessage().contains("File quota exceeded"));
         assertTrue(exception.getMessage().contains("10"));
     }
 
@@ -65,7 +65,7 @@ class FileMoverQuotaTest extends FileMoverSecurityTestBase {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
             () -> FileMover.plan(tempDir, rules, -1));
 
-        assertTrue(exception.getMessage().contains("quota"));
-        assertTrue(exception.getMessage().contains("positif"));
+        assertTrue(exception.getMessage().toLowerCase().contains("quota"));
+        assertTrue(exception.getMessage().toLowerCase().contains("positive"));
     }
 }

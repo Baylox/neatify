@@ -1,5 +1,8 @@
 package io.neatify.core;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -10,6 +13,7 @@ import java.util.*;
  */
 public final class FileMover {
 
+    private static final Logger logger = LoggerFactory.getLogger(FileMover.class);
     private static final int DEFAULT_MAX_FILES = 100_000; // Anti-DoS
 
     public enum CollisionStrategy { RENAME, SKIP, OVERWRITE }
@@ -85,7 +89,7 @@ public final class FileMover {
             try {
                 targetDir = PathSecurity.safeResolveWithin(sourceRoot, targetFolder);
             } catch (SecurityException se) {
-                System.err.println("[SECURITY] " + se.getMessage());
+                logger.warn("Security violation detected: {}", se.getMessage());
                 return FileVisitResult.CONTINUE;
             }
             if (!targetDir.startsWith(sourceRoot.normalize())) return FileVisitResult.CONTINUE;
@@ -95,7 +99,7 @@ public final class FileMover {
             actions.add(new Action(file, targetFile, reason));
 
         } catch (IOException e) {
-            System.err.println("Error while reading " + file + ": " + e.getMessage());
+            logger.error("Error while reading file {}: {}", file, e.getMessage(), e);
         }
         return FileVisitResult.CONTINUE;
     }
@@ -131,7 +135,7 @@ public final class FileMover {
 
         for (Action action : actions) {
             if (dryRun) {
-                System.out.printf("[DRY-RUN] %s -> %s (%s)%n", action.source(), action.target(), action.reason());
+                logger.info("[DRY-RUN] {} -> {} ({})", action.source(), action.target(), action.reason());
                 moved++;
                 continue;
             }
@@ -144,16 +148,16 @@ public final class FileMover {
                 };
                 if (finalTarget == null) {
                     // Skipped due to existing target
-                    System.out.printf("[SKIPPED] %s (target exists)%n", action.source().getFileName());
+                    logger.info("[SKIPPED] {} (target exists)", action.source().getFileName());
                     skipped++;
                 } else {
-                    System.out.printf("[MOVED] %s -> %s%n", action.source().getFileName(), finalTarget);
+                    logger.info("[MOVED] {} -> {}", action.source().getFileName(), finalTarget);
                     moved++;
                 }
             } catch (IOException e) {
                 String msg = String.format("Failed to move %s: %s", action.source(), e.getMessage());
                 errors.add(msg);
-                System.err.println("[ERROR] " + msg);
+                logger.error("Failed to move file: {}", msg, e);
                 skipped++;
             }
         }
@@ -172,7 +176,7 @@ public final class FileMover {
 
         for (Action action : actions) {
             if (dryRun) {
-                System.out.printf("[DRY-RUN] %s -> %s (%s)%n", action.source(), action.target(), action.reason());
+                logger.info("[DRY-RUN] {} -> {} ({})", action.source(), action.target(), action.reason());
                 moved++;
                 continue;
             }
@@ -184,17 +188,17 @@ public final class FileMover {
                     case OVERWRITE -> moveOverwrite(action.source(), action.target());
                 };
                 if (finalTarget == null) {
-                    System.out.printf("[SKIPPED] %s (target exists)%n", action.source().getFileName());
+                    logger.info("[SKIPPED] {} (target exists)", action.source().getFileName());
                     skipped++;
                 } else {
-                    System.out.printf("[MOVED] %s -> %s%n", action.source().getFileName(), finalTarget);
+                    logger.info("[MOVED] {} -> {}", action.source().getFileName(), finalTarget);
                     moved++;
                     if (listener != null) listener.onMoved(action.source(), finalTarget);
                 }
             } catch (IOException e) {
                 String msg = String.format("Failed to move %s: %s", action.source(), e.getMessage());
                 errors.add(msg);
-                System.err.println("[ERROR] " + msg);
+                logger.error("Failed to move file: {}", msg, e);
                 skipped++;
             }
         }

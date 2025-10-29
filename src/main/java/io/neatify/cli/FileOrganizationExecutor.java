@@ -8,6 +8,8 @@ import io.neatify.cli.util.ResultPrinter;
 import io.neatify.core.FileMover;
 import io.neatify.core.PathSecurity;
 import io.neatify.core.Rules;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -22,6 +24,8 @@ import static io.neatify.cli.ui.Display.*;
  * Encapsulates validation, planning, preview, and execution.
  */
 public class FileOrganizationExecutor {
+
+    private static final Logger logger = LoggerFactory.getLogger(FileOrganizationExecutor.class);
 
     /**
      * Executes the full file-organization workflow.
@@ -86,6 +90,7 @@ public class FileOrganizationExecutor {
         try {
             PathSecurity.validateSourceDir(sourceDir);
         } catch (IOException e) {
+            logger.error("Security validation failed for source directory: {}", e.getMessage(), e);
             throw new IllegalArgumentException("Error during validation: " + e.getMessage(), e);
         }
     }
@@ -120,7 +125,7 @@ public class FileOrganizationExecutor {
         List<FileMover.Action> actions = FileMover.plan(
             config.getSourceDir(),
             rules,
-            100_000,
+            config.getMaxFiles(),
             config.getIncludes(),
             config.getExcludes()
         );
@@ -157,6 +162,7 @@ public class FileOrganizationExecutor {
                     printInfo("Journal written: " + runPath.toAbsolutePath());
                 }
             } catch (java.io.IOException e) {
+                logger.error("Failed to write undo journal: {}", e.getMessage(), e);
                 printErr("Unable to write undo journal: " + e.getMessage());
             }
             return res;

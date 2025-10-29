@@ -28,7 +28,7 @@ class RulesSecurityTest {
             "Le chargement devrait échouer avec path traversal contenant '..'"
         );
 
-        assertTrue(exception.getMessage().contains("Path traversal interdit"));
+        assertTrue(exception.getMessage().contains("Path traversal not allowed"));
     }
 
     @Test
@@ -41,7 +41,7 @@ class RulesSecurityTest {
             () -> Rules.load(rulesFile)
         );
 
-        assertTrue(exception.getMessage().contains("Path traversal interdit"));
+        assertTrue(exception.getMessage().contains("Path traversal not allowed"));
     }
 
     @Test
@@ -55,7 +55,7 @@ class RulesSecurityTest {
             "Le path traversal devrait être bloqué même mélangé avec un chemin valide"
         );
 
-        assertTrue(exception.getMessage().contains("Path traversal interdit"));
+        assertTrue(exception.getMessage().contains("Path traversal not allowed"));
     }
 
     @Test
@@ -69,7 +69,7 @@ class RulesSecurityTest {
             "Le path traversal à la fin devrait être bloqué"
         );
 
-        assertTrue(exception.getMessage().contains("Path traversal interdit"));
+        assertTrue(exception.getMessage().contains("Path traversal not allowed"));
     }
 
     @Test
@@ -83,7 +83,7 @@ class RulesSecurityTest {
             "Les chemins absolus Unix devraient être bloqués"
         );
 
-        assertTrue(exception.getMessage().contains("Chemin absolu Unix interdit"));
+        assertTrue(exception.getMessage().contains("Absolute Unix path not allowed"));
     }
 
     @Test
@@ -96,7 +96,7 @@ class RulesSecurityTest {
             () -> Rules.load(rulesFile)
         );
 
-        assertTrue(exception.getMessage().contains("Chemin absolu Unix interdit"));
+        assertTrue(exception.getMessage().contains("Absolute Unix path not allowed"));
     }
 
     @Test
@@ -110,7 +110,7 @@ class RulesSecurityTest {
             "Les chemins absolus Windows devraient être bloqués"
         );
 
-        assertTrue(exception.getMessage().contains("Chemin absolu Windows interdit"));
+        assertTrue(exception.getMessage().contains("Absolute Windows path not allowed"));
     }
 
     @Test
@@ -123,7 +123,7 @@ class RulesSecurityTest {
             () -> Rules.load(rulesFile)
         );
 
-        assertTrue(exception.getMessage().contains("Chemin absolu Windows interdit"));
+        assertTrue(exception.getMessage().contains("Absolute Windows path not allowed"));
     }
 
     @Test
