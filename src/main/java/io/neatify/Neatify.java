@@ -8,7 +8,7 @@ import io.neatify.cli.ui.InteractiveCLI;
 
 import java.io.IOException;
 
-import static io.neatify.cli.ui.ConsoleUI.printError;
+import static io.neatify.cli.ui.Display.printErr;
 
 /**
  * Point d'entrée principal de Neatify.
@@ -48,14 +48,14 @@ public final class Neatify {
             new FileOrganizationExecutor().execute(config);
 
         } catch (IllegalArgumentException e) {
-            printError("Erreur: " + e.getMessage());
+            printErr("Erreur: " + e.getMessage());
             System.err.println("Utilisez --help pour voir l'aide.");
             System.exit(1);
         } catch (IOException e) {
-            printError("Erreur I/O: " + e.getMessage());
+            printErr("Erreur I/O: " + e.getMessage());
             System.exit(1);
         } catch (Exception e) {
-            printError("Erreur inattendue: " + e.getMessage());
+            printErr("Erreur inattendue: " + e.getMessage());
             System.exit(1);
         }
     }

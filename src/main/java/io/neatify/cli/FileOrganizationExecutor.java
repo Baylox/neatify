@@ -1,10 +1,9 @@
 package io.neatify.cli;
 
 import io.neatify.cli.args.CLIConfig;
+import io.neatify.cli.ui.Preview;
 import io.neatify.cli.util.Ansi;
 import io.neatify.cli.util.AsciiSymbols;
-import io.neatify.cli.util.PreviewPrinter;
-import io.neatify.cli.util.PreviewRenderer;
 import io.neatify.cli.util.ResultPrinter;
 import io.neatify.core.FileMover;
 import io.neatify.core.PathSecurity;
@@ -16,7 +15,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
-import static io.neatify.cli.ui.ConsoleUI.*;
+import static io.neatify.cli.ui.Display.*;
 
 /**
  * Exécuteur du workflow d'organisation de fichiers en mode CLI.
@@ -104,12 +103,12 @@ public class FileOrganizationExecutor {
     }
 
     private void showPreview(CLIConfig config, List<FileMover.Action> actions) {
-        PreviewRenderer.Config rendererConfig = new PreviewRenderer.Config()
+        Preview.Config rendererConfig = new Preview.Config()
             .maxFilesPerFolder(config.getPerFolderPreview())
             .sortMode(parseSortMode(config.getSortMode()))
             .showDuplicates(true);
 
-        PreviewPrinter.print(actions, rendererConfig);
+        Preview.print(actions, rendererConfig);
     }
 
     private FileMover.Result executeActions(CLIConfig config, List<FileMover.Action> actions) {
@@ -132,11 +131,11 @@ public class FileOrganizationExecutor {
         }
     }
 
-    private PreviewRenderer.SortMode parseSortMode(String mode) {
+    private Preview.SortMode parseSortMode(String mode) {
         return switch (mode.toLowerCase()) {
-            case "ext" -> PreviewRenderer.SortMode.EXT;
-            case "size" -> PreviewRenderer.SortMode.SIZE;
-            default -> PreviewRenderer.SortMode.ALPHA;
+            case "ext" -> Preview.SortMode.EXT;
+            case "size" -> Preview.SortMode.SIZE;
+            default -> Preview.SortMode.ALPHA;
         };
     }
 }

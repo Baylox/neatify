@@ -1,7 +1,6 @@
 package io.neatify.cli.core;
 
-import io.neatify.cli.util.PreviewPrinter;
-import io.neatify.cli.util.PreviewRenderer;
+import io.neatify.cli.ui.Preview;
 import io.neatify.cli.util.ResultPrinter;
 import io.neatify.core.FileMover;
 import io.neatify.core.PathSecurity;
@@ -14,7 +13,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
-import static io.neatify.cli.ui.ConsoleUI.*;
+import static io.neatify.cli.ui.Display.*;
 
 /**
  * Gère la logique d'organisation des fichiers en mode interactif.
@@ -111,12 +110,12 @@ public final class FileOrganizer {
     }
 
     private static void showPreview(List<FileMover.Action> actions) {
-        PreviewRenderer.Config config = new PreviewRenderer.Config()
+        Preview.Config config = new Preview.Config()
             .maxFilesPerFolder(5)
-            .sortMode(PreviewRenderer.SortMode.ALPHA)
+            .sortMode(Preview.SortMode.ALPHA)
             .showDuplicates(true);
 
-        PreviewPrinter.print(actions, config);
+        Preview.print(actions, config);
     }
 
     private static void executeIfConfirmed(List<FileMover.Action> actions) throws IOException {
