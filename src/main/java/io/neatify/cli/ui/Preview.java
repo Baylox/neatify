@@ -162,8 +162,8 @@ public final class Preview {
 
     /** Formate la section header. */
     private static String formatSection(String title) {
-        String line = "================================================";
-        return line + "\n" + title + "\n" + line;
+        String line = Display.line();
+        return line + "\n" + Display.center(title) + "\n" + line;
     }
 
     /** Formate la barre de progression (100% apres planification). */
@@ -178,4 +178,3 @@ public final class Preview {
         return bar.toString();
     }
 }
-

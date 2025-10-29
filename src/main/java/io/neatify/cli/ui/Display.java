@@ -10,6 +10,7 @@ import java.util.Scanner;
  */
 public final class Display {
 
+    public static final int LINE_WIDTH = 63;
     private static final Scanner scanner = new Scanner(System.in);
 
     private Display() {
@@ -54,22 +55,35 @@ public final class Display {
 
     // ============ Structure ============
 
-    public static void printLine() {
-        println("================================================");
+    public static void printLine() { println(line()); }
+
+    public static String line() {
+        return "=".repeat(LINE_WIDTH);
     }
 
     public static void printSection(String title) {
+        printSectionCentered(title);
+    }
+
+    public static void printSectionCentered(String title) {
         println();
         printLine();
-        println(title);
+        println(center(title));
         printLine();
+    }
+
+    public static String center(String text) {
+        if (text == null) return "";
+        String trimmed = text.trim();
+        int width = Math.max(1, LINE_WIDTH);
+        int padding = Math.max(0, (width - trimmed.length()) / 2);
+        return " ".repeat(padding) + trimmed;
     }
 
     // ============ Banniere ============
 
     public static void printBanner(AppInfo appInfo) {
         println();
-        printLine();
         if (io.neatify.cli.util.AsciiSymbols.useUnicode()) {
             println("    ███╗   ██╗███████╗ █████╗ ████████╗██╗███████╗██╗   ██╗");
             println("    ████╗  ██║██╔════╝██╔══██╗╚══██╔══╝██║██╔════╝╚██╗ ██╔╝");
@@ -83,11 +97,12 @@ public final class Display {
             println();
         } else {
             // ASCII fallback
-            println(appInfo.name() + " - v" + appInfo.version());
-            println(appInfo.description());
+            println(center(appInfo.name() + " - v" + appInfo.version()));
+            println(center(appInfo.description()));
+            println();
         }
-        println("-- " + signature() + " --");
-        printLine();
+        println("    -- " + signature() + " --");
+        println();
     }
 
     private static String signature() {
@@ -113,14 +128,14 @@ public final class Display {
         int total = moved + skipped;
 
         println();
-        println("================================================");
-        println("RESUME DE L'OPERATION");
-        println("================================================");
+        println(line());
+        println(center("RESUME DE L'OPERATION"));
+        println(line());
         println(String.format("  Fichiers traites   : %-15d", total));
         println(String.format("  Deplaces           : %-15d", moved));
         println(String.format("  Ignores            : %-15d", skipped));
         println(String.format("  Erreurs            : %-15d", errors));
-        println("------------------------------------------------");
+        println("-".repeat(LINE_WIDTH));
     }
 
     // ============ Input utilisateur ============

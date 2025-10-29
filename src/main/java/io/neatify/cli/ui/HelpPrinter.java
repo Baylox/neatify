@@ -14,7 +14,7 @@ public final class HelpPrinter {
     public static void print() {
         System.out.println();
         printLine();
-        System.out.println("AIDE - NEATIFY");
+        System.out.println(io.neatify.cli.ui.Display.center("AIDE - NEATIFY"));
         printLine();
         System.out.println();
         System.out.println("UTILISATION :");
