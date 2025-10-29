@@ -1,8 +1,6 @@
 package io.neatify.cli.util;
 
-import io.neatify.cli.ui.BannerRenderer;
-import io.neatify.cli.ui.ConsoleUI;
-import io.neatify.cli.ui.ConsoleOutput;
+import io.neatify.cli.ui.Display;
 import io.neatify.core.FileMover;
 
 /**
@@ -15,16 +13,15 @@ public final class ResultPrinter {
     }
 
     public static void print(FileMover.Result result) {
-        ConsoleOutput out = ConsoleOutput.system();
-        out.println(BannerRenderer.renderResultTable(
+        Display.printResultTable(
             result.moved(),
             result.skipped(),
             result.errors().size()
-        ));
+        );
 
         if (!result.errors().isEmpty()) {
-            ConsoleUI.printError("Details des erreurs:");
-            result.errors().forEach(err -> out.println("  - " + err));
+            Display.printErr("Details des erreurs:");
+            result.errors().forEach(err -> Display.println("  - " + err));
         }
     }
 }

@@ -1,9 +1,9 @@
 package io.neatify.cli;
 
 import io.neatify.TestHelper;
+import io.neatify.cli.ui.Preview;
 import io.neatify.cli.util.Ansi;
 import io.neatify.cli.util.AsciiSymbols;
-import io.neatify.cli.util.PreviewRenderer;
 import io.neatify.core.FileMover;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,7 +15,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests essentiels pour PreviewRenderer - Focus sur les cas critiques uniquement.
+ * Tests essentiels pour Preview - Focus sur les cas critiques uniquement.
  */
 class PreviewRendererTest extends TestHelper {
 
@@ -28,9 +28,9 @@ class PreviewRendererTest extends TestHelper {
     @Test
     void testRender_EmptyActions() {
         List<FileMover.Action> actions = List.of();
-        PreviewRenderer.Config config = new PreviewRenderer.Config();
+        Preview.Config config = new Preview.Config();
 
-        List<String> lines = PreviewRenderer.render(actions, config);
+        List<String> lines = Preview.render(actions, config);
 
         assertTrue(lines.isEmpty());
     }
@@ -42,9 +42,9 @@ class PreviewRendererTest extends TestHelper {
         FileMover.Action action = createAction(source, target);
 
         List<FileMover.Action> actions = List.of(action);
-        PreviewRenderer.Config config = new PreviewRenderer.Config();
+        Preview.Config config = new Preview.Config();
 
-        List<String> lines = PreviewRenderer.render(actions, config);
+        List<String> lines = Preview.render(actions, config);
 
         assertFalse(lines.isEmpty());
         String output = String.join("\n", lines);
@@ -65,8 +65,8 @@ class PreviewRendererTest extends TestHelper {
             )
         );
 
-        PreviewRenderer.Config config = new PreviewRenderer.Config();
-        List<String> lines = PreviewRenderer.render(actions, config);
+        Preview.Config config = new Preview.Config();
+        List<String> lines = Preview.render(actions, config);
 
         String output = String.join("\n", lines);
         assertTrue(output.contains("Documents"));
@@ -83,8 +83,8 @@ class PreviewRendererTest extends TestHelper {
             createAction(Paths.get("/tmp/3/photo.jpg"), Paths.get("/tmp/Images/photo.jpg"))
         );
 
-        PreviewRenderer.Config config = new PreviewRenderer.Config().showDuplicates(true);
-        List<String> lines = PreviewRenderer.render(actions, config);
+        Preview.Config config = new Preview.Config().showDuplicates(true);
+        List<String> lines = Preview.render(actions, config);
 
         String output = String.join("\n", lines);
         assertTrue(output.contains("photo.jpg"));
