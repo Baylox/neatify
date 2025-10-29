@@ -5,8 +5,8 @@ import io.neatify.cli.AppInfo;
 import java.util.Scanner;
 
 /**
- * Utilitaire simplifié pour l'affichage console.
- * Fusionne l'ancien BannerRenderer, ConsoleOutput et ConsoleUI.
+ * Utilitaire simplifie pour l'affichage console.
+ * Regroupe banniere, sorties formatees et saisie utilisateur.
  */
 public final class Display {
 
@@ -34,10 +34,10 @@ public final class Display {
         System.err.println(text);
     }
 
-    // ============ Messages formatés ============
+    // ============ Messages formates ============
 
     public static void printSuccess(String message) {
-        println("[✓] " + message);
+        println("[OK] " + message);
     }
 
     public static void printInfo(String message) {
@@ -49,7 +49,7 @@ public final class Display {
     }
 
     public static void printErr(String message) {
-        printError("[✗] " + message);
+        printError("[ERR] " + message);
     }
 
     // ============ Structure ============
@@ -65,25 +65,42 @@ public final class Display {
         printLine();
     }
 
-    // ============ Banner ============
+    // ============ Banniere ============
 
     public static void printBanner(AppInfo appInfo) {
-        print("\n" +
-                "    ███╗   ██╗███████╗ █████╗ ████████╗██╗███████╗██╗   ██╗\n" +
-                "    ████╗  ██║██╔════╝██╔══██╗╚══██╔══╝██║██╔════╝╚██╗ ██╔╝\n" +
-                "    ██╔██╗ ██║█████╗  ███████║   ██║   ██║█████╗   ╚████╔╝ \n" +
-                "    ██║╚██╗██║██╔══╝  ██╔══██║   ██║   ██║██╔══╝    ╚██╔╝  \n" +
-                "    ██║ ╚████║███████╗██║  ██║   ██║   ██║██║        ██║   \n" +
-                "    ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝   ╚═╝   ╚═╝╚═╝        ╚═╝   \n" +
-                "\n" +
-                "    " + appInfo.description() + " - v" + appInfo.version() + "\n" +
-                "    ════════════════════════════════════════════════════════\n" +
-                "\n");
+        println();
+        printLine();
+        if (io.neatify.cli.util.AsciiSymbols.useUnicode()) {
+            println("    ███╗   ██╗███████╗ █████╗ ████████╗██╗███████╗██╗   ██╗");
+            println("    ████╗  ██║██╔════╝██╔══██╗╚══██╔══╝██║██╔════╝╚██╗ ██╔╝");
+            println("    ██╔██╗ ██║█████╗  ███████║   ██║   ██║█████╗   ╚████╔╝ ");
+            println("    ██║╚██╗██║██╔══╝  ██╔══██║   ██║   ██║██╔══╝    ╚██╔╝  ");
+            println("    ██║ ╚████║███████╗██║  ██║   ██║   ██║██║        ██║   ");
+            println("    ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝   ╚═╝   ╚═╝╚═╝        ╚═╝   ");
+            println();
+            println("    " + appInfo.description() + " - v" + appInfo.version());
+            println("    ════════════════════════════════════════════════════════");
+            println();
+        } else {
+            // ASCII fallback
+            println(appInfo.name() + " - v" + appInfo.version());
+            println(appInfo.description());
+        }
+        println("-- " + signature() + " --");
+        printLine();
+    }
+
+    private static String signature() {
+        String env = System.getenv("NEATIFY_SIGNATURE");
+        if (env != null && !env.isBlank()) {
+            return env;
+        }
+        String user = System.getProperty("user.name", "neatify");
+        return "by " + user;
     }
 
     /**
-     * Affiche le banner (version dépréciée pour compatibilité).
-     * @deprecated Utilisez printBanner(AppInfo) à la place
+     * Version de compatibilite (depreciee).
      */
     @Deprecated
     public static void printBanner(String version) {
@@ -96,30 +113,14 @@ public final class Display {
         int total = moved + skipped;
 
         println();
-        println("    ┌─────────────────────────────────────────┐");
-        println("    │           RESUME DE L'OPERATION         │");
-        println("    ├─────────────────────────────────────────┤");
-        println(String.format("    │  Fichiers traites    │  %-15d │", total));
-        println(String.format("    │  Deplaces            │  %-15d │", moved));
-        println(String.format("    │  Ignores             │  %-15d │", skipped));
-        println(String.format("    │  Erreurs             │  %-15d │", errors));
-        println("    └─────────────────────────────────────────┘");
-    }
-
-    public static void printProgressBar(int current, int total, int width) {
-        if (total == 0) return;
-
-        int percentage = (current * 100) / total;
-        int filled = (current * width) / total;
-        int empty = width - filled;
-
-        StringBuilder bar = new StringBuilder("[");
-        bar.append("█".repeat(filled));
-        bar.append("░".repeat(empty));
-        bar.append("] ").append(percentage).append("% (")
-            .append(current).append("/").append(total).append(")");
-
-        println(bar.toString());
+        println("================================================");
+        println("RESUME DE L'OPERATION");
+        println("================================================");
+        println(String.format("  Fichiers traites   : %-15d", total));
+        println(String.format("  Deplaces           : %-15d", moved));
+        println(String.format("  Ignores            : %-15d", skipped));
+        println(String.format("  Erreurs            : %-15d", errors));
+        println("------------------------------------------------");
     }
 
     // ============ Input utilisateur ============
