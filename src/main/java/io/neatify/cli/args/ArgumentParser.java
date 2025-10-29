@@ -61,6 +61,8 @@ public class ArgumentParser {
         map.put("--interactive", i -> { config.setInteractive(true); return i; });
         map.put("-i", map.get("--interactive"));
         map.put("--undo", i -> { config.setUndo(true); return i; });
+        map.put("--undo-list", i -> { config.setUndo(true); config.setUndoList(true); return i; });
+        map.put("--undo-run", i -> { requireNextArgument(i, "--undo-run"); config.setUndo(true); config.setUndoRun(args[i+1]); return i + 1; });
         map.put("--no-color", i -> { config.setNoColor(true); return i; });
         map.put("--ascii", i -> { config.setAscii(true); return i; });
         map.put("--json", i -> { config.setJson(true); return i; });

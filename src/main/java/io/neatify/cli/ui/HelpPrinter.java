@@ -24,10 +24,13 @@ public final class HelpPrinter {
         System.out.println("  Sans arguments              Lance le mode interactif");
         System.out.println("  --interactive, -i           Lance le mode interactif");
         System.out.println("  --undo                      Annule la derniere execution (journal)");
+        System.out.println("  --undo-list                 Liste les executions journalisees (.neatify/runs)");
+        System.out.println("  --undo-run <timestamp>      Annule l'execution specifique");
         System.out.println();
         System.out.println("OPTIONS (mode ligne de commande):");
         System.out.println("  --source, -s <dossier>      Dossier a ranger (obligatoire)");
         System.out.println("  --rules, -r <fichier>       Fichier de regles (obligatoire)");
+        System.out.println("  --use-default-rules         Utilise les regles integrees (pas de --rules)");
         System.out.println("  --apply, -a                 Applique les changements (sinon dry-run)");
         System.out.println("  --json                       Sortie JSON (apercu + resultat)");
         System.out.println("  --on-collision <mode>       Collision: rename (defaut), skip, overwrite");

@@ -152,7 +152,10 @@ public class FileOrganizationExecutor {
                 moves.add(new io.neatify.cli.core.UndoExecutor.Move(src, dst));
             });
             try {
-                io.neatify.cli.core.UndoExecutor.appendRun(config.getSourceDir(), config.getOnCollision(), moves);
+                java.nio.file.Path runPath = io.neatify.cli.core.UndoExecutor.appendRun(config.getSourceDir(), config.getOnCollision(), moves);
+                if (runPath != null) {
+                    printInfo("Journal ecrit: " + runPath.toAbsolutePath());
+                }
             } catch (java.io.IOException e) {
                 printErr("Impossible d'ecrire le journal d'undo: " + e.getMessage());
             }
@@ -226,8 +229,34 @@ public class FileOrganizationExecutor {
     }
 
     private void performUndo(CLIConfig config) throws IOException {
+        if (config.isUndoList()) {
+            var runs = io.neatify.cli.core.UndoExecutor.listRuns(config.getSourceDir());
+            if (runs.isEmpty()) {
+                printWarning("Aucune execution precedente.");
+            } else {
+                printSection("JOURNAUX DISPONIBLES (.neatify/runs)");
+                for (var m : runs) {
+                    println("  - " + m.time() + " (" + m.movesCount() + " moves, collision=" + m.onCollision() + ")");
+                }
+            }
+            return;
+        }
+
+        if (config.getUndoRun() != null) {
+            try {
+                long ts = Long.parseLong(config.getUndoRun());
+                var r = io.neatify.cli.core.UndoExecutor.undoRun(config.getSourceDir(), ts);
+                if (r == null) { printWarning("Run introuvable: " + ts); return; }
+                printSuccess("Restaures: " + r.restored() + ", ignores: " + r.skipped() + ", erreurs: " + r.errors().size());
+                if (!r.errors().isEmpty()) { printErr("Erreurs pendant l'undo:"); r.errors().forEach(e -> println("  - " + e)); }
+                return;
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("--undo-run necessite un timestamp numerique");
+            }
+        }
+
         printInfo("Annulation de la derniere execution...");
-        io.neatify.cli.core.UndoExecutor.UndoResult r = io.neatify.cli.core.UndoExecutor.undoLast(config.getSourceDir());
+        var r = io.neatify.cli.core.UndoExecutor.undoLast(config.getSourceDir());
         if (r == null) {
             printWarning("Aucune execution precedente dans le journal.");
             return;

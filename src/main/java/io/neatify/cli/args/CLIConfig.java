@@ -15,6 +15,8 @@ public class CLIConfig {
     private boolean showVersion = false;
     private boolean interactive = false;
     private boolean undo = false;
+    private boolean undoList = false;
+    private String undoRun = null;
 
     // Options de preview
     private boolean noColor = false;
@@ -39,6 +41,8 @@ public class CLIConfig {
     public boolean isShowVersion() { return showVersion; }
     public boolean isInteractive() { return interactive; }
     public boolean isUndo() { return undo; }
+    public boolean isUndoList() { return undoList; }
+    public String getUndoRun() { return undoRun; }
     public boolean isNoColor() { return noColor; }
     public boolean isAscii() { return ascii; }
     public int getPerFolderPreview() { return perFolderPreview; }
@@ -57,6 +61,8 @@ public class CLIConfig {
     void setShowVersion(boolean showVersion) { this.showVersion = showVersion; }
     void setInteractive(boolean interactive) { this.interactive = interactive; }
     void setUndo(boolean undo) { this.undo = undo; }
+    void setUndoList(boolean undoList) { this.undoList = undoList; }
+    void setUndoRun(String undoRun) { this.undoRun = undoRun; }
     void setNoColor(boolean noColor) { this.noColor = noColor; }
     void setAscii(boolean ascii) { this.ascii = ascii; }
     void setPerFolderPreview(int perFolderPreview) { this.perFolderPreview = perFolderPreview; }

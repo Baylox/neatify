@@ -61,7 +61,7 @@ public final class InteractiveCLI {
         printSection("ANNULER LA DERNIERE EXECUTION");
         String sourcePath = readInput("Dossier source (utilise lors de l'organisation)");
         java.nio.file.Path sourceDir = java.nio.file.Paths.get(sourcePath);
-        UndoExecutor.UndoResult r = UndoExecutor.undoLast(sourceDir);
+        UndoExecutor.UndoResult r = UndoExecutor.undoLastV2(sourceDir);
         if (r == null) {
             printWarning("Aucun journal trouve. Rien a annuler.");
             return;

@@ -142,7 +142,10 @@ public final class FileOrganizer {
             moves.add(new io.neatify.cli.core.UndoExecutor.Move(src, dst));
         });
         try {
-            io.neatify.cli.core.UndoExecutor.appendRun(sourceDir, strategy.name().toLowerCase(), moves);
+            java.nio.file.Path runPath = io.neatify.cli.core.UndoExecutor.appendRun(sourceDir, strategy.name().toLowerCase(), moves);
+            if (runPath != null) {
+                printInfo("Journal ecrit: " + runPath.toAbsolutePath());
+            }
         } catch (IOException e) {
             printErr("Journal d'undo non ecrit: " + e.getMessage());
         }
