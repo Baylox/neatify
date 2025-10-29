@@ -36,10 +36,12 @@ public final class FileOrganizer {
         Map<String, String> rules = promptAndLoadRules();
         if (rules == null) return;
 
-        List<FileMover.Action> actions = planActions(sourceDir, rules);
+        Filters filters = promptFilters();
+
+        List<FileMover.Action> actions = planActions(sourceDir, rules, filters);
         if (actions == null) return;
 
-        executeIfConfirmed(actions);
+        executeIfConfirmed(actions, sourceDir);
     }
 
     private static Path promptAndValidateSourceDir() throws IOException {
@@ -94,9 +96,15 @@ public final class FileOrganizer {
         return rules;
     }
 
-    private static List<FileMover.Action> planActions(Path sourceDir, Map<String, String> rules) throws IOException {
+    private static List<FileMover.Action> planActions(Path sourceDir, Map<String, String> rules, Filters filters) throws IOException {
         printInfo("Analyse du dossier...");
-        List<FileMover.Action> actions = FileMover.plan(sourceDir, rules);
+        List<FileMover.Action> actions = FileMover.plan(
+            sourceDir,
+            rules,
+            100_000,
+            filters.includes,
+            filters.excludes
+        );
 
         if (actions.isEmpty()) {
             printWarning("Aucun fichier à déplacer.");
@@ -118,7 +126,7 @@ public final class FileOrganizer {
         Preview.print(actions, config);
     }
 
-    private static void executeIfConfirmed(List<FileMover.Action> actions) throws IOException {
+    private static void executeIfConfirmed(List<FileMover.Action> actions, Path sourceDir) throws IOException {
         String confirm = readInput("Appliquer ces changements? (o/N)", "n");
 
         if (!confirm.equalsIgnoreCase("o") && !confirm.equalsIgnoreCase("oui")) {
@@ -127,8 +135,17 @@ public final class FileOrganizer {
             return;
         }
 
+        FileMover.CollisionStrategy strategy = promptCollisionStrategy();
         printInfo("Application des changements...");
-        FileMover.Result result = FileMover.execute(actions, false);
+        java.util.List<io.neatify.cli.core.UndoExecutor.Move> moves = new java.util.ArrayList<>();
+        FileMover.Result result = FileMover.execute(actions, false, strategy, (src, dst) -> {
+            moves.add(new io.neatify.cli.core.UndoExecutor.Move(src, dst));
+        });
+        try {
+            io.neatify.cli.core.UndoExecutor.appendRun(sourceDir, strategy.name().toLowerCase(), moves);
+        } catch (IOException e) {
+            printErr("Journal d'undo non ecrit: " + e.getMessage());
+        }
 
         showSummary(result);
         waitForEnter();
@@ -137,5 +154,27 @@ public final class FileOrganizer {
     private static void showSummary(FileMover.Result result) {
         System.out.println();
         ResultPrinter.print(result);
+    }
+
+    // ======= Options interactives =======
+    private record Filters(java.util.List<String> includes, java.util.List<String> excludes) {}
+
+    private static Filters promptFilters() {
+        String inc = readInput("Inclure (glob, separes par ,) [Entree = aucun]", "");
+        String exc = readInput("Exclure (glob, separes par ,) [Entree = aucun]", "");
+        java.util.List<String> includes = new java.util.ArrayList<>();
+        java.util.List<String> excludes = new java.util.ArrayList<>();
+        if (!inc.isBlank()) for (String p : inc.split(",")) { String s=p.trim(); if(!s.isEmpty()) includes.add(s); }
+        if (!exc.isBlank()) for (String p : exc.split(",")) { String s=p.trim(); if(!s.isEmpty()) excludes.add(s); }
+        return new Filters(includes, excludes);
+    }
+
+    private static FileMover.CollisionStrategy promptCollisionStrategy() {
+        String s = readInput("Strategie de collision [rename|skip|overwrite]", "rename");
+        return switch (s.toLowerCase()) {
+            case "skip" -> FileMover.CollisionStrategy.SKIP;
+            case "overwrite" -> FileMover.CollisionStrategy.OVERWRITE;
+            default -> FileMover.CollisionStrategy.RENAME;
+        };
     }
 }
