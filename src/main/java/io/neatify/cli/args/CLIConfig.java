@@ -9,6 +9,7 @@ import java.nio.file.Path;
 public class CLIConfig {
     private Path sourceDir;
     private Path rulesFile;
+    private boolean useDefaultRules = false;
     private boolean apply = false;
     private boolean showHelp = false;
     private boolean showVersion = false;
@@ -32,6 +33,7 @@ public class CLIConfig {
     // Getters
     public Path getSourceDir() { return sourceDir; }
     public Path getRulesFile() { return rulesFile; }
+    public boolean isUseDefaultRules() { return useDefaultRules; }
     public boolean isApply() { return apply; }
     public boolean isShowHelp() { return showHelp; }
     public boolean isShowVersion() { return showVersion; }
@@ -49,6 +51,7 @@ public class CLIConfig {
     // Setters (package-private pour être utilisés seulement par ArgumentParser)
     void setSourceDir(Path sourceDir) { this.sourceDir = sourceDir; }
     void setRulesFile(Path rulesFile) { this.rulesFile = rulesFile; }
+    void setUseDefaultRules(boolean useDefaultRules) { this.useDefaultRules = useDefaultRules; }
     void setApply(boolean apply) { this.apply = apply; }
     void setShowHelp(boolean showHelp) { this.showHelp = showHelp; }
     void setShowVersion(boolean showVersion) { this.showVersion = showVersion; }
@@ -68,6 +71,8 @@ public class CLIConfig {
      * @return true si on est en mode commande (pas help/version/interactive)
      */
     public boolean requiresSourceAndRules() {
-        return !showHelp && !showVersion && !interactive && !undo;
+        // Renvoie true uniquement quand la CLI requiert à la fois --source et --rules.
+        // Avec --use-default-rules, le fichier de règles n'est pas requis.
+        return !showHelp && !showVersion && !interactive && !undo && !useDefaultRules;
     }
 }

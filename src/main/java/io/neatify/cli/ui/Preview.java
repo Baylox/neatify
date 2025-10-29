@@ -6,6 +6,7 @@ import io.neatify.core.FileMetadata;
 import io.neatify.core.FileMover;
 
 import java.nio.file.Path;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -33,7 +34,7 @@ public final class Preview {
     }
 
     /** Element de fichier avec metadonnees pour l'affichage. */
-    private record FileEntry(String name, String extension, int count) {}
+    private record FileEntry(String name, String extension, int count, long totalBytes) {}
 
     /** Groupe de fichiers par dossier. */
     private record FolderGroup(String folderName, List<FileEntry> files) {}
@@ -97,17 +98,21 @@ public final class Preview {
 
     /** Cree un FolderGroup avec comptage des duplicatas. */
     private static FolderGroup createFolderGroup(String folderName, List<FileMover.Action> actions, Config config) {
-        Map<String, Long> counts = actions.stream()
-            .map(a -> a.source().getFileName().toString())
-            .collect(Collectors.groupingBy(name -> name, Collectors.counting()));
+        // regrouper par nom de fichier
+        Map<String, List<FileMover.Action>> byName = actions.stream()
+            .collect(Collectors.groupingBy(a -> a.source().getFileName().toString(), LinkedHashMap::new, Collectors.toList()));
 
-        List<FileEntry> entries = counts.entrySet().stream()
-            .map(e -> new FileEntry(
-                e.getKey(),
-                FileMetadata.extensionOf(e.getKey()),
-                e.getValue().intValue()
-            ))
-            .toList();
+        List<FileEntry> entries = new ArrayList<>();
+        for (Map.Entry<String, List<FileMover.Action>> e : byName.entrySet()) {
+            String name = e.getKey();
+            List<FileMover.Action> group = e.getValue();
+            int count = group.size();
+            long size = 0L;
+            for (FileMover.Action a : group) {
+                try { size += Files.size(a.source()); } catch (Exception ignore) { /* best-effort */ }
+            }
+            entries.add(new FileEntry(name, FileMetadata.extensionOf(name), count, size));
+        }
 
         List<FileEntry> sorted = sortEntries(entries, config.sortMode);
         return new FolderGroup(folderName, sorted);
@@ -116,9 +121,15 @@ public final class Preview {
     /** Trie les entrees selon le mode demande. */
     private static List<FileEntry> sortEntries(List<FileEntry> entries, SortMode mode) {
         return switch (mode) {
-            case ALPHA -> entries.stream().sorted(Comparator.comparing(FileEntry::name)).toList();
-            case EXT -> entries.stream().sorted(Comparator.comparing(FileEntry::extension).thenComparing(FileEntry::name)).toList();
-            case SIZE -> entries; // SIZE necessiterait des metadonnees supplementaires
+            case ALPHA -> entries.stream()
+                .sorted(Comparator.comparing(FileEntry::name))
+                .toList();
+            case EXT -> entries.stream()
+                .sorted(Comparator.comparing(FileEntry::extension).thenComparing(FileEntry::name))
+                .toList();
+            case SIZE -> entries.stream()
+                .sorted(Comparator.comparingLong(FileEntry::totalBytes).reversed().thenComparing(FileEntry::name))
+                .toList();
         };
     }
 

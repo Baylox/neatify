@@ -59,7 +59,7 @@ public class FileOrganizationExecutor {
     private void validatePaths(CLIConfig config) {
         validateSourceDir(config.getSourceDir());
         validateSourceDirSecurity(config.getSourceDir());
-        if (!config.isUndo()) {
+        if (!config.isUndo() && !config.isUseDefaultRules()) {
             validateRulesFile(config.getRulesFile());
         }
     }
@@ -100,11 +100,19 @@ public class FileOrganizationExecutor {
     }
 
     private Map<String, String> loadRules(CLIConfig config) throws IOException {
-        printInfo("Chargement des regles depuis: " + config.getRulesFile());
-        Map<String, String> rules = Rules.load(config.getRulesFile());
-        printSuccess(rules.size() + " regle(s) chargee(s)");
-        System.out.println();
-        return rules;
+        if (config.isUseDefaultRules()) {
+            printInfo("Utilisation des regles par defaut integrees...");
+            Map<String, String> rules = Rules.getDefaults();
+            printSuccess(rules.size() + " regle(s) par defaut chargee(s)");
+            System.out.println();
+            return rules;
+        } else {
+            printInfo("Chargement des regles depuis: " + config.getRulesFile());
+            Map<String, String> rules = Rules.load(config.getRulesFile());
+            printSuccess(rules.size() + " regle(s) chargee(s)");
+            System.out.println();
+            return rules;
+        }
     }
 
     private List<FileMover.Action> planActions(CLIConfig config, Map<String, String> rules) throws IOException {

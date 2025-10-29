@@ -49,6 +49,7 @@ public class ArgumentParser {
         map.put("-s", map.get("--source"));
         map.put("--rules", i -> parsePathArgument(i, "--rules", config::setRulesFile));
         map.put("-r", map.get("--rules"));
+        map.put("--use-default-rules", i -> { config.setUseDefaultRules(true); return i; });
 
         // Flags booléens simples
         map.put("--apply", i -> { config.setApply(true); return i; });
@@ -133,13 +134,15 @@ public class ArgumentParser {
     }
 
     private void validateRequiredArguments() {
-        if (config.requiresSourceAndRules()) {
-            if (config.getSourceDir() == null) {
-                throw new IllegalArgumentException("--source est obligatoire");
-            }
-            if (config.getRulesFile() == null) {
-                throw new IllegalArgumentException("--rules est obligatoire");
-            }
+        boolean needsSource = !config.isShowHelp() && !config.isShowVersion() && !config.isInteractive();
+
+        if (needsSource && config.getSourceDir() == null) {
+            throw new IllegalArgumentException("--source est obligatoire");
+        }
+
+        boolean needsRules = needsSource && !config.isUndo() && !config.isUseDefaultRules();
+        if (needsRules && config.getRulesFile() == null) {
+            throw new IllegalArgumentException("--rules est obligatoire");
         }
     }
 
