@@ -6,7 +6,7 @@ import io.neatify.cli.core.RulesFileCreator;
 
 import java.io.IOException;
 
-import static io.neatify.cli.ui.ConsoleUI.*;
+import static io.neatify.cli.ui.Display.*;
 
 /**
  * Gère le mode interactif de Neatify - Menu principal et coordination.
