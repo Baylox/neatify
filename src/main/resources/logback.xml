@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- Property: log directory (can be overridden via -Dneatify.log.dir) -->
+    <property name="LOG_DIR" value="${neatify.log.dir:-logs}" />
+
+    <!-- Console Appender: stdout for INFO and DEBUG only (no duplicates) -->
+    <appender name="CONSOLE_STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <target>System.out</target>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} [run:%X{runId:-none}] - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        <!-- LevelFilter: accept INFO and DEBUG only, deny WARN/ERROR -->
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>WARN</level>
+            <onMatch>DENY</onMatch>
+        </filter>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>DENY</onMatch>
+        </filter>
+    </appender>
+
+    <!-- Console Appender: stderr for WARN and ERROR only -->
+    <appender name="CONSOLE_STDERR" class="ch.qos.logback.core.ConsoleAppender">
+        <target>System.err</target>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} [run:%X{runId:-none}] - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        <!-- ThresholdFilter: only WARN and ERROR -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>WARN</level>
+        </filter>
+    </appender>
+
+    <!-- File Appender: main log with rotation -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/neatify.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/neatify.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>100MB</totalSizeCap>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} [run:%X{runId:-none}] - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- File Appender: security log (marker-based) -->
+    <appender name="SECURITY_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/security.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/security.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>90</maxHistory>
+            <totalSizeCap>50MB</totalSizeCap>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} [run:%X{runId:-none}] %marker - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        <!-- Only accept events with SECURITY marker -->
+        <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+            <evaluator class="ch.qos.logback.classic.boolex.OnMarkerEvaluator">
+                <marker>SECURITY</marker>
+            </evaluator>
+            <onMismatch>DENY</onMismatch>
+            <onMatch>ACCEPT</onMatch>
+        </filter>
+    </appender>
+
+    <!-- TurboFilter: suppress console logs in JSON mode -->
+    <turboFilter class="ch.qos.logback.classic.turbo.MDCFilter">
+        <MDCKey>jsonMode</MDCKey>
+        <Value>true</Value>
+        <OnMatch>DENY</OnMatch>
+    </turboFilter>
+
+    <!-- Root Logger: default level INFO (can be changed via system property) -->
+    <root level="${neatify.log.level:-INFO}">
+        <appender-ref ref="CONSOLE_STDOUT" />
+        <appender-ref ref="CONSOLE_STDERR" />
+        <appender-ref ref="FILE" />
+        <appender-ref ref="SECURITY_FILE" />
+    </root>
+
+    <!-- Package-specific logging levels -->
+    <logger name="io.neatify.core" level="DEBUG" />
+    <logger name="io.neatify.cli" level="INFO" />
+
+</configuration>

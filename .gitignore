@@ -32,6 +32,7 @@ build/
 ### VS Code ###
 .vscode/
 test-demo/
+test-logs-demo/
 
 ### Mac OS ###
 .DS_Store

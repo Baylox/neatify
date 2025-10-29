@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- Test configuration: minimal console output, no file logging -->
+
+    <!-- Console Appender: stderr only for WARN+ during tests -->
+    <appender name="CONSOLE_TEST" class="ch.qos.logback.core.ConsoleAppender">
+        <target>System.err</target>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>WARN</level>
+        </filter>
+    </appender>
+
+    <!-- Root Logger: WARN level for tests (less noise) -->
+    <root level="WARN">
+        <appender-ref ref="CONSOLE_TEST" />
+    </root>
+
+    <!-- Package-specific: can be set to DEBUG for debugging specific tests -->
+    <logger name="io.neatify.core" level="WARN" />
+    <logger name="io.neatify.cli" level="WARN" />
+
+</configuration>
