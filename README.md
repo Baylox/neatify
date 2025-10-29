@@ -18,14 +18,14 @@ Neatify est un utilitaire en ligne de commande écrit en Java qui organise autom
 
 ---
 
-## Installation
+## Installation rapide
 
 ### Prérequis
 
 - Java 21 ou supérieur
 - Maven 3.8+ (ou utiliser le Maven Wrapper fourni)
 
-### Compilation depuis les sources
+### Compilation
 
 ```bash
 # Cloner le dépôt
@@ -47,8 +47,6 @@ mvn clean package
 
 ### Mode interactif (recommandé)
 
-Lancez simplement le programme sans arguments pour accéder au menu interactif :
-
 ```bash
 java -jar target/neatify.jar
 ```
@@ -59,8 +57,6 @@ java -jar target/neatify.jar
 3. Afficher l'aide
 4. Afficher la version
 5. Quitter
-
-Le mode interactif guide l'utilisateur étape par étape, affiche un aperçu des changements et demande confirmation avant toute modification.
 
 ### Mode ligne de commande
 
@@ -76,16 +72,6 @@ java -jar target/neatify.jar --help
 
 # Afficher la version
 java -jar target/neatify.jar --version
-
-# Lancer le mode interactif explicitement
-java -jar target/neatify.jar --interactive
-```
-
-### Mode développement
-
-```bash
-# Exécuter directement avec Maven
-mvn exec:java
 ```
 
 ---
@@ -125,120 +111,9 @@ pptx=Documents/Presentations
 
 ---
 
-## Architecture
+## Exemple rapide
 
-```
-src/main/java/io/neatify/
-├── Neatify.java                          # Point d'entrée principal
-├── cli/                                   # Interface ligne de commande
-│   ├── args/
-│   │   ├── ArgumentParser.java           # Parsing des arguments CLI
-│   │   └── CLIConfig.java                # Configuration CLI
-│   ├── core/
-│   │   ├── FileOrganizer.java            # Orchestration de l'organisation
-│   │   └── RulesFileCreator.java         # Création assistée de règles
-│   ├── ui/
-│   │   ├── BannerRenderer.java           # Affichage de la bannière
-│   │   ├── ConsoleOutput.java            # Sortie console formatée
-│   │   ├── ConsoleUI.java                # Interface console
-│   │   ├── HelpPrinter.java              # Affichage de l'aide
-│   │   └── InteractiveCLI.java           # Mode interactif
-│   ├── util/
-│   │   ├── Ansi.java                     # Couleurs ANSI
-│   │   ├── AsciiSymbols.java             # Symboles ASCII/Unicode
-│   │   └── PreviewRenderer.java          # Rendu de l'aperçu
-│   ├── FileOrganizationExecutor.java     # Exécution de l'organisation
-│   └── AppInfo.java                      # Informations de version
-└── core/                                  # Logique métier
-    ├── DefaultRules.java                 # Règles par défaut incluses
-    ├── FileMetadata.java                 # Métadonnées de fichier
-    ├── FileMover.java                    # Déplacement de fichiers (plan + execute)
-    ├── PathSecurity.java                 # Validation sécurité des chemins
-    └── Rules.java                        # Chargement et validation des règles
-```
-
-**Principe de conception :**
-1. **Séparation CLI/Core :** L'interface utilisateur (cli) est séparée de la logique métier (core)
-2. **Phase de planification :** Scanne le répertoire et calcule les actions nécessaires
-3. **Phase d'exécution :** Applique les actions (ou simule en mode dry-run)
-4. **Validation de sécurité :** Chaque chemin est validé avant toute opération
-
----
-
-## Tests
-
-### Exécution des tests
-
-```bash
-# Lancer tous les tests
-mvn test
-
-# Lancer un test spécifique
-mvn test -Dtest=FileMoverTest
-
-# Lancer les tests de sécurité uniquement
-mvn test -Dtest=io.neatify.core.security.*Test
-```
-
-### Architecture des tests
-
-```
-src/test/java/io/neatify/
-├── TestHelper.java                      # Classe de base avec helpers communs
-├── cli/
-│   ├── args/ArgumentParserTest.java     # Tests du parser d'arguments
-│   └── PreviewRendererTest.java         # Tests du rendu d'aperçu
-└── core/
-    ├── FileMetadataTest.java            # Tests des métadonnées
-    ├── FileMoverTest.java               # Tests du déplacement de fichiers
-    ├── RulesTest.java                   # Tests du chargement de règles
-    └── security/                        # Package dédié aux tests de sécurité
-        ├── FileMoverSecurityTestBase.java        # Base pour tests de sécurité
-        ├── FileMoverPathTraversalTest.java       # Tests anti path traversal
-        ├── FileMoverQuotaTest.java               # Tests anti-DOS (quota)
-        ├── FileMoverCollisionTest.java           # Tests anti-TOCTOU
-        ├── PathSecurityTest.java                 # Tests de validation de chemins
-        └── RulesSecurityTest.java                # Tests de validation de règles
-```
-
-**60+ tests couvrant :**
-- ✓ Fonctionnalités principales (plan, execute, dry-run)
-- ✓ Sécurité (path traversal, quota, collisions)
-- ✓ Interface CLI (parsing, interactivité)
-- ✓ Rendu et formatage (aperçu, couleurs)
-
----
-
-## Fonctionnalités de sécurité
-
-### Protection des opérations
-- **Dry-run par défaut :** Aucun fichier n'est déplacé sans le flag explicite `--apply`
-- **Gestion atomique des collisions (Anti-TOCTOU) :** Les collisions détectées au moment de l'exécution sont résolues avec des suffixes `_1`, `_2`, etc.
-- **Déplacements atomiques :** Utilise `ATOMIC_MOVE` quand disponible pour des opérations plus sûres
-- **Fichiers cachés ignorés :** Les fichiers commençant par `.` sont ignorés par défaut
-
-### Protection contre les attaques par chemin (Path Traversal)
-- **Validation stricte des chemins :** `PathSecurity` bloque les tentatives de path traversal (`../`, `..\\`)
-- **Blocage des chemins absolus :** Chemins Unix (`/etc`) et Windows (`C:\`) interdits dans les règles
-- **Validation des dossiers système :** Interdiction d'utiliser des dossiers système sensibles comme source
-- **Double niveau de protection :** Validation au niveau de `Rules` ET de `FileMover`
-- **Vérification des symlinks :** Détection et blocage des liens symboliques dans l'arborescence
-
-### Protection anti-DOS
-- **Quota de fichiers :** Limite configurable du nombre de fichiers traités (défaut: 100 000)
-- **Validation stricte des règles :** Format et contenu des fichiers de règles vérifiés
-- **Gestion des erreurs robuste :** Échec contrôlé en cas d'entrée malveillante
-
-### Architecture de test sécurisée
-- **60+ tests unitaires** organisés en packages fonctionnels
-- **Tests de sécurité dédiés** : PathSecurityTest, RulesSecurityTest, FileMoverSecurityTest
-- **Tests de scénarios d'attaque** : Path traversal, quota, collisions, règles malveillantes
-
----
-
-## Exemples
-
-### Exemple 1 : Organiser un dossier Téléchargements
+### Organiser un dossier Téléchargements
 
 ```bash
 # Créer des règles personnalisées
@@ -256,56 +131,73 @@ java -jar target/neatify.jar --source ~/Downloads --rules mes-regles.properties
 java -jar target/neatify.jar --source ~/Downloads --rules mes-regles.properties --apply
 ```
 
-### Exemple 2 : Organiser un projet de code
+---
 
-```properties
-java=SourceCode/Java
-py=SourceCode/Python
-js=SourceCode/JavaScript
-md=Documentation
-json=Config
-yaml=Config
+## Sécurité
+
+Neatify intègre de multiples protections :
+
+- ✅ **Dry-run par défaut** : Prévisualisation obligatoire avant modification
+- ✅ **Anti path traversal** : Blocage des tentatives d'accès en dehors du dossier source
+- ✅ **Anti-DOS** : Quota configurable (défaut: 100 000 fichiers)
+- ✅ **Anti-TOCTOU** : Gestion atomique des collisions de fichiers
+- ✅ **Validation stricte** : Tous les chemins et règles sont vérifiés
+- ✅ **33 tests de sécurité** dédiés aux scénarios d'attaque
+
+**⚠️ Avertissement :** Testez toujours en mode dry-run avant d'appliquer des changements sur des données importantes. Cet outil ne crée pas de sauvegardes automatiques.
+
+📖 **Voir [docs/SECURITY.md](docs/SECURITY.md) pour les détails complets**
+
+---
+
+## Documentation
+
+### 📚 Documentation détaillée
+
+- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** - Architecture du projet, patterns utilisés, flux de données
+- **[TESTING.md](docs/TESTING.md)** - Guide complet des tests, conventions, architecture des tests
+- **[SECURITY.md](docs/SECURITY.md)** - Modèle de menaces, protections implémentées, bonnes pratiques
+- **[DEVELOPMENT.md](docs/DEVELOPMENT.md)** - Guide du développeur, contribution, évolutions futures
+
+### 🚀 Quick Links
+
+- **Architecture** : Voir [structure des packages](docs/ARCHITECTURE.md#structure-des-packages)
+- **Tests** : Lancer avec `mvn test` - Voir [guide des tests](docs/TESTING.md)
+- **Contribution** : Voir [guide de contribution](docs/DEVELOPMENT.md#contribution)
+
+---
+
+## Tests
+
+```bash
+# Lancer tous les tests (60+)
+mvn test
+
+# Tests de sécurité uniquement
+mvn test -Dtest=io.neatify.core.security.*Test
+
+# Test spécifique
+mvn test -Dtest=FileMoverTest
 ```
+
+📖 **Voir [docs/TESTING.md](docs/TESTING.md) pour le guide complet**
 
 ---
 
 ## Développement
 
-### Structure du projet
+```bash
+# Exécuter en mode développement
+mvn exec:java
 
-```
-neatify/
-├── pom.xml                       # Configuration Maven
-├── rules.properties              # Règles d'exemple
-├── README.md                     # Documentation (français)
-├── README.en.md                  # Documentation (anglais)
-├── LICENSE                       # Licence MIT
-└── src/
-    ├── main/
-    │   ├── java/io/neatify/
-    │   │   ├── cli/             # Interface ligne de commande
-    │   │   │   ├── args/        # Parsing des arguments
-    │   │   │   ├── core/        # Orchestration CLI
-    │   │   │   ├── ui/          # Interface utilisateur
-    │   │   │   └── util/        # Utilitaires d'affichage
-    │   │   ├── core/            # Logique métier
-    │   │   └── Neatify.java     # Point d'entrée
-    │   └── resources/            # Ressources
-    └── test/
-        └── java/io/neatify/     # Tests unitaires (60+)
-            ├── TestHelper.java   # Helpers communs
-            ├── cli/             # Tests CLI
-            └── core/            # Tests métier
-                └── security/    # Tests de sécurité
+# Construire et tester
+mvn clean package
+
+# Avec rapport de couverture
+mvn test jacoco:report
 ```
 
-### Évolutions futures
-
-- [ ] Interface `Rule` pour des règles complexes (par date, taille, motifs regex)
-- [ ] Option `--by-date` pour organiser les fichiers par année/mois
-- [ ] Option `--report` pour générer un rapport JSON des actions effectuées
-- [ ] Flag `--include-hidden` pour traiter les fichiers cachés
-- [ ] Structure Maven multi-modules pour support de plugins externes
+📖 **Voir [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) pour le guide du développeur**
 
 ---
 
@@ -319,8 +211,17 @@ Ce projet est sous licence MIT - voir le fichier [LICENSE](LICENSE) pour plus de
 
 Les contributions, problèmes et demandes de fonctionnalités sont les bienvenus.
 
+**Comment contribuer :**
+1. Fork le projet
+2. Créer une branche (`git checkout -b feature/ma-feature`)
+3. Commit les changements (`git commit -m 'feat: ajout feature X'`)
+4. Push vers la branche (`git push origin feature/ma-feature`)
+5. Ouvrir une Pull Request
+
+📖 **Voir [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md#contribution) pour les détails**
+
 ---
 
-## Avertissement
+## Documentation en anglais
 
-Testez toujours en mode dry-run avant d'appliquer des changements sur des données importantes. Cet outil ne crée pas de sauvegardes automatiques.
+- [English documentation](README.en.md)
