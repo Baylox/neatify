@@ -105,7 +105,15 @@ public final class FileMover {
         if (patterns == null) return list;
         for (String p : patterns) {
             if (p == null || p.isBlank()) continue;
+            // principal
             list.add(base.getFileSystem().getPathMatcher("glob:" + p));
+            // compat: **/X doit aussi matcher X (zéro dossier)
+            if (p.startsWith("**/")) {
+                String tail = p.substring(3);
+                if (!tail.isBlank()) {
+                    list.add(base.getFileSystem().getPathMatcher("glob:" + tail));
+                }
+            }
         }
         return list;
     }
