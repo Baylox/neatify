@@ -59,6 +59,7 @@ public class ArgumentParser {
         map.put("-v", map.get("--version"));
         map.put("--interactive", i -> { config.setInteractive(true); return i; });
         map.put("-i", map.get("--interactive"));
+        map.put("--undo", i -> { config.setUndo(true); return i; });
         map.put("--no-color", i -> { config.setNoColor(true); return i; });
         map.put("--ascii", i -> { config.setAscii(true); return i; });
         map.put("--json", i -> { config.setJson(true); return i; });
@@ -148,4 +149,3 @@ public class ArgumentParser {
     @FunctionalInterface
     private interface PathConsumer { void accept(Path path); }
 }
-

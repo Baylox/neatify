@@ -160,6 +160,47 @@ public final class FileMover {
         return new Result(moved, skipped, errors);
     }
 
+    @FunctionalInterface
+    public interface MoveListener { void onMoved(Path source, Path finalTarget); }
+
+    public static Result execute(List<Action> actions, boolean dryRun, CollisionStrategy strategy, MoveListener listener) {
+        Objects.requireNonNull(actions, "La liste d'actions ne peut pas être null");
+
+        int moved = 0;
+        int skipped = 0;
+        List<String> errors = new ArrayList<>();
+
+        for (Action action : actions) {
+            if (dryRun) {
+                System.out.printf("[DRY-RUN] %s -> %s (%s)%n", action.source(), action.target(), action.reason());
+                moved++;
+                continue;
+            }
+            try {
+                Files.createDirectories(action.target().getParent());
+                Path finalTarget = switch (strategy) {
+                    case RENAME -> atomicMoveWithRetry(action.source(), action.target());
+                    case SKIP -> moveSkipOnExist(action.source(), action.target());
+                    case OVERWRITE -> moveOverwrite(action.source(), action.target());
+                };
+                if (finalTarget == null) {
+                    System.out.printf("[SKIPPED] %s (cible existe)%n", action.source().getFileName());
+                    skipped++;
+                } else {
+                    System.out.printf("[MOVED] %s -> %s%n", action.source().getFileName(), finalTarget);
+                    moved++;
+                    if (listener != null) listener.onMoved(action.source(), finalTarget);
+                }
+            } catch (IOException e) {
+                String msg = String.format("Echec du deplacement de %s: %s", action.source(), e.getMessage());
+                errors.add(msg);
+                System.err.println("[ERROR] " + msg);
+                skipped++;
+            }
+        }
+        return new Result(moved, skipped, errors);
+    }
+
     private static Path moveSkipOnExist(Path source, Path target) throws IOException {
         try {
             Files.move(source, target);

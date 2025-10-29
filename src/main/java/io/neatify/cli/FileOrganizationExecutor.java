@@ -33,6 +33,11 @@ public class FileOrganizationExecutor {
         validatePaths(config);
         applyDisplayOptions(config);
 
+        if (config.isUndo()) {
+            performUndo(config);
+            return;
+        }
+
         Map<String, String> rules = loadRules(config);
         List<FileMover.Action> actions = planActions(config, rules);
 
@@ -53,8 +58,10 @@ public class FileOrganizationExecutor {
 
     private void validatePaths(CLIConfig config) {
         validateSourceDir(config.getSourceDir());
-        validateRulesFile(config.getRulesFile());
         validateSourceDirSecurity(config.getSourceDir());
+        if (!config.isUndo()) {
+            validateRulesFile(config.getRulesFile());
+        }
     }
 
     private void validateSourceDir(Path sourceDir) {
@@ -131,7 +138,20 @@ public class FileOrganizationExecutor {
         System.out.println();
 
         FileMover.CollisionStrategy strategy = parseCollision(config.getOnCollision());
-        return FileMover.execute(actions, !config.isApply(), strategy);
+        if (config.isApply()) {
+            java.util.List<io.neatify.cli.core.UndoExecutor.Move> moves = new java.util.ArrayList<>();
+            FileMover.Result res = FileMover.execute(actions, false, strategy, (src, dst) -> {
+                moves.add(new io.neatify.cli.core.UndoExecutor.Move(src, dst));
+            });
+            try {
+                io.neatify.cli.core.UndoExecutor.appendRun(config.getSourceDir(), config.getOnCollision(), moves);
+            } catch (java.io.IOException e) {
+                printErr("Impossible d'ecrire le journal d'undo: " + e.getMessage());
+            }
+            return res;
+        } else {
+            return FileMover.execute(actions, true, strategy);
+        }
     }
 
     private void showSummary(CLIConfig config, FileMover.Result result) {
@@ -195,5 +215,19 @@ public class FileOrganizationExecutor {
 
     private String escape(String s) {
         return s.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+
+    private void performUndo(CLIConfig config) throws IOException {
+        printInfo("Annulation de la derniere execution...");
+        io.neatify.cli.core.UndoExecutor.UndoResult r = io.neatify.cli.core.UndoExecutor.undoLast(config.getSourceDir());
+        if (r == null) {
+            printWarning("Aucune execution precedente dans le journal.");
+            return;
+        }
+        printSuccess("Restaures: " + r.restored() + ", ignores: " + r.skipped() + ", erreurs: " + r.errors().size());
+        if (!r.errors().isEmpty()) {
+            printErr("Erreurs pendant l'undo:");
+            r.errors().forEach(e -> println("  - " + e));
+        }
     }
 }

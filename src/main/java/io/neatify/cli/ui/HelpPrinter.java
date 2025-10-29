@@ -23,6 +23,7 @@ public final class HelpPrinter {
         System.out.println("MODES :");
         System.out.println("  Sans arguments              Lance le mode interactif");
         System.out.println("  --interactive, -i           Lance le mode interactif");
+        System.out.println("  --undo                      Annule la derniere execution (journal)");
         System.out.println();
         System.out.println("OPTIONS (mode ligne de commande):");
         System.out.println("  --source, -s <dossier>      Dossier a ranger (obligatoire)");

@@ -13,6 +13,7 @@ public class CLIConfig {
     private boolean showHelp = false;
     private boolean showVersion = false;
     private boolean interactive = false;
+    private boolean undo = false;
 
     // Options de preview
     private boolean noColor = false;
@@ -35,6 +36,7 @@ public class CLIConfig {
     public boolean isShowHelp() { return showHelp; }
     public boolean isShowVersion() { return showVersion; }
     public boolean isInteractive() { return interactive; }
+    public boolean isUndo() { return undo; }
     public boolean isNoColor() { return noColor; }
     public boolean isAscii() { return ascii; }
     public int getPerFolderPreview() { return perFolderPreview; }
@@ -51,6 +53,7 @@ public class CLIConfig {
     void setShowHelp(boolean showHelp) { this.showHelp = showHelp; }
     void setShowVersion(boolean showVersion) { this.showVersion = showVersion; }
     void setInteractive(boolean interactive) { this.interactive = interactive; }
+    void setUndo(boolean undo) { this.undo = undo; }
     void setNoColor(boolean noColor) { this.noColor = noColor; }
     void setAscii(boolean ascii) { this.ascii = ascii; }
     void setPerFolderPreview(int perFolderPreview) { this.perFolderPreview = perFolderPreview; }
@@ -65,6 +68,6 @@ public class CLIConfig {
      * @return true si on est en mode commande (pas help/version/interactive)
      */
     public boolean requiresSourceAndRules() {
-        return !showHelp && !showVersion && !interactive;
+        return !showHelp && !showVersion && !interactive && !undo;
     }
 }
