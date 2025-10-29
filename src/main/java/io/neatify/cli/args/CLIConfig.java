@@ -20,6 +20,14 @@ public class CLIConfig {
     private int perFolderPreview = 5;
     private String sortMode = "alpha";
 
+    // Sorties et execution
+    private boolean json = false;
+    private String onCollision = "rename"; // rename | skip | overwrite
+
+    // Filtres
+    private java.util.List<String> includes = new java.util.ArrayList<>();
+    private java.util.List<String> excludes = new java.util.ArrayList<>();
+
     // Getters
     public Path getSourceDir() { return sourceDir; }
     public Path getRulesFile() { return rulesFile; }
@@ -31,6 +39,10 @@ public class CLIConfig {
     public boolean isAscii() { return ascii; }
     public int getPerFolderPreview() { return perFolderPreview; }
     public String getSortMode() { return sortMode; }
+    public boolean isJson() { return json; }
+    public String getOnCollision() { return onCollision; }
+    public java.util.List<String> getIncludes() { return includes; }
+    public java.util.List<String> getExcludes() { return excludes; }
 
     // Setters (package-private pour être utilisés seulement par ArgumentParser)
     void setSourceDir(Path sourceDir) { this.sourceDir = sourceDir; }
@@ -43,6 +55,10 @@ public class CLIConfig {
     void setAscii(boolean ascii) { this.ascii = ascii; }
     void setPerFolderPreview(int perFolderPreview) { this.perFolderPreview = perFolderPreview; }
     void setSortMode(String sortMode) { this.sortMode = sortMode; }
+    void setJson(boolean json) { this.json = json; }
+    void setOnCollision(String onCollision) { this.onCollision = onCollision; }
+    void addInclude(String pattern) { this.includes.add(pattern); }
+    void addExclude(String pattern) { this.excludes.add(pattern); }
 
     /**
      * Vérifie si la configuration nécessite sourceDir et rulesFile.

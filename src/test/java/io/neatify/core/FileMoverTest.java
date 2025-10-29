@@ -89,6 +89,66 @@ class FileMoverTest extends TestHelper {
     }
 
     @Test
+    void testPlan_WithIncludeExclude(@TempDir Path tempDir) throws IOException {
+        Path sub = tempDir.resolve("sub");
+        Files.createDirectory(sub);
+        createTestFile(tempDir, "a.pdf", "a");
+        createTestFile(tempDir, "b.jpg", "b");
+        createTestFile(sub, "c.txt", "c");
+
+        Map<String, String> rules = Map.of(
+            "pdf", "Docs",
+            "jpg", "Images",
+            "txt", "Texts"
+        );
+
+        var actions = FileMover.plan(tempDir, rules, 100000,
+            java.util.List.of("**/*.pdf", "**/*.txt"),
+            java.util.List.of("**/sub/*.txt")
+        );
+
+        assertEquals(1, actions.stream().filter(a -> a.source().getFileName().toString().equals("a.pdf")).count());
+        assertEquals(0, actions.stream().filter(a -> a.source().getFileName().toString().equals("b.jpg")).count());
+        assertEquals(0, actions.stream().filter(a -> a.source().getFileName().toString().equals("c.txt")).count());
+    }
+
+    @Test
+    void testExecute_CollisionStrategies(@TempDir Path tempDir) throws IOException {
+        // Prepare files
+        createTestFile(tempDir, "x.txt", "one");
+        Path targetDir = tempDir.resolve("Dest");
+        Files.createDirectories(targetDir);
+        Path target = targetDir.resolve("x.txt");
+        Files.writeString(target, "existing");
+
+        // SKIP: should not overwrite and should skip
+        FileMover.Action actionSkip = createAction(tempDir.resolve("x.txt"), target);
+        FileMover.Result resSkip = FileMover.execute(java.util.List.of(actionSkip), false, FileMover.CollisionStrategy.SKIP);
+        assertTrue(Files.exists(target));
+        assertTrue(Files.exists(tempDir.resolve("x.txt"))); // not moved
+        assertEquals(1, resSkip.skipped());
+
+        // OVERWRITE
+        Files.writeString(tempDir.resolve("x.txt"), "two");
+        FileMover.Action actionOv = createAction(tempDir.resolve("x.txt"), target);
+        FileMover.Result resOv = FileMover.execute(java.util.List.of(actionOv), false, FileMover.CollisionStrategy.OVERWRITE);
+        assertFalse(Files.exists(tempDir.resolve("x.txt")));
+        assertEquals("two", Files.readString(target));
+        assertEquals(1, resOv.moved());
+
+        // RENAME
+        // recreate source
+        Files.writeString(tempDir.resolve("x.txt"), "three");
+        FileMover.Action actionRn = createAction(tempDir.resolve("x.txt"), target);
+        FileMover.Result resRn = FileMover.execute(java.util.List.of(actionRn), false, FileMover.CollisionStrategy.RENAME);
+        assertFalse(Files.exists(tempDir.resolve("x.txt")));
+        // original target remains, a new file with suffix exists
+        assertTrue(Files.exists(target));
+        assertTrue(Files.list(targetDir).anyMatch(p -> p.getFileName().toString().matches("x_\\d+\\.txt")));
+        assertEquals(1, resRn.moved());
+    }
+
+    @Test
     void testExecute_CreatesTargetDirectory(@TempDir Path tempDir) throws IOException {
         createTestFile(tempDir, "test.jpg", "content");
         Path source = tempDir.resolve("test.jpg");

@@ -7,7 +7,7 @@ import java.util.Map;
 
 /**
  * Parser pour les arguments de ligne de commande de Neatify.
- * Utilise un Map de handlers pour éviter la complexité cyclomatique d'un gros switch.
+ * Construit une configuration immuable via des handlers simples.
  */
 public class ArgumentParser {
     private final Map<String, ArgumentHandler> handlers;
@@ -21,10 +21,8 @@ public class ArgumentParser {
 
     /**
      * Parse les arguments et retourne une configuration.
-     *
      * @param arguments arguments de ligne de commande
      * @return configuration parsée
-     * @throws IllegalArgumentException si les arguments sont invalides
      */
     public CLIConfig parse(String[] arguments) {
         this.config = new CLIConfig();
@@ -33,11 +31,9 @@ public class ArgumentParser {
         for (index = 0; index < args.length; index++) {
             String arg = args[index];
             ArgumentHandler handler = handlers.get(arg);
-
             if (handler == null) {
                 throw new IllegalArgumentException("Argument inconnu : " + arg);
             }
-
             index = handler.handle(index);
         }
 
@@ -65,10 +61,14 @@ public class ArgumentParser {
         map.put("-i", map.get("--interactive"));
         map.put("--no-color", i -> { config.setNoColor(true); return i; });
         map.put("--ascii", i -> { config.setAscii(true); return i; });
+        map.put("--json", i -> { config.setJson(true); return i; });
 
-        // Arguments avec valeurs complexes
+        // Arguments avec valeurs
         map.put("--per-folder-preview", this::parsePerFolderPreview);
         map.put("--sort", this::parseSort);
+        map.put("--on-collision", this::parseCollision);
+        map.put("--include", this::parseInclude);
+        map.put("--exclude", this::parseExclude);
 
         return map;
     }
@@ -103,6 +103,28 @@ public class ArgumentParser {
         return i + 1;
     }
 
+    private int parseCollision(int i) {
+        requireNextArgument(i, "--on-collision");
+        String strategy = args[i + 1].toLowerCase();
+        if (!strategy.matches("rename|skip|overwrite")) {
+            throw new IllegalArgumentException("--on-collision doit etre: rename, skip ou overwrite");
+        }
+        config.setOnCollision(strategy);
+        return i + 1;
+    }
+
+    private int parseInclude(int i) {
+        requireNextArgument(i, "--include");
+        config.addInclude(args[i + 1]);
+        return i + 1;
+    }
+
+    private int parseExclude(int i) {
+        requireNextArgument(i, "--exclude");
+        config.addExclude(args[i + 1]);
+        return i + 1;
+    }
+
     private void requireNextArgument(int i, String argName) {
         if (i + 1 >= args.length) {
             throw new IllegalArgumentException(argName + " necessite un argument");
@@ -121,12 +143,9 @@ public class ArgumentParser {
     }
 
     @FunctionalInterface
-    private interface ArgumentHandler {
-        int handle(int index);
-    }
+    private interface ArgumentHandler { int handle(int index); }
 
     @FunctionalInterface
-    private interface PathConsumer {
-        void accept(Path path);
-    }
+    private interface PathConsumer { void accept(Path path); }
 }
+

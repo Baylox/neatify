@@ -41,9 +41,14 @@ public class FileOrganizationExecutor {
             return;
         }
 
-        showPreview(config, actions);
-        FileMover.Result result = executeActions(config, actions);
-        showSummary(config, result);
+        if (config.isJson()) {
+            FileMover.Result result = executeActions(config, actions);
+            printJson(config, actions, result);
+        } else {
+            showPreview(config, actions);
+            FileMover.Result result = executeActions(config, actions);
+            showSummary(config, result);
+        }
     }
 
     private void validatePaths(CLIConfig config) {
@@ -97,7 +102,13 @@ public class FileOrganizationExecutor {
 
     private List<FileMover.Action> planActions(CLIConfig config, Map<String, String> rules) throws IOException {
         printInfo("Analyse du dossier: " + config.getSourceDir());
-        List<FileMover.Action> actions = FileMover.plan(config.getSourceDir(), rules);
+        List<FileMover.Action> actions = FileMover.plan(
+            config.getSourceDir(),
+            rules,
+            100_000,
+            config.getIncludes(),
+            config.getExcludes()
+        );
         printSuccess(actions.size() + " fichier(s) a deplacer");
         return actions;
     }
@@ -119,7 +130,8 @@ public class FileOrganizationExecutor {
         }
         System.out.println();
 
-        return FileMover.execute(actions, !config.isApply());
+        FileMover.CollisionStrategy strategy = parseCollision(config.getOnCollision());
+        return FileMover.execute(actions, !config.isApply(), strategy);
     }
 
     private void showSummary(CLIConfig config, FileMover.Result result) {
@@ -137,5 +149,51 @@ public class FileOrganizationExecutor {
             case "size" -> Preview.SortMode.SIZE;
             default -> Preview.SortMode.ALPHA;
         };
+    }
+
+    private FileMover.CollisionStrategy parseCollision(String s) {
+        return switch (s.toLowerCase()) {
+            case "skip" -> FileMover.CollisionStrategy.SKIP;
+            case "overwrite" -> FileMover.CollisionStrategy.OVERWRITE;
+            default -> FileMover.CollisionStrategy.RENAME;
+        };
+    }
+
+    private void printJson(CLIConfig config, List<FileMover.Action> actions, FileMover.Result result) {
+        StringBuilder sb = new StringBuilder();
+        sb.append('{');
+        sb.append("\"source\":\"").append(escape(config.getSourceDir().toString())).append("\",");
+        sb.append("\"apply\":").append(config.isApply()).append(',');
+        sb.append("\"onCollision\":\"").append(escape(config.getOnCollision())).append("\",");
+        sb.append("\"planned\":").append(actions.size()).append(',');
+        sb.append("\"actions\":[");
+        for (int i = 0; i < actions.size(); i++) {
+            var a = actions.get(i);
+            sb.append('{')
+              .append("\"source\":\"").append(escape(a.source().toString())).append("\",")
+              .append("\"target\":\"").append(escape(a.target().toString())).append("\",")
+              .append("\"reason\":\"").append(escape(a.reason())).append("\"")
+              .append('}');
+            if (i < actions.size() - 1) sb.append(',');
+        }
+        sb.append(']');
+        if (result != null) {
+            sb.append(',').append("\"result\":{")
+              .append("\"moved\":").append(result.moved()).append(',')
+              .append("\"skipped\":").append(result.skipped()).append(',')
+              .append("\"errors\":[");
+            for (int i = 0; i < result.errors().size(); i++) {
+                String e = result.errors().get(i);
+                sb.append("\"").append(escape(e)).append("\"");
+                if (i < result.errors().size() - 1) sb.append(',');
+            }
+            sb.append("]}");
+        }
+        sb.append('}');
+        System.out.println(sb.toString());
+    }
+
+    private String escape(String s) {
+        return s.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 }

@@ -28,6 +28,10 @@ public final class HelpPrinter {
         System.out.println("  --source, -s <dossier>      Dossier a ranger (obligatoire)");
         System.out.println("  --rules, -r <fichier>       Fichier de regles (obligatoire)");
         System.out.println("  --apply, -a                 Applique les changements (sinon dry-run)");
+        System.out.println("  --json                       Sortie JSON (apercu + resultat)");
+        System.out.println("  --on-collision <mode>       Collision: rename (defaut), skip, overwrite");
+        System.out.println("  --include <glob>            Inclure (repetable), ex: **/*.pdf");
+        System.out.println("  --exclude <glob>            Exclure (repetable), ex: **/node_modules/**");
         System.out.println("  --help, -h                  Affiche cette aide");
         System.out.println("  --version, -v               Affiche la version");
         System.out.println();

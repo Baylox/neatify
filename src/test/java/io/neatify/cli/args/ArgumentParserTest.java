@@ -69,4 +69,25 @@ class ArgumentParserTest {
 
         assertTrue(exception.getMessage().contains("alpha, ext ou size"));
     }
+
+    @Test
+    void testParse_JsonFlag_AndCollision() {
+        String[] args = {"--source", "/tmp", "--rules", "/tmp/r", "--json", "--on-collision", "overwrite"};
+        CLIConfig config = parser.parse(args);
+
+        assertTrue(config.isJson());
+        assertEquals("overwrite", config.getOnCollision());
+    }
+
+    @Test
+    void testParse_IncludeExclude_Multiple() {
+        String[] args = {"--source", "/tmp", "--rules", "/tmp/r",
+                "--include", "**/*.pdf", "--include", "**/*.jpg",
+                "--exclude", "**/node_modules/**"};
+        CLIConfig config = parser.parse(args);
+
+        assertTrue(config.getIncludes().contains("**/*.pdf"));
+        assertTrue(config.getIncludes().contains("**/*.jpg"));
+        assertTrue(config.getExcludes().contains("**/node_modules/**"));
+    }
 }
