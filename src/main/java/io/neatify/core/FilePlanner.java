@@ -35,7 +35,22 @@ final class FilePlanner {
 
         Files.walkFileTree(sourceRoot, new SimpleFileVisitor<>() {
             @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+                // Skip internal journal directory to avoid moving undo files
+                Path name = dir.getFileName();
+                if (name != null && name.toString().equals(".neatify")) {
+                    return FileVisitResult.SKIP_SUBTREE;
+                }
+                return FileVisitResult.CONTINUE;
+            }
+            @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+                // Never process files under the internal .neatify directory
+                Path relToRoot = sourceRoot.relativize(file);
+                if (relToRoot.getNameCount() > 0 &&
+                    relToRoot.getName(0).toString().equals(".neatify")) {
+                    return FileVisitResult.CONTINUE;
+                }
                 if (fileCount.incrementAndGet() > maxFiles) {
                     throw new IllegalStateException("File quota exceeded: " + maxFiles);
                 }
@@ -76,6 +91,11 @@ final class FilePlanner {
             if (!targetDir.startsWith(sourceRoot.normalize())) return Optional.empty();
 
             Path targetFile = targetDir.resolve(metadata.fileName());
+
+            // Avoid planning a no-op move (already in the right place)
+            if (file.toAbsolutePath().normalize().equals(targetFile.toAbsolutePath().normalize())) {
+                return Optional.empty();
+            }
             String reason = String.format("extension: %s -> %s", metadata.extension(), targetFolder);
             return Optional.of(new FileMover.Action(file, targetFile, reason));
 

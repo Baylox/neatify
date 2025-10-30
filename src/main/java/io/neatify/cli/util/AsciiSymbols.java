@@ -16,19 +16,10 @@ public final class AsciiSymbols {
      * Detects if the terminal likely supports Unicode.
      */
     private static boolean detectUnicodeSupport() {
-        String encoding = System.getProperty("file.encoding");
-        if (encoding != null && encoding.toLowerCase().contains("utf")) {
-            return true;
-        }
-
-        String os = System.getProperty("os.name").toLowerCase();
-        if (os.contains("win")) {
-            // Recent Windows: Unicode generally supported
-            return true;
-        }
-
-        // Assume support by default
-        return true;
+        // Be conservative: only enable Unicode when the JVM reports a UTF-capable encoding.
+        // This avoids garbled characters on terminals not configured for UTF-8.
+        String encoding = System.getProperty("file.encoding", "").toLowerCase();
+        return encoding.contains("utf");
     }
 
     /** Enables or disables Unicode (forces ASCII if false). */
