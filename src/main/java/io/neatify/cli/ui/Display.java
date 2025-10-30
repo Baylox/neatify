@@ -114,7 +114,7 @@ public final class Display {
 
     // Note: removed deprecated printBanner(String) overload to keep API lean
 
-    // ============ Tableaux et barres ============
+    // ============ Tables and bars ============
 
     public static void printResultTable(int moved, int skipped, int errors) {
         int total = moved + skipped;

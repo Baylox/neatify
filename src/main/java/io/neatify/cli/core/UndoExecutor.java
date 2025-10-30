@@ -1,5 +1,8 @@
 package io.neatify.cli.core;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.annotations.SerializedName;
 import io.neatify.core.PathSecurity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,17 +12,43 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /** Handles journaling and undoing operations. */
 public final class UndoExecutor {
 
     private static final Logger logger = LoggerFactory.getLogger(UndoExecutor.class);
+    private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
     private UndoExecutor() {}
 
     public record Move(java.nio.file.Path from, java.nio.file.Path to) {}
     public record UndoResult(int restored, int skipped, List<String> errors) {}
     public record RunMeta(long time, String onCollision, int movesCount, Path file) {}
+
+    // JSON DTOs for Gson serialization
+    private static final class MoveDto {
+        String from;
+        String to;
+
+        MoveDto(String from, String to) {
+            this.from = from;
+            this.to = to;
+        }
+    }
+
+    private static final class RunDoc {
+        long time;
+        @SerializedName("onCollision")
+        String onCollision;
+        List<MoveDto> moves;
+
+        RunDoc(long time, String onCollision, List<MoveDto> moves) {
+            this.time = time;
+            this.onCollision = onCollision;
+            this.moves = moves;
+        }
+    }
 
     private static Path neatifyDir(Path sourceRoot) { return sourceRoot.resolve(".neatify"); }
     private static Path runsDir(Path sourceRoot) { return neatifyDir(sourceRoot).resolve("runs"); }
@@ -34,22 +63,18 @@ public final class UndoExecutor {
 
         long now = System.currentTimeMillis();
         Path runFile = dir.resolve(now + ".json");
-        StringBuilder sb = new StringBuilder();
-        sb.append('{')
-          .append("\"time\":").append(now).append(',')
-          .append("\"onCollision\":\"").append(escape(onCollision)).append("\",")
-          .append("\"moves\":[");
-        for (int i = 0; i < moves.size(); i++) {
-            Move m = moves.get(i);
-            sb.append('{')
-              .append("\"from\":\"").append(escape(m.from.toAbsolutePath().toString())).append("\",")
-              .append("\"to\":\"").append(escape(m.to.toAbsolutePath().toString())).append("\"")
-              .append('}');
-            if (i < moves.size() - 1) sb.append(',');
-        }
-        sb.append(']').append('}');
 
-        Files.writeString(runFile, sb.toString(), StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW);
+        // Convert Move records to DTOs
+        List<MoveDto> moveDtos = moves.stream()
+            .map(m -> new MoveDto(
+                m.from.toAbsolutePath().toString(),
+                m.to.toAbsolutePath().toString()))
+            .collect(Collectors.toList());
+
+        RunDoc runDoc = new RunDoc(now, onCollision, moveDtos);
+        String json = gson.toJson(runDoc);
+
+        Files.writeString(runFile, json, StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW);
         return runFile;
     }
 
@@ -96,8 +121,10 @@ public final class UndoExecutor {
              .forEach(p -> {
                  try {
                      String c = Files.readString(p, StandardCharsets.UTF_8);
-                     RunDoc rd = parseRun(c);
-                     if (rd != null) metas.add(new RunMeta(rd.time, rd.onCollision, rd.moves.size(), p));
+                     RunDoc rd = gson.fromJson(c, RunDoc.class);
+                     if (rd != null && rd.moves != null) {
+                         metas.add(new RunMeta(rd.time, rd.onCollision, rd.moves.size(), p));
+                     }
                  } catch (Exception e) {
                      logger.debug("Failed to parse run file {}: {}", p, e.getMessage());
                  }
@@ -114,9 +141,13 @@ public final class UndoExecutor {
 
     private static UndoResult undoRunFile(Path sourceRoot, Path runFile) throws IOException {
         String content = Files.readString(runFile, StandardCharsets.UTF_8).trim();
-        RunDoc rd = parseRun(content);
-        if (rd == null) return null;
-        List<Move> moves = rd.moves;
+        RunDoc rd = gson.fromJson(content, RunDoc.class);
+        if (rd == null || rd.moves == null) return null;
+
+        // Convert DTOs back to Move records
+        List<Move> moves = rd.moves.stream()
+            .map(dto -> new Move(Paths.get(dto.from), Paths.get(dto.to)))
+            .collect(Collectors.toList());
 
         int restored = 0, skipped = 0; List<String> errors = new ArrayList<>();
         Path normalizedRoot = sourceRoot.toAbsolutePath().normalize();
@@ -124,7 +155,7 @@ public final class UndoExecutor {
             Path from = m.from.toAbsolutePath().normalize();
             Path to = m.to.toAbsolutePath().normalize();
             if (!from.startsWith(normalizedRoot) || !to.startsWith(normalizedRoot)) {
-                skipped++; errors.add("Hors perimetre: " + from + " / " + to); continue;
+                skipped++; errors.add("Out of scope: " + from + " / " + to); continue;
             }
             if (!Files.exists(to)) { skipped++; errors.add("Absent: " + to); continue; }
             try {
@@ -185,6 +216,7 @@ public final class UndoExecutor {
         return new UndoResult(restored, skipped, errors);
     }
 
+    // Legacy manifest.json parsing helpers (still needed for backward compatibility)
     private static List<Move> parseMoves(String movesArr) {
         List<Move> list = new ArrayList<>();
         if (movesArr.isEmpty()) return list;
@@ -211,54 +243,5 @@ public final class UndoExecutor {
         int q2 = jsonObj.indexOf('"', q1 + 1);
         if (q1 < 0 || q2 < 0) return null;
         return jsonObj.substring(q1 + 1, q2).replace("\\\"", "\"").replace("\\\\", "\\");
-    }
-
-    private static long extractLong(String jsonObj, String key) {
-        String k = "\"" + key + "\"";
-        int p = jsonObj.indexOf(k);
-        if (p < 0) return 0L;
-        int c = jsonObj.indexOf(':', p);
-        int end = c + 1;
-        while (end < jsonObj.length() && Character.isWhitespace(jsonObj.charAt(end))) end++;
-        int s = end;
-        while (end < jsonObj.length() && Character.isDigit(jsonObj.charAt(end))) end++;
-        try { return Long.parseLong(jsonObj.substring(s, end)); } catch (Exception e) { return 0L; }
-    }
-
-    private static int countMoves(String content) {
-        int ms = content.indexOf("\"moves\"");
-        if (ms < 0) return 0;
-        int arrStart = content.indexOf('[', ms);
-        int arrEnd = content.indexOf(']', arrStart);
-        if (arrStart < 0 || arrEnd < 0) return 0;
-        String movesArr = content.substring(arrStart + 1, arrEnd).trim();
-        if (movesArr.isEmpty()) return 0;
-        int cnt = 1;
-        for (int i = 0; i < movesArr.length(); i++) if (movesArr.charAt(i) == ',') cnt++;
-        return cnt;
-    }
-
-    private static String escape(String s) {
-        return s.replace("\\", "\\\\").replace("\"", "\\\"");
-    }
-
-    // Minimal JSON handling for fixed run schema
-    private static final class RunDoc {
-        final long time; final String onCollision; final List<Move> moves;
-        RunDoc(long t, String oc, List<Move> m) { this.time=t; this.onCollision=oc; this.moves=m; }
-    }
-
-    private static RunDoc parseRun(String json) {
-        if (json == null) return null;
-        long t = extractLong(json, "time");
-        String oc = extract(json, "onCollision");
-        int ms = json.indexOf("\"moves\"");
-        if (ms < 0) return null;
-        int arrStart = json.indexOf('[', ms);
-        int arrEnd = json.indexOf(']', arrStart);
-        if (arrStart < 0 || arrEnd < 0) return null;
-        String movesArr = json.substring(arrStart + 1, arrEnd).trim();
-        List<Move> moves = parseMoves(movesArr);
-        return new RunDoc(t, oc, moves);
     }
 }
