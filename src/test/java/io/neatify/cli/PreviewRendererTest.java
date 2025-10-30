@@ -15,7 +15,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests essentiels pour Preview - Focus sur les cas critiques uniquement.
+ * Essential tests for Preview - Focus on critical cases only.
  */
 class PreviewRendererTest extends TestHelper {
 

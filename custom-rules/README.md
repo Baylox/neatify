@@ -1,24 +1,24 @@
 # Custom Rules
 
-Ce dossier est destiné à vos **fichiers de règles personnalisés**.
+This folder is for your **custom rules files**.
 
-## Utilisation
+## Usage
 
-1. Créez vos propres fichiers `.properties` dans ce dossier
-2. Utilisez-les avec Neatify :
+1. Create your own `.properties` files in this folder
+2. Use them with Neatify:
    ```bash
    java -jar target/neatify.jar --source ~/Downloads --rules custom-rules/my-rules.properties --apply
    ```
 
-## Format des règles
+## Rules Format
 
-Les fichiers de règles suivent le format `.properties` :
+Rules files follow the `.properties` format:
 
 ```properties
-# Commentaire
-extension=DossierCible
+# Comment
+extension=TargetFolder
 
-# Exemples
+# Examples
 pdf=Documents
 jpg=Images
 mp4=Videos
@@ -26,7 +26,7 @@ mp4=Videos
 
 ## Template
 
-Copiez le fichier `example.properties.template` et renommez-le pour créer vos propres règles :
+Copy the `example.properties.template` file and rename it to create your own rules:
 
 ```bash
 cp example.properties.template my-rules.properties
@@ -34,6 +34,6 @@ cp example.properties.template my-rules.properties
 
 ## Note
 
-Les fichiers `*.properties` de ce dossier sont **ignorés par Git** (non versionnés), ce qui vous permet de créer vos règles personnalisées sans polluer le dépôt.
+The `*.properties` files in this folder are **ignored by Git** (not version-controlled), allowing you to create your custom rules without polluting the repository.
 
-Seuls ce README et le template sont versionnés.
+Only this README and the template are version-controlled.

@@ -11,7 +11,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests essentiels pour Rules.
+ * Essential tests for Rules.
  */
 class RulesTest {
 

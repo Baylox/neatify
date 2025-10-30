@@ -12,8 +12,8 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests de sécurité pour Rules - Protection contre Path Traversal.
- * Ces tests garantissent que le code bloque les tentatives d'exploitation.
+ * Security tests for Rules - Path Traversal Protection.
+ * These tests ensure that the code blocks exploitation attempts.
  */
 class RulesSecurityTest {
 
@@ -25,7 +25,7 @@ class RulesSecurityTest {
         IllegalArgumentException exception = assertThrows(
             IllegalArgumentException.class,
             () -> Rules.load(rulesFile),
-            "Le chargement devrait échouer avec path traversal contenant '..'"
+            "Loading should fail with path traversal containing '..'"
         );
 
         assertTrue(exception.getMessage().contains("Path traversal not allowed"));
@@ -52,7 +52,7 @@ class RulesSecurityTest {
         IllegalArgumentException exception = assertThrows(
             IllegalArgumentException.class,
             () -> Rules.load(rulesFile),
-            "Le path traversal devrait être bloqué même mélangé avec un chemin valide"
+            "Path traversal should be blocked even when mixed with a valid path"
         );
 
         assertTrue(exception.getMessage().contains("Path traversal not allowed"));
@@ -66,7 +66,7 @@ class RulesSecurityTest {
         IllegalArgumentException exception = assertThrows(
             IllegalArgumentException.class,
             () -> Rules.load(rulesFile),
-            "Le path traversal à la fin devrait être bloqué"
+            "Path traversal at the end should be blocked"
         );
 
         assertTrue(exception.getMessage().contains("Path traversal not allowed"));
@@ -80,7 +80,7 @@ class RulesSecurityTest {
         IllegalArgumentException exception = assertThrows(
             IllegalArgumentException.class,
             () -> Rules.load(rulesFile),
-            "Les chemins absolus Unix devraient être bloqués"
+            "Absolute Unix paths should be blocked"
         );
 
         assertTrue(exception.getMessage().contains("Absolute Unix path not allowed"));
@@ -107,7 +107,7 @@ class RulesSecurityTest {
         IllegalArgumentException exception = assertThrows(
             IllegalArgumentException.class,
             () -> Rules.load(rulesFile),
-            "Les chemins absolus Windows devraient être bloqués"
+            "Absolute Windows paths should be blocked"
         );
 
         assertTrue(exception.getMessage().contains("Absolute Windows path not allowed"));
@@ -134,10 +134,10 @@ class RulesSecurityTest {
             pdf=Documents/Work/Reports
             """);
 
-        // Ces chemins sont valides et ne devraient PAS lancer d'exception
+        // These paths are valid and should NOT throw an exception
         Map<String, String> rules = assertDoesNotThrow(
             () -> Rules.load(rulesFile),
-            "Les chemins relatifs imbriqués valides devraient être autorisés"
+            "Valid nested relative paths should be allowed"
         );
 
         assertEquals("Images/Photos/Vacation", rules.get("jpg"));
@@ -152,10 +152,10 @@ class RulesSecurityTest {
             pdf=Documents.v2
             """);
 
-        // Un seul point dans un nom de dossier est valide
+        // A single dot in a folder name is valid
         Map<String, String> rules = assertDoesNotThrow(
             () -> Rules.load(rulesFile),
-            "Un point simple dans un nom de dossier devrait être autorisé"
+            "A single dot in a folder name should be allowed"
         );
 
         assertEquals("Images.Backup", rules.get("jpg"));
@@ -172,11 +172,11 @@ class RulesSecurityTest {
             txt=TextFiles
             """);
 
-        // L'ensemble du chargement devrait échouer si une règle est malveillante
+        // The entire loading should fail if one rule is malicious
         IllegalArgumentException exception = assertThrows(
             IllegalArgumentException.class,
             () -> Rules.load(rulesFile),
-            "Le chargement devrait échouer si au moins une règle est malveillante"
+            "Loading should fail if at least one rule is malicious"
         );
 
         assertNotNull(exception.getMessage(), "Exception should have a message");

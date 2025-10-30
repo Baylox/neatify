@@ -7,33 +7,33 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
- * Classe de base pour tous les tests avec helpers communs.
- * Réduit la duplication de code entre les différentes classes de test.
+ * Base class for all tests with common helpers.
+ * Reduces code duplication between different test classes.
  */
 public abstract class TestHelper {
 
     // =====================================================
-    // HELPER METHODS - Création de fichiers
+    // HELPER METHODS - File creation
     // =====================================================
 
     /**
-     * Crée un fichier de test avec un contenu personnalisé.
+     * Creates a test file with custom content.
      */
     protected void createTestFile(Path tempDir, String filename, String content) throws IOException {
         Files.writeString(tempDir.resolve(filename), content);
     }
 
     /**
-     * Crée un fichier de test avec un contenu par défaut.
+     * Creates a test file with default content.
      */
     protected void createTestFile(Path tempDir, String filename) throws IOException {
         createTestFile(tempDir, filename, "content");
     }
 
     /**
-     * Crée plusieurs fichiers de test avec un pattern de nom.
-     * Par exemple: createMultipleFiles(tempDir, "file", "txt", 5)
-     * créera file1.txt, file2.txt, ..., file5.txt
+     * Creates multiple test files with a naming pattern.
+     * For example: createMultipleFiles(tempDir, "file", "txt", 5)
+     * will create file1.txt, file2.txt, ..., file5.txt
      */
     protected void createMultipleFiles(Path tempDir, String prefix, String extension, int count) throws IOException {
         for (int i = 1; i <= count; i++) {
@@ -42,18 +42,18 @@ public abstract class TestHelper {
     }
 
     // =====================================================
-    // HELPER METHODS - Création d'actions FileMover
+    // HELPER METHODS - FileMover action creation
     // =====================================================
 
     /**
-     * Crée une action FileMover avec un label par défaut "test".
+     * Creates a FileMover action with default label "test".
      */
     protected FileMover.Action createAction(Path source, Path target) {
         return new FileMover.Action(source, target, "test");
     }
 
     /**
-     * Crée une action FileMover avec un label personnalisé.
+     * Creates a FileMover action with a custom label.
      */
     protected FileMover.Action createAction(Path source, Path target, String label) {
         return new FileMover.Action(source, target, label);
