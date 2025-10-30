@@ -78,26 +78,29 @@ public final class Display {
         return " ".repeat(padding) + trimmed;
     }
 
-    // ============ Banner ============
+    // ============ Banner (Unicode via + env override) ============
 
-    public static void printBanner(AppInfo appInfo) {
+    /**
+     * Unicode banner encoded with sequences, with ASCII fallback.
+     * Respects env override NEATIFY_FORCE_UNICODE=true to force Unicode rendering.
+     */
+    public static void printBannerSafe(AppInfo appInfo) {
         println();
         if (io.neatify.cli.util.AsciiSymbols.useUnicode()) {
-            println("    ███╗   ██╗███████╗ █████╗ ████████╗██╗███████╗██╗   ██╗");
-            println("    ████╗  ██║██╔════╝██╔══██╗╚══██╔══╝██║██╔════╝╚██╗ ██╔╝");
-            println("    ██╔██╗ ██║█████╗  ███████║   ██║   ██║█████╗   ╚████╔╝ ");
-            println("    ██║╚██╗██║██╔══╝  ██╔══██║   ██║   ██║██╔══╝    ╚██╔╝  ");
-            println("    ██║ ╚████║███████╗██║  ██║   ██║   ██║██║        ██║   ");
-            println("    ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝   ╚═╝   ╚═╝╚═╝        ╚═╝   ");
-            println();
-            println("    " + appInfo.description() + " - v" + appInfo.version());
-            println("    ════════════════════════════════════════════════════════");
-            println();
+            String title = appInfo.name() + " - v" + appInfo.version();
+            String desc = appInfo.description();
+            int inner = Math.max(title.length(), desc.length());
+            int pad = 2; // spaces padding left/right
+            int width = inner + pad * 2;
+            String h = "\u2550".repeat(width); // box drawing double horizontal
+            println("  \u2554" + h + "\u2557"); // top corners
+            println("  \u2551" + padCenter(title, width) + "\u2551");
+            println("  \u2551" + padCenter(desc, width) + "\u2551");
+            println("  \u255A" + h + "\u255D"); // bottom corners
         } else {
             // ASCII fallback
             println(center(appInfo.name() + " - v" + appInfo.version()));
             println(center(appInfo.description()));
-            println();
         }
         println("    -- " + signature() + " --");
         println();
@@ -111,8 +114,6 @@ public final class Display {
         String user = System.getProperty("user.name", "neatify");
         return "by " + user;
     }
-
-    // Note: removed deprecated printBanner(String) overload to keep API lean
 
     // ============ Tables and bars ============
 
@@ -151,33 +152,6 @@ public final class Display {
         scanner.nextLine();
     }
 
-    // ============ Safer Banner (Unicode via \+ env override) ============
-
-    /**
-     * Unicode banner encoded with sequences, with ASCII fallback.
-     * Respects env override NEATIFY_FORCE_UNICODE=true to force Unicode rendering.
-     */
-    public static void printBannerSafe(AppInfo appInfo) {
-        println();
-        if (io.neatify.cli.util.AsciiSymbols.useUnicode()) {
-            String title = appInfo.name() + " - v" + appInfo.version();
-            String desc = appInfo.description();
-            int inner = Math.max(title.length(), desc.length());
-            int pad = 2; // spaces padding left/right
-            int width = inner + pad * 2;
-            String h = "\u2550".repeat(width); // box drawing double horizontal
-            println("  \u2554" + h + "\u2557"); // top left/right corners
-            println("  \u2551" + padCenter(title, width) + "\u2551");
-            println("  \u2551" + padCenter(desc, width) + "\u2551");
-            println("  \u255A" + h + "\u255D"); // bottom left/right corners
-        } else {
-            println(center(appInfo.name() + " - v" + appInfo.version()));
-            println(center(appInfo.description()));
-        }
-        println("    -- " + signature() + " --");
-        println();
-    }
-
     // Centers text inside a fixed width using spaces (no ANSI/unicode), returns exactly width chars
     private static String padCenter(String s, int width) {
         if (s == null) s = "";
@@ -188,3 +162,4 @@ public final class Display {
         return " ".repeat(left) + t + " ".repeat(right);
     }
 }
+

@@ -91,6 +91,7 @@
                                 </transformer>
                             </transformers>
                             <finalName>neatify</finalName>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
                         </configuration>
                     </execution>
                 </executions>
