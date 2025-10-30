@@ -21,7 +21,8 @@ public final class InteractiveCLI {
     }
 
     public void run() throws IOException {
-        printBanner(appInfo);
+        // Use safer banner that supports and env override
+        Display.printBannerSafe(appInfo);
 
         while (true) {
             printMenu();

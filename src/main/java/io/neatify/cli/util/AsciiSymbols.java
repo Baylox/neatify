@@ -29,6 +29,10 @@ public final class AsciiSymbols {
 
     /** Returns whether Unicode mode is active. */
     public static boolean useUnicode() {
+        String force = System.getenv("NEATIFY_FORCE_UNICODE");
+        if (force != null && force.equalsIgnoreCase("true")) {
+            return true;
+        }
         return useUnicode;
     }
 
