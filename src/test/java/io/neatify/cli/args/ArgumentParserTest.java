@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests essentiels pour ArgumentParser - Focus sur parsing et validation critique.
+ * Essential tests for ArgumentParser - Focus on parsing and critical validation.
  */
 class ArgumentParserTest {
 

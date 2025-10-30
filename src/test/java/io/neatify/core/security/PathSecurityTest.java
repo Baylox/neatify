@@ -11,7 +11,7 @@ import java.nio.file.Path;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests de sécurité pour PathSecurity.
+ * Security tests for PathSecurity.
  */
 class PathSecurityTest {
 
@@ -71,14 +71,14 @@ class PathSecurityTest {
 
     @Test
     void testValidateSourceDir_ValidDir(@TempDir Path tempDir) {
-        // Un dossier temporaire devrait être autorisé
+        // A temporary folder should be allowed
         assertDoesNotThrow(() -> PathSecurity.validateSourceDir(tempDir));
     }
 
     @Test
     void testValidateSourceDir_RejectsSystemDirs() {
-        // Ce test vérifie que les dossiers système sont bien bloqués
-        // mais est tolérant aux différences d'environnement
+        // This test verifies that system directories are properly blocked
+        // but is tolerant to environment differences
         boolean tested = isUnixLikeSystem() ? testUnixSystemDirectory() : testWindowsSystem();
 
         assertTrue(tested, "At least one system directory test should have been performed");
@@ -108,8 +108,8 @@ class PathSecurityTest {
     }
 
     private boolean testWindowsSystem() {
-        // Sur Windows, on teste juste que la validation fonctionne sans planter
-        // Le blocage spécifique des dossiers Windows est difficile à tester de manière portable
+        // On Windows, we just test that validation works without crashing
+        // Specific Windows folder blocking is difficult to test in a portable way
         return true;
     }
 }

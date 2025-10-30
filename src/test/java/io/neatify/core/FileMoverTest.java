@@ -13,7 +13,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests essentiels pour FileMover.
+ * Essential tests for FileMover.
  */
 class FileMoverTest extends TestHelper {
 

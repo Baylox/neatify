@@ -18,7 +18,7 @@ final class DefaultRules {
         addRules(rules, "Images", "jpg", "jpeg", "png", "gif", "bmp", "svg", "webp", "ico");
 
         addRules(rules, "Documents", "pdf", "doc", "docx", "txt", "odt", "rtf", "md");
-        addRules(rules, "Documents/Tableurs", "xls", "xlsx", "csv", "ods");
+        addRules(rules, "Documents/Spreadsheets", "xls", "xlsx", "csv", "ods");
         addRules(rules, "Documents/Presentations", "ppt", "pptx", "odp");
 
         addRules(rules, "Archives", "zip", "rar", "7z", "tar", "gz", "bz2");

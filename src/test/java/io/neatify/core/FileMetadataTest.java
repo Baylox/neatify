@@ -10,7 +10,7 @@ import java.nio.file.Path;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests essentiels pour FileMetadata - Focus sur extraction d'extension.
+ * Essential tests for FileMetadata - Focus on extension extraction.
  */
 class FileMetadataTest {
 

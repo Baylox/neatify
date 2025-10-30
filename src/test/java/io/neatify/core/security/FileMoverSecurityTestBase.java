@@ -12,14 +12,14 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Classe de base pour les tests de sécurité de FileMover.
- * Fournit des méthodes utilitaires spécifiques à la sécurité.
- * Hérite des helpers communs de TestHelper.
+ * Base class for FileMover security tests.
+ * Provides security-specific utility methods.
+ * Inherits common helpers from TestHelper.
  */
 public abstract class FileMoverSecurityTestBase extends TestHelper {
 
     // =====================================================
-    // HELPER METHODS - Assertions sur les actions
+    // HELPER METHODS - Action assertions
     // =====================================================
 
     protected void assertActionExists(List<FileMover.Action> actions, String filename) {
@@ -43,7 +43,7 @@ public abstract class FileMoverSecurityTestBase extends TestHelper {
         Map<String, String> maliciousRules = Map.of(extension, maliciousTarget);
         List<FileMover.Action> actions = FileMover.plan(tempDir, maliciousRules);
         assertEquals(0, actions.size(),
-            "Les règles avec path traversal ne devraient générer aucune action");
+            "Rules with path traversal should not generate any actions");
     }
 
     // =====================================================

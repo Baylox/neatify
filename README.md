@@ -116,7 +116,3 @@ Tip: always preview before applying on important data.
 ## License
 
 MIT – see `LICENSE`.
-
----
-
-Lire la documentation en français: README.fr.md

@@ -1,12 +1,12 @@
-# Neatify - Template de règles personnalisées
+# Neatify - Custom Rules Template
 #
-# Format : extension=DossierCible
-# Les extensions sont automatiquement normalisées (sans point, minuscules)
+# Format: extension=TargetFolder
+# Extensions are automatically normalized (no dot, lowercase)
 #
-# Copiez ce fichier et renommez-le :
+# Copy this file and rename it:
 #   cp example.properties.template my-rules.properties
 #
-# Puis éditez-le selon vos besoins.
+# Then edit it according to your needs.
 
 # ============================================================
 # IMAGES
@@ -30,12 +30,12 @@ odt=Documents
 rtf=Documents
 md=Documents
 
-# Tableurs
-xls=Documents/Tableurs
-xlsx=Documents/Tableurs
-csv=Documents/Tableurs
+# Spreadsheets
+xls=Documents/Spreadsheets
+xlsx=Documents/Spreadsheets
+csv=Documents/Spreadsheets
 
-# Présentations
+# Presentations
 ppt=Documents/Presentations
 pptx=Documents/Presentations
 
@@ -49,22 +49,22 @@ tar=Archives
 gz=Archives
 
 # ============================================================
-# MÉDIAS
+# MEDIA
 # ============================================================
-# Vidéos
+# Videos
 mp4=Videos
 avi=Videos
 mkv=Videos
 mov=Videos
 
 # Audio
-mp3=Musique
-wav=Musique
-flac=Musique
-m4a=Musique
+mp3=Music
+wav=Music
+flac=Music
+m4a=Music
 
 # ============================================================
-# CODE SOURCE
+# SOURCE CODE
 # ============================================================
 java=Code
 py=Code
@@ -75,7 +75,7 @@ css=Code
 json=Code
 
 # ============================================================
-# AUTRES
+# OTHER
 # ============================================================
-# Ajoutez vos propres règles ici
-# exemple=MonDossier
+# Add your own rules here
+# example=MyFolder

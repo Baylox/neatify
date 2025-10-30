@@ -13,19 +13,19 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests anti-TOCTOU pour FileMover - Gestion atomique des collisions de fichiers.
+ * Anti-TOCTOU tests for FileMover - Atomic file collision handling.
  */
 class FileMoverCollisionTest extends FileMoverSecurityTestBase {
 
     @Test
     void testAtomicMove_NoCollision(@TempDir Path tempDir) throws IOException {
-        // Créer un fichier source
+        // Create a source file
         createTestFile(tempDir, "test.txt");
 
         Map<String, String> rules = Map.of("txt", "Documents");
         List<FileMover.Action> actions = FileMover.plan(tempDir, rules);
 
-        // Exécuter
+        // Execute
         FileMover.Result result = FileMover.execute(actions, false);
 
         assertEquals(1, result.moved());
@@ -34,44 +34,44 @@ class FileMoverCollisionTest extends FileMoverSecurityTestBase {
 
     @Test
     void testAtomicMove_WithCollision(@TempDir Path tempDir) throws IOException {
-        // Créer un fichier source
+        // Create a source file
         createTestFile(tempDir, "test.txt", "new content");
 
-        // Planifier
+        // Plan
         Map<String, String> rules = Map.of("txt", "Documents");
         List<FileMover.Action> actions = FileMover.plan(tempDir, rules);
 
-        // Créer le dossier cible avec un fichier existant APRÈS la planification
+        // Create the target folder with an existing file AFTER planning
         setupCollisionScenario(tempDir, "test.txt", "existing");
 
-        // Exécuter - devrait créer test_1.txt car test.txt existe déjà
+        // Execute - should create test_1.txt because test.txt already exists
         FileMover.Result result = FileMover.execute(actions, false);
 
         assertEquals(1, result.moved());
 
         Path targetDir = tempDir.resolve("Documents");
-        // Le fichier original existe toujours
+        // The original file still exists
         assertTrue(Files.exists(targetDir.resolve("test.txt")));
         assertEquals("existing", Files.readString(targetDir.resolve("test.txt")));
 
-        // Le nouveau fichier a un suffixe
+        // The new file has a suffix
         assertTrue(Files.exists(targetDir.resolve("test_1.txt")));
         assertEquals("new content", Files.readString(targetDir.resolve("test_1.txt")));
     }
 
     @Test
     void testAtomicMove_MultipleCollisions(@TempDir Path tempDir) throws IOException {
-        // Créer un nouveau fichier
+        // Create a new file
         createTestFile(tempDir, "test.txt", "v3");
 
-        // Planifier
+        // Plan
         Map<String, String> rules = Map.of("txt", "Documents");
         List<FileMover.Action> actions = FileMover.plan(tempDir, rules);
 
-        // Créer le dossier cible avec plusieurs fichiers existants APRÈS la planification
+        // Create the target folder with multiple existing files AFTER planning
         setupCollisionScenario(tempDir, "test.txt", "v0", "v1", "v2");
 
-        // Exécuter - devrait créer test_3.txt
+        // Execute - should create test_3.txt
         FileMover.Result result = FileMover.execute(actions, false);
 
         assertEquals(1, result.moved());
@@ -79,13 +79,13 @@ class FileMoverCollisionTest extends FileMoverSecurityTestBase {
     }
 
     private void assertMultipleCollisionFilesExist(Path targetDir, String expectedNewContent) throws IOException {
-        // Tous les fichiers existent
+        // All files exist
         assertTrue(Files.exists(targetDir.resolve("test.txt")));
         assertTrue(Files.exists(targetDir.resolve("test_1.txt")));
         assertTrue(Files.exists(targetDir.resolve("test_2.txt")));
         assertTrue(Files.exists(targetDir.resolve("test_3.txt")));
 
-        // Le nouveau a le bon contenu
+        // The new one has the correct content
         assertEquals(expectedNewContent, Files.readString(targetDir.resolve("test_3.txt")));
     }
 }

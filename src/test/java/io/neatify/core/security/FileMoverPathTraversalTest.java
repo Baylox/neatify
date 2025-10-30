@@ -12,8 +12,8 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests de sécurité pour FileMover - Protection contre Path Traversal.
- * Second niveau de protection après Rules.sanitizeFolderName().
+ * Security tests for FileMover - Path Traversal Protection.
+ * Second level of protection after Rules.sanitizeFolderName().
  */
 class FileMoverPathTraversalTest extends FileMoverSecurityTestBase {
 
@@ -44,7 +44,7 @@ class FileMoverPathTraversalTest extends FileMoverSecurityTestBase {
         Path normalizedSource = tempDir.normalize();
 
         assertTrue(resolvedTarget.startsWith(normalizedSource),
-            "Le chemin résolu devrait rester dans le dossier source");
+            "The resolved path should stay within the source folder");
         assertTrue(resolvedTarget.toString().contains("Media"));
         assertTrue(resolvedTarget.toString().contains("Photos"));
         assertTrue(resolvedTarget.toString().contains("Vacation"));
@@ -62,20 +62,20 @@ class FileMoverPathTraversalTest extends FileMoverSecurityTestBase {
         createTestFile(tempDir, "script.exe");
 
         Map<String, String> mixedRules = Map.of(
-            "jpg", "Images",                    // Valide
-            "pdf", "../../../etc",              // Malveillante
-            "exe", "Applications/Tools"         // Valide
+            "jpg", "Images",                    // Valid
+            "pdf", "../../../etc",              // Malicious
+            "exe", "Applications/Tools"         // Valid
         );
 
         List<FileMover.Action> actions = FileMover.plan(tempDir, mixedRules);
 
         assertEquals(2, actions.size(),
-            "Seules les règles valides devraient générer des actions");
+            "Only valid rules should generate actions");
 
         assertActionExists(actions, "image.jpg");
         assertActionExists(actions, "script.exe");
         assertActionNotExists(actions, "document.pdf",
-            "document.pdf ne devrait PAS être traité (règle malveillante)");
+            "document.pdf should NOT be processed (malicious rule)");
     }
 
     @Test
@@ -92,6 +92,6 @@ class FileMoverPathTraversalTest extends FileMoverSecurityTestBase {
 
         Path targetPath = actions.get(0).target().normalize();
         assertFalse(targetPath.toString().contains("/./" ),
-            "Le chemin ne devrait pas contenir './' après normalisation");
+            "The path should not contain './' after normalization");
     }
 }
