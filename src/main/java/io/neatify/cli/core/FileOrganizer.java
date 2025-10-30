@@ -165,11 +165,24 @@ public final class FileOrganizer {
     private static Filters promptFilters() {
         String inc = readInput("Include (glob, comma-separated) [Enter = none]", "");
         String exc = readInput("Exclude (glob, comma-separated) [Enter = none]", "");
-        java.util.List<String> includes = new java.util.ArrayList<>();
-        java.util.List<String> excludes = new java.util.ArrayList<>();
-        if (!inc.isBlank()) for (String p : inc.split(",")) { String s=p.trim(); if(!s.isEmpty()) includes.add(s); }
-        if (!exc.isBlank()) for (String p : exc.split(",")) { String s=p.trim(); if(!s.isEmpty()) excludes.add(s); }
+
+        java.util.List<String> includes = parseCommaSeparatedPatterns(inc);
+        java.util.List<String> excludes = parseCommaSeparatedPatterns(exc);
+
         return new Filters(includes, excludes);
+    }
+
+    private static java.util.List<String> parseCommaSeparatedPatterns(String input) {
+        if (input == null) return java.util.List.of();
+        String trimmed = input.trim();
+        if (trimmed.isBlank()) return java.util.List.of();
+
+        java.util.List<String> out = new java.util.ArrayList<>();
+        for (String part : trimmed.split(",")) {
+            String s = part.trim();
+            if (!s.isEmpty()) out.add(s);
+        }
+        return out;
     }
 
     private static FileMover.CollisionStrategy promptCollisionStrategy() {
