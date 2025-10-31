@@ -42,6 +42,7 @@ public class FileOrganizationExecutor {
 
         try {
             validatePaths(config);
+            enforceGitRepositoryPolicy(config);
             applyDisplayOptions(config);
 
             if (config.isUndo()) {
@@ -69,6 +70,44 @@ public class FileOrganizationExecutor {
             MDC.remove("runId");
             logger.debug("Execution completed, runId cleared");
         }
+    }
+
+    /**
+     * Enforces a safety policy: applying changes is only allowed when the
+     * source directory is inside a Git repository. This prevents destructive
+     * reorganizations on arbitrary system folders.
+     */
+    private void enforceGitRepositoryPolicy(CLIConfig config) {
+        Path source = config.getSourceDir();
+        boolean insideGit = isInsideGitRepository(source);
+        if (config.isApply() && insideGit && !config.isAllowInsideGit()) {
+            throw new IllegalArgumentException(
+                "--apply is blocked inside a Git repository by default. " +
+                "Use --allow-inside-git to override, or run outside repos.");
+        }
+        if (insideGit) {
+            // Warn when operating in or under a Git repository
+            if (config.isApply()) {
+                printWarning("Applying inside a Git repository: " + source);
+                printWarning("Proceeding because --allow-inside-git is set. Ensure you have backups.");
+            } else {
+                printWarning("Git repository detected: " + source + " (dry-run; --apply blocked unless --allow-inside-git)");
+            }
+        }
+    }
+
+    private boolean isInsideGitRepository(Path start) {
+        if (start == null) return false;
+        Path current = start.toAbsolutePath().normalize();
+        while (current != null) {
+            Path gitDir = current.resolve(".git");
+            if (Files.exists(gitDir)) {
+                // .git can be a directory or a file (worktree); both indicate a repo
+                return true;
+            }
+            current = current.getParent();
+        }
+        return false;
     }
 
     private void validatePaths(CLIConfig config) {
@@ -138,7 +177,8 @@ public class FileOrganizationExecutor {
             rules,
             config.getMaxFiles(),
             config.getIncludes(),
-            config.getExcludes()
+            config.getExcludes(),
+            /*skipGitRepos=*/!config.isAllowInsideGit()
         );
         printSuccess(actions.size() + " file(s) to move");
         return actions;

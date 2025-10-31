@@ -37,6 +37,7 @@ public final class HelpPrinter {
         System.out.println("  --max-files <n>             Max files to scan (default: 100000)");
         System.out.println("  --include <glob>            Include (repeatable), e.g. **/*.pdf");
         System.out.println("  --exclude <glob>            Exclude (repeatable), e.g. **/node_modules/**");
+        System.out.println("  --allow-inside-git          Allow operating inside Git repositories (unsafe)");
         System.out.println("  --help, -h                  Show this help");
         System.out.println("  --version, -v               Show version");
         System.out.println();

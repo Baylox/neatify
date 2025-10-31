@@ -108,6 +108,9 @@ java -jar target/neatify.jar --source ~/Downloads --rules my-rules.properties --
 - Path traversal protection
 - File‑count quota (anti‑DoS)
 - Atomic collision handling (rename/skip/overwrite)
+- Ignore Git repositories by default: Neatify skips folders that are Git repos (`.git` present) when scanning. This prevents reorganizing project sources by mistake.
+- Apply blocked inside Git repos: `--apply` is blocked when the source directory is inside a Git repository.
+- Explicit override: use `--allow-inside-git` if you intentionally want to operate inside a Git repo (not recommended). Preview first and ensure backups.
 
 Tip: always preview before applying on important data.
 

@@ -66,6 +66,8 @@ public class ArgumentParser {
         map.put("--no-color", i -> { config.setNoColor(true); return i; });
         map.put("--ascii", i -> { config.setAscii(true); return i; });
         map.put("--json", i -> { config.setJson(true); return i; });
+        // Safety override (explicit)
+        map.put("--allow-inside-git", i -> { config.setAllowInsideGit(true); return i; });
 
         // Logging levels
         map.put("--quiet", i -> { config.setQuiet(true); return i; });

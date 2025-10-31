@@ -29,6 +29,9 @@ public class CLIConfig {
     private String onCollision = "rename"; // rename | skip | overwrite
     private int maxFiles = 100_000;
 
+    // Safety overrides
+    private boolean allowInsideGit = false;
+
     // Logging options
     private boolean quiet = false;    // WARN+ only
     private boolean verbose = false;  // INFO level (default)
@@ -56,6 +59,7 @@ public class CLIConfig {
     public boolean isJson() { return json; }
     public String getOnCollision() { return onCollision; }
     public int getMaxFiles() { return maxFiles; }
+    public boolean isAllowInsideGit() { return allowInsideGit; }
     public boolean isQuiet() { return quiet; }
     public boolean isVerbose() { return verbose; }
     public boolean isDebug() { return debug; }
@@ -80,6 +84,7 @@ public class CLIConfig {
     void setJson(boolean json) { this.json = json; }
     void setOnCollision(String onCollision) { this.onCollision = onCollision; }
     void setMaxFiles(int maxFiles) { this.maxFiles = maxFiles; }
+    void setAllowInsideGit(boolean allowInsideGit) { this.allowInsideGit = allowInsideGit; }
     void setQuiet(boolean quiet) { this.quiet = quiet; }
     void setVerbose(boolean verbose) { this.verbose = verbose; }
     void setDebug(boolean debug) { this.debug = debug; }

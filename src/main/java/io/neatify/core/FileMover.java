@@ -72,17 +72,27 @@ public final class FileMover {
     public record Result(int moved, int skipped, List<String> errors) {}
 
     public static List<Action> plan(Path sourceRoot, Map<String, String> rules) throws IOException {
-        return FilePlanner.plan(sourceRoot, rules, DEFAULT_MAX_FILES, List.of(), List.of());
+        return FilePlanner.plan(sourceRoot, rules, DEFAULT_MAX_FILES, List.of(), List.of(), true);
     }
 
     public static List<Action> plan(Path sourceRoot, Map<String, String> rules, int maxFiles) throws IOException {
-        return FilePlanner.plan(sourceRoot, rules, maxFiles, List.of(), List.of());
+        return FilePlanner.plan(sourceRoot, rules, maxFiles, List.of(), List.of(), true);
     }
 
     /** Plans with include/exclude glob filters on relative paths. */
     public static List<Action> plan(Path sourceRoot, Map<String, String> rules, int maxFiles,
                                     List<String> includes, List<String> excludes) throws IOException {
-        return FilePlanner.plan(sourceRoot, rules, maxFiles, includes, excludes);
+        return FilePlanner.plan(sourceRoot, rules, maxFiles, includes, excludes, true);
+    }
+
+    /**
+     * Plans with include/exclude filters and control over Git-repo traversal.
+     * @param skipGitRepos if true, skip directories that are Git repositories
+     */
+    public static List<Action> plan(Path sourceRoot, Map<String, String> rules, int maxFiles,
+                                    List<String> includes, List<String> excludes,
+                                    boolean skipGitRepos) throws IOException {
+        return FilePlanner.plan(sourceRoot, rules, maxFiles, includes, excludes, skipGitRepos);
     }
 
     // Planning helpers moved to FilePlanner

@@ -18,7 +18,8 @@ final class FilePlanner {
     private FilePlanner() { }
 
     static List<FileMover.Action> plan(Path sourceRoot, Map<String, String> rules, int maxFiles,
-                                       List<String> includes, List<String> excludes) throws IOException {
+                                       List<String> includes, List<String> excludes,
+                                       boolean skipGitRepos) throws IOException {
         Objects.requireNonNull(sourceRoot, "Source directory cannot be null");
         Objects.requireNonNull(rules, "Rules cannot be null");
 
@@ -40,6 +41,18 @@ final class FilePlanner {
                 Path name = dir.getFileName();
                 if (name != null && name.toString().equals(".neatify")) {
                     return FileVisitResult.SKIP_SUBTREE;
+                }
+                // Skip Git repositories (dir contains a .git entry or is the .git folder)
+                if (skipGitRepos) {
+                    try {
+                        if (name != null && name.toString().equals(".git")) {
+                            return FileVisitResult.SKIP_SUBTREE;
+                        }
+                        Path gitEntry = dir.resolve(".git");
+                        if (Files.exists(gitEntry)) {
+                            return FileVisitResult.SKIP_SUBTREE;
+                        }
+                    } catch (Exception ignored) { }
                 }
                 return FileVisitResult.CONTINUE;
             }
