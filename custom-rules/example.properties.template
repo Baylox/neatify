@@ -78,10 +78,11 @@ cpp=Code
 cs=Code
 rb=Code
 php=Code
-sql=Code
+
 
 # ============================================================
 # OTHER
 # ============================================================
+# sql=Database
 # Add your own rules here
 # example=MyFolder
