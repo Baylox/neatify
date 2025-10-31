@@ -73,6 +73,12 @@ ts=Code
 html=Code
 css=Code
 json=Code
+c=Code
+cpp=Code
+cs=Code
+rb=Code
+php=Code
+sql=Code
 
 # ============================================================
 # OTHER
