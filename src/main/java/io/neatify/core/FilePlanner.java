@@ -42,14 +42,22 @@ final class FilePlanner {
                 if (name != null && name.toString().equals(".neatify")) {
                     return FileVisitResult.SKIP_SUBTREE;
                 }
-                // Skip Git repositories (dir contains a .git entry or is the .git folder)
+                // Skip VCS repositories by default to avoid reorganizing projects
+                // Detected markers: .git, .hg, .svn, .bzr, _darcs, .pijul, Fossil (.fslckout), repo tool (.repo)
                 if (skipGitRepos) {
                     try {
-                        if (name != null && name.toString().equals(".git")) {
+                        String n = name == null ? "" : name.toString();
+                        if (n.equals(".git") || n.equals(".hg") || n.equals(".svn") || n.equals(".bzr") || n.equals("_darcs") || n.equals(".pijul")) {
                             return FileVisitResult.SKIP_SUBTREE;
                         }
-                        Path gitEntry = dir.resolve(".git");
-                        if (Files.exists(gitEntry)) {
+                        if (Files.exists(dir.resolve(".git")) ||
+                            Files.exists(dir.resolve(".hg")) ||
+                            Files.exists(dir.resolve(".svn")) ||
+                            Files.exists(dir.resolve(".bzr")) ||
+                            Files.exists(dir.resolve("_darcs")) ||
+                            Files.exists(dir.resolve(".pijul")) ||
+                            Files.exists(dir.resolve(".fslckout")) ||
+                            Files.exists(dir.resolve(".repo"))) {
                             return FileVisitResult.SKIP_SUBTREE;
                         }
                     } catch (Exception ignored) { }
