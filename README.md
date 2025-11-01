@@ -55,6 +55,43 @@ java -jar target/neatify.jar --source <dir> --undo-list       # list journals
 java -jar target/neatify.jar --source <dir> --undo-run <ts>   # undo by timestamp
 ```
 
+## JSON Output
+
+- `--json` writes a single JSON document to stdout; no human‑readable messages are printed on stdout.
+- Human logs and warnings (if any) go to stderr and log files.
+- When no actions are planned, Neatify still emits a valid JSON envelope with `planned=0`, `actions=[]` and empty `result` counters.
+
+Example:
+```bash
+java -jar target/neatify.jar --source ~/Downloads --rules rules.properties --json
+```
+
+Output (example):
+```json
+{
+  "source": "/home/user/Downloads",
+  "apply": false,
+  "onCollision": "rename",
+  "planned": 12,
+  "actions": [
+    { "source": "/home/user/Downloads/a.jpg", "target": "/home/user/Downloads/Images/a.jpg", "reason": "extension: jpg -> Images" }
+  ],
+  "result": { "moved": 12, "skipped": 0, "errors": [] }
+}
+```
+
+Zero‑action case:
+```json
+{
+  "source": "/home/user/Downloads",
+  "apply": false,
+  "onCollision": "rename",
+  "planned": 0,
+  "actions": [],
+  "result": { "moved": 0, "skipped": 0, "errors": [] }
+}
+```
+
 ---
 
 ## Rules
