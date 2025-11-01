@@ -1,5 +1,7 @@
 package io.neatify.cli;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import io.neatify.cli.args.CLIConfig;
 import io.neatify.cli.ui.Preview;
 import io.neatify.cli.util.Ansi;
@@ -248,41 +250,34 @@ public class FileOrganizationExecutor {
     }
 
     private void printJson(CLIConfig config, List<FileMover.Action> actions, FileMover.Result result) {
-        StringBuilder sb = new StringBuilder();
-        sb.append('{');
-        sb.append("\"source\":\"").append(escape(config.getSourceDir().toString())).append("\",");
-        sb.append("\"apply\":").append(config.isApply()).append(',');
-        sb.append("\"onCollision\":\"").append(escape(config.getOnCollision())).append("\",");
-        sb.append("\"planned\":").append(actions.size()).append(',');
-        sb.append("\"actions\":[");
-        for (int i = 0; i < actions.size(); i++) {
-            var a = actions.get(i);
-            sb.append('{')
-              .append("\"source\":\"").append(escape(a.source().toString())).append("\",")
-              .append("\"target\":\"").append(escape(a.target().toString())).append("\",")
-              .append("\"reason\":\"").append(escape(a.reason())).append("\"")
-              .append('}');
-            if (i < actions.size() - 1) sb.append(',');
-        }
-        sb.append(']');
-        if (result != null) {
-            sb.append(',').append("\"result\":{")
-              .append("\"moved\":").append(result.moved()).append(',')
-              .append("\"skipped\":").append(result.skipped()).append(',')
-              .append("\"errors\":[");
-            for (int i = 0; i < result.errors().size(); i++) {
-                String e = result.errors().get(i);
-                sb.append("\"").append(escape(e)).append("\"");
-                if (i < result.errors().size() - 1) sb.append(',');
-            }
-            sb.append("]}");
-        }
-        sb.append('}');
-        System.out.println(sb.toString());
-    }
+        // Convert actions to DTOs
+        List<ActionDto> actionDtos = actions.stream()
+            .map(a -> new ActionDto(
+                a.source().toString(),
+                a.target().toString(),
+                a.reason()
+            ))
+            .toList();
 
-    private String escape(String s) {
-        return s.replace("\\", "\\\\").replace("\"", "\\\"");
+        // Convert result to DTO if present
+        ResultDto resultDto = result != null
+            ? new ResultDto(result.moved(), result.skipped(), result.errors())
+            : null;
+
+        // Build JSON output object
+        JsonOutput output = new JsonOutput(
+            config.getSourceDir().toString(),
+            config.isApply(),
+            config.getOnCollision(),
+            actions.size(),
+            actionDtos,
+            resultDto
+        );
+
+        // Serialize to JSON using Gson
+        Gson gson = new GsonBuilder().create();
+        String json = gson.toJson(output);
+        System.out.println(json);
     }
 
     private void performUndo(CLIConfig config) throws IOException {
@@ -324,4 +319,26 @@ public class FileOrganizationExecutor {
             r.errors().forEach(e -> println("  - " + e));
         }
     }
+
+    // JSON DTOs for serialization
+    private record JsonOutput(
+        String source,
+        boolean apply,
+        String onCollision,
+        int planned,
+        List<ActionDto> actions,
+        ResultDto result
+    ) {}
+
+    private record ActionDto(
+        String source,
+        String target,
+        String reason
+    ) {}
+
+    private record ResultDto(
+        int moved,
+        int skipped,
+        List<String> errors
+    ) {}
 }
