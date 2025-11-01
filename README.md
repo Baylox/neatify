@@ -16,19 +16,22 @@ Requirements:
 - Java 21+
 - Maven 3.8+ (or the Maven Wrapper)
 
-Build:
+## Clone:
 ```bash
 git clone <repo-url>
 cd neatify
-mvn clean package
-# Windows (wrapper):
-.\mvnw.cmd clean package
-# Jar: target/neatify.jar
 ```
 
----
-
-## Use
+## Build:
+### Linux / macOS:
+```bash
+mvn clean package
+```
+### Windows (wrapper):
+```bash
+.\mvnw.cmd clean package
+```
+# Jar: target/neatify.jar
 
 Interactive (recommended):
 ```bash
@@ -42,6 +45,16 @@ java -jar target/neatify.jar --source ~/Downloads --rules rules.properties
 
 # Apply changes
 java -jar target/neatify.jar --source ~/Downloads --rules rules.properties --apply
+
+# Use built‑in default rules (no file)
+java -jar target/neatify.jar --source ~/Downloads --use-default-rules
+
+# Include / Exclude globs
+java -jar target/neatify.jar --source ~/Downloads --rules rules.properties \
+  --include "**/*.pdf" --exclude "**/node_modules/**"
+
+# Collision strategy (rename | skip | overwrite)
+java -jar target/neatify.jar --source ~/Downloads --rules rules.properties --on-collision skip
 
 # Help / Version
 java -jar target/neatify.jar --help
@@ -92,6 +105,20 @@ Zero‑action case:
 }
 ```
 
+JSON + jq examples:
+```bash
+# Count planned moves
+java -jar target/neatify.jar --source ~/Downloads --rules rules.properties --json | jq '.planned'
+
+# Print first 5 planned moves (source -> target)
+java -jar target/neatify.jar --source ~/Downloads --rules rules.properties --json \
+  | jq -r '.actions[] | "\(.source) -> \(.target)"' | head -n 5
+
+# List unique target folders (POSIX-style splitting)
+java -jar target/neatify.jar --source ~/Downloads --rules rules.properties --json \
+  | jq -r '.actions[].target | split("/")[:-1] | join("/")' | sort -u
+```
+
 ---
 
 ## Rules
@@ -129,11 +156,13 @@ jpg=Images
 mp4=Videos
 zip=Archives
 EOF
-
-# Preview first
+```
+### Preview first
+```bash
 java -jar target/neatify.jar --source ~/Downloads --rules my-rules.properties
-
-# Then apply
+```
+### Then apply
+```bash
 java -jar target/neatify.jar --source ~/Downloads --rules my-rules.properties --apply
 ```
 
