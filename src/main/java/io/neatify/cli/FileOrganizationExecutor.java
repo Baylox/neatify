@@ -75,9 +75,9 @@ public class FileOrganizationExecutor {
     }
 
     /**
-     * Enforces a safety policy: applying changes is only allowed when the
-     * source directory is inside a Git repository. This prevents destructive
-     * reorganizations on arbitrary system folders.
+     * Enforces a safety policy: applying changes is blocked by default when the
+     * source directory is inside a Git repository (unless --allow-inside-git is set).
+     * This prevents accidental destructive reorganizations of project files.
      */
     private void enforceGitRepositoryPolicy(CLIConfig config) {
         Path source = config.getSourceDir();
