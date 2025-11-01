@@ -36,12 +36,12 @@ mvn clean package
 
 ### Usage
 
-Interactive (recommended):
+**Interactive mode (recommended):**
 ```bash
 java -jar target/neatify.jar
 ```
 
-Command‑line examples:
+**Basic usage:**
 ```bash
 # Preview (dry‑run)
 java -jar target/neatify.jar --source ~/Downloads --rules rules.properties
@@ -51,20 +51,25 @@ java -jar target/neatify.jar --source ~/Downloads --rules rules.properties --app
 
 # Use built‑in default rules (no file)
 java -jar target/neatify.jar --source ~/Downloads --use-default-rules
+```
 
+**Advanced options:**
+```bash
 # Include / Exclude globs
 java -jar target/neatify.jar --source ~/Downloads --rules rules.properties \
   --include "**/*.pdf" --exclude "**/node_modules/**"
 
 # Collision strategy (rename | skip | overwrite)
 java -jar target/neatify.jar --source ~/Downloads --rules rules.properties --on-collision skip
+```
 
-# Help / Version
+**Help & Version:**
+```bash
 java -jar target/neatify.jar --help
 java -jar target/neatify.jar --version
 ```
 
-Undo (optional):
+**Undo operations:**
 ```bash
 java -jar target/neatify.jar --source <dir> --undo            # undo last run
 java -jar target/neatify.jar --source <dir> --undo-list       # list journals
