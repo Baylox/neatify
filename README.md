@@ -6,32 +6,58 @@ Automatic file organization based on simple rules.
 
 ## What It Does
 
-Neatify is a small Java CLI that tidies a folder by moving files into category folders (Documents, Images, Videos, etc.) based on file extensions. It defaults to a safe “dry‑run” preview so you can see changes before applying them.
+Neatify is a small Java CLI that tidies a folder by moving files into category folders (Documents, Images, Videos, etc.) based on file extensions. It defaults to a safe "dry‑run" preview so you can see changes before applying them.
 
 ---
 
-## Install
+## Quick Start
 
-Requirements:
+```bash
+cat > my-rules.properties << EOF
+pdf=Documents
+jpg=Images
+mp4=Videos
+zip=Archives
+EOF
+```
+### Preview first
+```bash
+java -jar target/neatify.jar --source ~/Downloads --rules my-rules.properties
+```
+### Then apply
+```bash
+java -jar target/neatify.jar --source ~/Downloads --rules my-rules.properties --apply
+```
+
+> **Note:** This assumes you've already built the project. If not, see [Getting Started](#getting-started) below.
+
+---
+
+## Getting Started
+
+### Requirements
 - Java 21+
 - Maven 3.8+ (or the Maven Wrapper)
 
-## Clone:
+### Clone
 ```bash
 git clone https://github.com/Baylox/neatify.git
 cd neatify
 ```
 
-## Build:
-### Linux / macOS:
+### Build
+**Linux / macOS:**
 ```bash
 mvn clean package
 ```
-### Windows (wrapper):
+**Windows (wrapper):**
 ```bash
 .\mvnw.cmd clean package
 ```
-# Artefact de build
+
+**Build Artifact:** `target/neatify.jar`
+
+### Usage
 
 Interactive (recommended):
 ```bash
@@ -149,38 +175,23 @@ Notes:
 
 ---
 
-## Quick Start
-
-```bash
-cat > my-rules.properties << EOF
-pdf=Documents
-jpg=Images
-mp4=Videos
-zip=Archives
-EOF
-```
-### Preview first
-```bash
-java -jar target/neatify.jar --source ~/Downloads --rules my-rules.properties
-```
-### Then apply
-```bash
-java -jar target/neatify.jar --source ~/Downloads --rules my-rules.properties --apply
-```
-
----
-
 ## Safety
 
-- Dry‑run preview by default
-- Path traversal protection
-- File‑count quota (anti‑DoS)
-- Atomic collision handling (rename/skip/overwrite)
-- Ignore VCS repositories by default: Neatify skips folders that are version-controlled worktrees when scanning. Markers detected include: `.git`, `.hg`, `.svn`, `.bzr`, `_darcs`, `.pijul`, Fossil (`.fslckout`), and Repo tool (`.repo`). This prevents reorganizing project sources by mistake.
-- Apply blocked inside Git repos: `--apply` is blocked when the source directory is inside a Git repository.
-- Explicit override: use `--allow-inside-git` if you intentionally want to operate inside a Git repo (not recommended). Preview first and ensure backups.
+**Core Protections:**
+- **Dry‑run preview by default** – see changes before applying
+- **Path traversal protection** – prevents malicious file paths
+- **File‑count quota (anti‑DoS)** – limits processing scope
+- **Atomic collision handling** – choose between rename/skip/overwrite strategies
 
-Tip: always preview before applying on important data.
+**VCS Repository Protection:**
+- **Ignore VCS by default** – Neatify skips version-controlled worktrees during scans
+  - Detected markers: `.git`, `.hg`, `.svn`, `.bzr`, `_darcs`, `.pijul`, Fossil (`.fslckout`), Repo (`.repo`)
+  - Prevents accidental reorganization of project sources
+- **Git repository blocking** – `--apply` is blocked when source directory is inside a Git repository
+- **Explicit override** – use `--allow-inside-git` to bypass (not recommended)
+  - Always preview first and ensure backups before using this flag
+
+> **Tip:** Always preview before applying on important data.
 
 ---
 
