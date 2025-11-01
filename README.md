@@ -18,7 +18,7 @@ Requirements:
 
 ## Clone:
 ```bash
-git clone <repo-url>
+git clone https://github.com/Baylox/neatify.git
 cd neatify
 ```
 
@@ -31,7 +31,7 @@ mvn clean package
 ```bash
 .\mvnw.cmd clean package
 ```
-# Jar: target/neatify.jar
+# Artefact de build
 
 Interactive (recommended):
 ```bash
@@ -109,11 +109,13 @@ JSON + jq examples:
 ```bash
 # Count planned moves
 java -jar target/neatify.jar --source ~/Downloads --rules rules.properties --json | jq '.planned'
-
+```
+```bash
 # Print first 5 planned moves (source -> target)
 java -jar target/neatify.jar --source ~/Downloads --rules rules.properties --json \
   | jq -r '.actions[] | "\(.source) -> \(.target)"' | head -n 5
-
+```
+```bash
 # List unique target folders (POSIX-style splitting)
 java -jar target/neatify.jar --source ~/Downloads --rules rules.properties --json \
   | jq -r '.actions[].target | split("/")[:-1] | join("/")' | sort -u
