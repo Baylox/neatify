@@ -10,29 +10,6 @@ Neatify is a small Java CLI that tidies a folder by moving files into category f
 
 ---
 
-## Quick Start
-
-```bash
-cat > my-rules.properties << EOF
-pdf=Documents
-jpg=Images
-mp4=Videos
-zip=Archives
-EOF
-```
-### Preview first
-```bash
-java -jar target/neatify.jar --source ~/Downloads --rules my-rules.properties
-```
-### Then apply
-```bash
-java -jar target/neatify.jar --source ~/Downloads --rules my-rules.properties --apply
-```
-
-> **Note:** This assumes you've already built the project. If not, see [Getting Started](#getting-started) below.
-
----
-
 ## Getting Started
 
 ### Requirements
@@ -175,6 +152,27 @@ Notes:
 
 ---
 
+## Quick Start
+
+```bash
+cat > my-rules.properties << EOF
+pdf=Documents
+jpg=Images
+mp4=Videos
+zip=Archives
+EOF
+```
+### Preview first
+```bash
+java -jar target/neatify.jar --source ~/Downloads --rules my-rules.properties
+```
+### Then apply
+```bash
+java -jar target/neatify.jar --source ~/Downloads --rules my-rules.properties --apply
+```
+
+---
+
 ## Safety
 
 **Core Protections:**
@@ -197,4 +195,4 @@ Notes:
 
 ## License
 
-MIT – see `LICENSE`.
+MIT – see [LICENSE](./LICENSE).
