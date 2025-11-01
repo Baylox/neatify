@@ -56,7 +56,12 @@ public class FileOrganizationExecutor {
             List<FileMover.Action> actions = planActions(config, rules);
 
             if (actions.isEmpty()) {
-                printWarning("No files to move.");
+                if (config.isJson()) {
+                    // In JSON mode, emit a valid JSON envelope even when nothing is planned
+                    printJson(config, actions, new FileMover.Result(0, 0, List.of()));
+                } else {
+                    printWarning("No files to move.");
+                }
                 return;
             }
 
@@ -87,8 +92,8 @@ public class FileOrganizationExecutor {
                 "--apply is blocked inside a Git repository by default. " +
                 "Use --allow-inside-git to override, or run outside repos.");
         }
-        if (insideGit) {
-            // Warn when operating in or under a Git repository
+        if (insideGit && !config.isJson()) {
+            // Warn when operating in or under a Git repository (suppress on stdout in JSON mode)
             if (config.isApply()) {
                 printWarning("Applying inside a Git repository: " + source);
                 printWarning("Proceeding because --allow-inside-git is set. Ensure you have backups.");
@@ -158,22 +163,26 @@ public class FileOrganizationExecutor {
 
     private Map<String, String> loadRules(CLIConfig config) throws IOException {
         if (config.isUseDefaultRules()) {
-            printInfo("Using built-in default rules...");
+            if (!config.isJson()) printInfo("Using built-in default rules...");
             Map<String, String> rules = Rules.getDefaults();
-            printSuccess(rules.size() + " default rule(s) loaded");
-            System.out.println();
+            if (!config.isJson()) {
+                printSuccess(rules.size() + " default rule(s) loaded");
+                System.out.println();
+            }
             return rules;
         } else {
-            printInfo("Loading rules from: " + config.getRulesFile());
+            if (!config.isJson()) printInfo("Loading rules from: " + config.getRulesFile());
             Map<String, String> rules = Rules.load(config.getRulesFile());
-            printSuccess(rules.size() + " rule(s) loaded");
-            System.out.println();
+            if (!config.isJson()) {
+                printSuccess(rules.size() + " rule(s) loaded");
+                System.out.println();
+            }
             return rules;
         }
     }
 
     private List<FileMover.Action> planActions(CLIConfig config, Map<String, String> rules) throws IOException {
-        printInfo("Scanning folder: " + config.getSourceDir());
+        if (!config.isJson()) printInfo("Scanning folder: " + config.getSourceDir());
         List<FileMover.Action> actions = FileMover.plan(
             config.getSourceDir(),
             rules,
@@ -182,7 +191,7 @@ public class FileOrganizationExecutor {
             config.getExcludes(),
             /*skipGitRepos=*/!config.isAllowInsideGit()
         );
-        printSuccess(actions.size() + " file(s) to move");
+        if (!config.isJson()) printSuccess(actions.size() + " file(s) to move");
         return actions;
     }
 
@@ -196,12 +205,14 @@ public class FileOrganizationExecutor {
     }
 
     private FileMover.Result executeActions(CLIConfig config, List<FileMover.Action> actions) {
-        if (config.isApply()) {
-            printInfo("Applying changes...");
-        } else {
-            printInfo("DRY-RUN mode - Use --apply to apply");
+        if (!config.isJson()) {
+            if (config.isApply()) {
+                printInfo("Applying changes...");
+            } else {
+                printInfo("DRY-RUN mode - Use --apply to apply");
+            }
+            System.out.println();
         }
-        System.out.println();
 
         FileMover.CollisionStrategy strategy = parseCollision(config.getOnCollision());
         if (config.isApply()) {
@@ -211,7 +222,7 @@ public class FileOrganizationExecutor {
             });
             try {
                 java.nio.file.Path runPath = io.neatify.cli.core.UndoExecutor.appendRun(config.getSourceDir(), config.getOnCollision(), moves);
-                if (runPath != null) {
+                if (runPath != null && !config.isJson()) {
                     printInfo("Journal written: " + runPath.toAbsolutePath());
                 }
             } catch (java.io.IOException e) {
