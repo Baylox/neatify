@@ -1,32 +1,32 @@
-# API — Package `io.neatify.core`
+# API — `io.neatify.core` package
 
-Ce package contient toute la logique métier. Il ne dépend d'aucune autre couche de l'application.
+This package contains all the business logic. It has no dependency on any other application layer.
 
 ---
 
 ## `FileMover`
 
-Façade publique du système de déplacement de fichiers. Cache les classes `FilePlanner` et `FileExecutor` (package-private).
+Public facade of the file movement system. Hides the `FilePlanner` and `FileExecutor` classes (package-private).
 
-### Records imbriqués
+### Nested records
 
 ```java
 record Action(Path source, Path target, String reason)
 ```
-Représente un déplacement planifié. Immuable.
+Represents a planned move. Immutable.
 
 ```java
 record Result(int moved, int skipped, List<String> errors)
 ```
-Résultat d'une exécution. `moved` = fichiers déplacés (ou planifiés en dry-run). `skipped` = fichiers ignorés volontairement (collision skip, déjà en place). `errors` = messages d'erreur I/O.
+Execution result. `moved` = files moved (or planned in dry-run). `skipped` = intentionally ignored files (skip collision, already in place). `errors` = I/O error messages.
 
 ### Enum `CollisionStrategy`
 
-| Valeur | Comportement si la destination existe |
+| Value | Behavior when destination exists |
 |---|---|
-| `RENAME` | Ajoute `_1`, `_2`… jusqu'à 1000 tentatives |
-| `SKIP` | Retourne `null` (fichier ignoré, pas d'erreur) |
-| `OVERWRITE` | Remplace (atomique si possible) |
+| `RENAME` | Appends `_1`, `_2`… up to 1000 attempts |
+| `SKIP` | Returns `null` (file ignored, no error) |
+| `OVERWRITE` | Replaces (atomic when possible) |
 
 ### Interface `MoveListener`
 
@@ -37,113 +37,113 @@ interface MoveListener {
 }
 ```
 
-Callback appelé après chaque déplacement réussi (uniquement en mode non-dry-run).
+Callback invoked after each successful move (non-dry-run only).
 
-### Méthodes statiques
+### Static methods
 
 ```java
-// Planning — version simple avec règles par défaut
+// Planning — basic with default rules
 public static List<Action> plan(Path sourceRoot, Map<String, String> rules)
     throws IOException
 
-// Planning — avec quota et filtres glob
+// Planning — with quota and glob filters
 public static List<Action> plan(Path sourceRoot, Map<String, String> rules,
     int maxFiles, List<String> includes, List<String> excludes)
     throws IOException
 
-// Planning — avec option skip VCS repos
+// Planning — with VCS repo skip option
 public static List<Action> plan(Path sourceRoot, Map<String, String> rules,
     int maxFiles, List<String> includes, List<String> excludes,
     boolean skipGitRepos)
     throws IOException
 
-// Exécution — stratégie RENAME par défaut
+// Execution — default RENAME strategy
 public static Result execute(List<Action> actions, boolean dryRun)
 
-// Exécution — stratégie configurable
+// Execution — configurable strategy
 public static Result execute(List<Action> actions, boolean dryRun,
     CollisionStrategy strategy)
 
-// Exécution — avec listener (pour journalisation undo)
+// Execution — with listener (for undo journaling)
 public static Result execute(List<Action> actions, boolean dryRun,
     CollisionStrategy strategy, MoveListener listener)
 ```
 
-**Exceptions :**
-- `IllegalArgumentException` — `sourceRoot` n'est pas un répertoire, `maxFiles <= 0`
-- `IllegalStateException` — quota `maxFiles` dépassé
-- `IOException` — erreur I/O lors du parcours de l'arborescence
+**Exceptions:**
+- `IllegalArgumentException` — `sourceRoot` is not a directory, `maxFiles <= 0`
+- `IllegalStateException` — `maxFiles` quota exceeded
+- `IOException` — I/O error during tree traversal
 
 ---
 
 ## `Rules`
 
-Chargement et validation des fichiers de règles `.properties`.
+Loading and validation of `.properties` rules files.
 
-### Méthodes statiques
+### Static methods
 
 ```java
-// Retourne les règles par défaut intégrées (immutable map, ~67 entrées)
+// Returns the built-in default rules (immutable map, ~67 entries)
 public static Map<String, String> getDefaults()
 
-// Charge un fichier .properties et retourne une map immutable
-// extension (lowercase, sans dot) → dossier destination
+// Loads a .properties file and returns an immutable map
+// extension (lowercase, no dot) → destination folder
 public static Map<String, String> load(Path propertiesFile)
     throws IOException
 
-// Retourne le dossier cible pour une extension, ou null si non trouvée
+// Returns the target folder for an extension, or null if not found
 public static String getTargetFolder(Map<String, String> rules, String extension)
 ```
 
-**Validation dans `load()` :**
-- Le fichier doit exister et être un fichier régulier
-- Les extensions vides ou les dossiers vides sont ignorés
-- Les path traversal (`..`) et chemins absolus lèvent `IllegalArgumentException`
-- Les caractères illégaux dans les noms de dossiers sont remplacés par `_`
+**Validation in `load()`:**
+- File must exist and be a regular file
+- Empty extensions or empty folders are ignored
+- Path traversal (`..`) and absolute paths throw `IllegalArgumentException`
+- Illegal characters in folder names are replaced by `_`
 
-**Exceptions :**
-- `IllegalArgumentException` — fichier invalide, path traversal détecté
-- `IOException` — fichier illisible
+**Exceptions:**
+- `IllegalArgumentException` — invalid file, path traversal detected
+- `IOException` — unreadable file
 
 ---
 
 ## `FileMetadata`
 
-Record immuable contenant les métadonnées d'un fichier.
+Immutable record holding file metadata.
 
 ```java
 public record FileMetadata(
     Path path,
-    String extension,       // sans dot, lowercase — ex: "pdf"
+    String extension,       // no dot, lowercase — e.g. "pdf"
     long sizeInBytes,
     LocalDateTime lastModified
 )
 ```
 
-### Méthodes statiques
+### Static methods
 
 ```java
-// Crée un FileMetadata depuis un chemin — lit les attributs du système de fichiers
+// Creates a FileMetadata from a path — reads filesystem attributes
 public static FileMetadata from(Path filePath) throws IOException
 ```
 
-**Exceptions :**
-- `IllegalArgumentException` — le chemin ne pointe pas vers un fichier régulier
-- `IOException` — erreur de lecture des attributs
+**Exceptions:**
+- `IllegalArgumentException` — path does not point to a regular file
+- `IOException` — error reading attributes
 
-### Méthodes d'instance
+### Instance methods
 
 ```java
-public String fileName()          // Nom du fichier (sans le chemin)
-public boolean hasNoExtension()   // true si extension est vide
+public String fileName()          // File name (without path)
+public boolean hasNoExtension()   // true if extension is empty
 public String formattedSize()     // "1.23 KB", "4.56 MB", "512 B" (Locale.ROOT)
 ```
 
-### Méthode statique utilitaire
+### Static utility method
 
 ```java
-// Extrait l'extension d'un nom de fichier (lowercase, sans dot)
-// Retourne "" si pas d'extension ou dot en fin de nom
+// Extracts the extension from a file name (lowercase, no dot)
+// Returns "" if no extension or trailing dot
 public static String extensionOf(String fileName)
 ```
 
@@ -151,53 +151,53 @@ public static String extensionOf(String fileName)
 
 ## `PathSecurity`
 
-Validation et sécurisation des chemins. Toutes les méthodes sont statiques.
+Path validation and security. All methods are static.
 
-### Méthodes
+### Methods
 
 ```java
-// Valide que le dossier source n'est pas un répertoire système
-// Vérifie absence de symlinks dans l'ancestry
-// Lève SecurityException si violation
+// Validates that the source directory is not a system directory
+// Checks for symlinks in ancestry
+// Throws SecurityException on violation
 public static void validateSourceDir(Path sourcePath)
 
-// Valide qu'un sous-chemin relatif ne contient pas de traversal ni d'absolu
-// Lève IllegalArgumentException si violation
+// Validates that a relative subpath contains no traversal or absolute component
+// Throws IllegalArgumentException on violation
 public static void validateRelativeSubpath(String subpath)
 
-// Résout subpath relativement à root en garantissant que le résultat reste dans root
-// Lève SecurityException si le chemin résolu s'échappe
+// Resolves subpath relative to root, guaranteeing the result stays within root
+// Throws SecurityException if the resolved path escapes
 public static Path safeResolveWithin(Path root, String subpath)
 
-// Vérifie que le chemin et aucun de ses parents n'est un lien symbolique
-// Lève SecurityException si symlink trouvé
+// Verifies that the path and none of its parents is a symbolic link
+// Throws SecurityException if a symlink is found
 public static void assertNoSymlinkInAncestry(Path path)
 ```
 
-**Répertoires système bloqués par `validateSourceDir()` :**
+**System directories blocked by `validateSourceDir()`:**
 
-Unix : `/etc`, `/bin`, `/sbin`, `/usr/bin`, `/usr/sbin`, `/var`, `/sys`, `/proc`, `/dev`, `/boot`, `/root`
+Unix: `/etc`, `/bin`, `/sbin`, `/usr/bin`, `/usr/sbin`, `/var`, `/sys`, `/proc`, `/dev`, `/boot`, `/root`
 
-Windows : `C:\Windows`, `C:\Program Files`, `C:\Program Files (x86)`, `C:\ProgramData`, `C:\Users\All Users`
+Windows: `C:\Windows`, `C:\Program Files`, `C:\Program Files (x86)`, `C:\ProgramData`, `C:\Users\All Users`
 
 ---
 
 ## `DefaultRules` *(package-private)*
 
-Définit les 67 règles par défaut intégrées. Non instanciable.
+Defines the 67 built-in default rules. Not instantiable.
 
 ```java
 static Map<String, String> create()
-// Retourne la map d'associations extension → dossier
+// Returns the extension → folder mapping
 ```
 
-Appelé uniquement par `Rules.getDefaults()`.
+Called only by `Rules.getDefaults()`.
 
 ---
 
 ## `FilePlanner` *(package-private)*
 
-Parcourt l'arborescence de fichiers et produit la liste des `FileMover.Action`. Non instanciable.
+Traverses the file tree and produces the `FileMover.Action` list. Not instantiable.
 
 ```java
 static List<FileMover.Action> plan(
@@ -210,32 +210,32 @@ static List<FileMover.Action> plan(
 ) throws IOException
 ```
 
-**Comportement :**
-- Ignore `.neatify/` (journaux d'undo)
-- Ignore les fichiers cachés (nom commençant par `.`)
-- Ignore les fichiers sans extension
-- Si `skipGitRepos=true`, ignore les sous-dossiers contenant un marker VCS (`.git`, `.hg`, `.svn`, `.bzr`, `_darcs`, `.pijul`, `.fslckout`, `.repo`)
-- Lève `IllegalStateException` si `maxFiles` est dépassé
+**Behavior:**
+- Skips `.neatify/` (undo journals)
+- Skips hidden files (name starting with `.`)
+- Skips extension-less files
+- If `skipGitRepos=true`, skips subdirectories containing a VCS marker (`.git`, `.hg`, `.svn`, `.bzr`, `_darcs`, `.pijul`, `.fslckout`, `.repo`)
+- Throws `IllegalStateException` if `maxFiles` is exceeded
 
 ---
 
 ## `FileExecutor` *(package-private)*
 
-Exécute les actions planifiées. Non instanciable.
+Executes planned actions. Not instantiable.
 
 ```java
 static FileMover.Result execute(
     List<FileMover.Action> actions,
     boolean dryRun,
     FileMover.CollisionStrategy strategy,
-    FileMover.MoveListener listener   // peut être null
+    FileMover.MoveListener listener   // may be null
 )
 ```
 
-**Comportement en dry-run :** log `[DRY-RUN]`, incrémente `moved` sans déplacer.
+**Dry-run behavior:** logs `[DRY-RUN]`, increments `moved` without moving anything.
 
-**Comportement réel :**
-1. `Files.createDirectories(target.getParent())` si parent non null
-2. `strategy.move(source, target)` pour le déplacement effectif
-3. Si succès et listener non null : `listener.onMoved(source, finalTarget)`
-4. Si `IOException` : message ajouté à `errors`, `skipped` non incrémenté
+**Real behavior:**
+1. `Files.createDirectories(target.getParent())` if parent is non-null
+2. `strategy.move(source, target)` for the actual move
+3. If successful and listener is non-null: `listener.onMoved(source, finalTarget)`
+4. On `IOException`: message added to `errors`, `skipped` not incremented

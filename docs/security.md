@@ -1,59 +1,59 @@
-# Sécurité
+# Security
 
-Neatify manipule des fichiers sur le système de l'utilisateur. Plusieurs protections sont en place pour éviter les dommages accidentels ou malveillants.
+Neatify manipulates files on the user's system. Several protections are in place to prevent accidental or malicious damage.
 
 ---
 
-## 1. Protection contre le path traversal
+## 1. Path traversal protection
 
-**Classe :** `PathSecurity.validateRelativeSubpath()`
-**Déclenché par :** Chargement des règles, résolution des chemins cibles
+**Class:** `PathSecurity.validateRelativeSubpath()`
+**Triggered by:** Rule loading, target path resolution
 
-Bloque toute règle ou chemin contenant `..` (montée dans l'arborescence) ou un chemin absolu (`/`, `C:\`).
+Blocks any rule or path containing `..` (directory traversal) or an absolute path (`/`, `C:\`).
 
 ```properties
-# Règle malveillante — rejetée
+# Malicious rule — rejected
 pdf=../../../etc
 java=/usr/bin
 ```
 
-**Comportement :** `SecurityException` levée, le fichier est ignoré. Un warning `[SECURITY]` est loggué.
+**Behavior:** `SecurityException` thrown, the file is skipped. A `[SECURITY]` warning is logged.
 
 ---
 
-## 2. Protection contre les symlinks
+## 2. Symlink attack prevention
 
-**Classe :** `PathSecurity.assertNoSymlinkInAncestry()`
-**Déclenché par :** Avant chaque déplacement (source et destination), avant chaque annulation
+**Class:** `PathSecurity.assertNoSymlinkInAncestry()`
+**Triggered by:** Before every file move (source and destination), before every undo
 
-Vérifie que le chemin lui-même **et tous ses parents** ne sont pas des liens symboliques. Un attaquant ne peut pas rediriger silencieusement une opération vers un emplacement arbitraire en créant un symlink intermédiaire.
+Verifies that the path itself **and all its parents** are not symbolic links. An attacker cannot silently redirect an operation to an arbitrary location by creating an intermediate symlink.
 
 ```
-/data/linked → /etc/   ← symlink malveillant
+/data/linked → /etc/   ← malicious symlink
 ```
 
-Si `/data/linked` est un symlink, toute opération sur ses enfants est refusée.
+If `/data/linked` is a symlink, any operation on its children is rejected.
 
-**Comportement :** `SecurityException` levée, l'opération est annulée.
+**Behavior:** `SecurityException` thrown, the operation is cancelled.
 
-> Note : Ce contrôle est désactivé sur Windows (les symlinks y nécessitent des droits administrateur et sont rares dans ce contexte). Le test JUnit associé est annoté `@DisabledOnOs(OS.WINDOWS)`.
+> Note: This check is disabled on Windows (symlinks require admin rights there and are uncommon in this context). The associated JUnit test is annotated `@DisabledOnOs(OS.WINDOWS)`.
 
 ---
 
-## 3. Protection des répertoires système
+## 3. System directory protection
 
-**Classe :** `PathSecurity.validateSourceDir()`
-**Déclenché par :** Validation du dossier source avant toute opération
+**Class:** `PathSecurity.validateSourceDir()`
+**Triggered by:** Source directory validation before any operation
 
-Bloque l'utilisation de répertoires système comme source :
+Blocks the use of system directories as source:
 
-**Unix / macOS :**
+**Unix / macOS:**
 ```
 /etc  /bin  /sbin  /usr/bin  /usr/sbin
 /var  /sys  /proc  /dev  /boot  /root
 ```
 
-**Windows :**
+**Windows:**
 ```
 C:\Windows
 C:\Program Files
@@ -62,18 +62,18 @@ C:\ProgramData
 C:\Users\All Users
 ```
 
-**Comportement :** `SecurityException` levée avant tout scan.
+**Behavior:** `SecurityException` thrown before any scan.
 
 ---
 
-## 4. Protection des dépôts Git
+## 4. Git repository protection
 
-**Classe :** `FileOrganizationExecutor.enforceGitRepositoryPolicy()`
-**Déclenché par :** Avant toute exécution avec `--apply`
+**Class:** `FileOrganizationExecutor.enforceGitRepositoryPolicy()`
+**Triggered by:** Before any execution with `--apply`
 
-Détecte si le dossier source (ou un de ses parents) est un dépôt de code versionné :
+Detects if the source directory (or one of its parents) is a versioned code repository:
 
-| Marker détecté | VCS |
+| Detected marker | VCS |
 |---|---|
 | `.git` | Git |
 | `.hg` | Mercurial |
@@ -84,118 +84,118 @@ Détecte si le dossier source (ou un de ses parents) est un dépôt de code vers
 | `.fslckout` | Fossil |
 | `.repo` | Android repo tool |
 
-Si un marker est trouvé et que `--allow-inside-git` n'est pas spécifié, `--apply` est refusé avec un message explicite.
+If a marker is found and `--allow-inside-git` is not specified, `--apply` is rejected with an explicit message.
 
-En dry-run, un **avertissement** est affiché mais l'opération continue.
+In dry-run, a **warning** is displayed but the operation continues.
 
-**Contournement explicite :**
+**Explicit override:**
 ```bash
 java -jar target/neatify.jar --source ~/project/assets -r rules.properties \
   --apply --allow-inside-git
 ```
 
-Durant le planning, les sous-dossiers contenant un marker VCS sont aussi ignorés par défaut (via `skipGitRepos=true` dans `FilePlanner`).
+During planning, subdirectories containing a VCS marker are also skipped by default (`skipGitRepos=true` in `FilePlanner`).
 
 ---
 
-## 5. Quota de fichiers (anti-DoS)
+## 5. File count quota (anti-DoS)
 
-**Classe :** `FilePlanner.plan()`
-**Déclenché par :** Durant le parcours de l'arborescence
+**Class:** `FilePlanner.plan()`
+**Triggered by:** During directory tree traversal
 
-Limite le nombre de fichiers scannés à **100 000 par défaut**. Si ce seuil est dépassé, une `IllegalStateException` est levée et le scan s'arrête.
+Limits the number of scanned files to **100,000 by default**. If this threshold is exceeded, an `IllegalStateException` is thrown and the scan stops.
 
-Configurable avec `--max-files <n>`.
+Configurable with `--max-files <n>`.
 
-**But :** Éviter des scans involontaires de partitions entières ou d'archives montées.
-
----
-
-## 6. Opérations atomiques (anti-TOCTOU)
-
-**Classe :** `RulesFileCreator`
-**Déclenché par :** Création d'un fichier de règles
-
-La création de fichier utilise `StandardOpenOption.CREATE_NEW` (appel système `O_CREAT | O_EXCL`), qui échoue atomiquement si le fichier existe déjà. Cela évite les race conditions de type TOCTOU (Time-Of-Check Time-Of-Use).
-
-De même, `UndoExecutor.appendRun()` crée les journaux avec `CREATE_NEW`, avec une boucle de retry sur collision de timestamp.
+**Purpose:** Prevents accidental scans of entire partitions or mounted archives.
 
 ---
 
-## 7. Stratégies de collision de fichiers
+## 6. Atomic operations (TOCTOU prevention)
 
-**Classe :** `FileMover.CollisionStrategy`
-**Déclenché par :** À chaque déplacement si la destination existe
+**Class:** `RulesFileCreator`
+**Triggered by:** Rules file creation
 
-| Stratégie | Comportement |
+File creation uses `StandardOpenOption.CREATE_NEW` (syscall `O_CREAT | O_EXCL`), which fails atomically if the file already exists. This prevents TOCTOU (Time-Of-Check Time-Of-Use) race conditions.
+
+Similarly, `UndoExecutor.appendRun()` creates journals with `CREATE_NEW`, with a retry loop on timestamp collisions.
+
+---
+
+## 7. File collision strategies
+
+**Class:** `FileMover.CollisionStrategy`
+**Triggered by:** On every move when the destination already exists
+
+| Strategy | Behavior |
 |---|---|
-| `RENAME` | Génère `file_1.pdf`, `file_2.pdf`… jusqu'à 1000 tentatives |
-| `SKIP` | Ignore le fichier sans erreur |
-| `OVERWRITE` | Remplace avec `ATOMIC_MOVE` si possible, sinon `REPLACE_EXISTING` |
+| `RENAME` | Generates `file_1.pdf`, `file_2.pdf`… up to 1000 attempts |
+| `SKIP` | Ignores the file without error |
+| `OVERWRITE` | Replaces with `ATOMIC_MOVE` if possible, otherwise `REPLACE_EXISTING` |
 
-Garantit qu'aucun fichier destination n'est écrasé accidentellement avec la stratégie par défaut `RENAME`.
-
----
-
-## 8. Validation du scope dans l'annulation
-
-**Classe :** `UndoExecutor.undoRunFile()`
-**Déclenché par :** À chaque mouvement d'annulation
-
-Vérifie que les chemins `from` et `to` enregistrés dans le journal sont bien **à l'intérieur du dossier source courant**. Si un chemin pointe hors du scope (journal corrompu ou déplacé), le mouvement est ignoré avec un message d'erreur.
+Ensures no destination file is accidentally overwritten with the default `RENAME` strategy.
 
 ---
 
-## 9. Sanitisation des noms de dossiers
+## 8. Undo scope validation
 
-**Classe :** `Rules.sanitizeFolderName()`
-**Déclenché par :** Chargement de tout fichier de règles
+**Class:** `UndoExecutor.undoRunFile()`
+**Triggered by:** On every undo move
 
-Les caractères illégaux dans les noms de dossiers sont remplacés par `_` :
+Verifies that `from` and `to` paths recorded in the journal are **inside the current source directory**. If a path points outside the scope (corrupted or relocated journal), the move is skipped with an error message.
+
+---
+
+## 9. Folder name sanitization
+
+**Class:** `Rules.sanitizeFolderName()`
+**Triggered by:** On every rules file load
+
+Illegal characters in folder names are replaced by `_`:
 
 ```
 < > : " \ | ? *
 ```
 
-Les slashes `/` sont conservés pour permettre les sous-dossiers (`Documents/Spreadsheets`). Les espaces sont conservés.
+Slashes `/` are preserved to allow subfolders (`Documents/Spreadsheets`). Spaces are preserved.
 
 ---
 
-## 10. Vérification que la destination reste dans la source
+## 10. Target path containment check
 
-**Classe :** `PathSecurity.safeResolveWithin()`, `FilePlanner.planFor()`
-**Déclenché par :** Pour chaque fichier planifié
+**Class:** `PathSecurity.safeResolveWithin()`, `FilePlanner.planFor()`
+**Triggered by:** For every planned file
 
-Après résolution du chemin cible, Neatify vérifie explicitement que le chemin résolu commence bien par le chemin source normalisé. Même si la sanitisation a échoué à bloquer un pattern, cette vérification finale empêche tout déplacement hors du dossier source.
-
----
-
-## 11. Isolation du mode JSON
-
-**Classe :** `Neatify.main()`, `logback.xml`
-**Déclenché par :** `--json`
-
-En mode JSON, un flag MDC (`jsonMode=true`) est positionné avant toute exécution. Un `TurboFilter` Logback supprime tous les messages de log sur la console. Seul le JSON structuré est émis sur `stdout`. Les logs sont redirigés vers `stderr` et les fichiers.
-
-Le flag MDC est **toujours nettoyé** dans un bloc `finally`, même en cas d'exception.
+After resolving the target path, Neatify explicitly verifies that the resolved path starts with the normalized source path. Even if sanitization failed to catch a pattern, this final check prevents any move outside the source directory.
 
 ---
 
-## 12. Logging des violations de sécurité
+## 11. JSON mode output isolation
 
-**Classe :** `FilePlanner`, `UndoExecutor`
-**Déclenché par :** Toute détection de violation
+**Class:** `Neatify.main()`, `logback.xml`
+**Triggered by:** `--json`
 
-Les violations de sécurité sont loggées avec le marker SLF4J `SECURITY`, dans un fichier séparé `logs/security.<date>.log` (configuré dans `logback.xml`). Cela permet un audit indépendant des événements de sécurité.
+In JSON mode, an MDC flag (`jsonMode=true`) is set before any execution. A Logback `TurboFilter` suppresses all log messages from the console. Only structured JSON is emitted on `stdout`. Logs are redirected to `stderr` and log files.
+
+The MDC flag is **always cleaned up** in a `finally` block, even on exception.
 
 ---
 
-## 13. Fichiers cachés et sans extension ignorés
+## 12. Security violation logging
 
-**Classe :** `FilePlanner.planFor()`
-**Déclenché par :** Pour chaque fichier lors du scan
+**Class:** `FilePlanner`, `UndoExecutor`
+**Triggered by:** Any detected violation
 
-- Les fichiers dont le nom commence par `.` sont ignorés (`.gitconfig`, `.env`…)
-- Les fichiers sans extension sont ignorés (`Makefile`, `LICENSE`, `README`…)
+Security violations are logged with the SLF4J `SECURITY` marker, to a separate file `logs/security.<date>.log` (configured in `logback.xml`). This enables independent auditing of security events.
 
-Ces exclusions réduisent le risque de déplacer accidentellement des fichiers de configuration système.
+---
+
+## 13. Hidden and extension-less files ignored
+
+**Class:** `FilePlanner.planFor()`
+**Triggered by:** For every file during scan
+
+- Files whose name starts with `.` are ignored (`.gitconfig`, `.env`…)
+- Files without an extension are ignored (`Makefile`, `LICENSE`, `README`…)
+
+These exclusions reduce the risk of accidentally moving system or configuration files.

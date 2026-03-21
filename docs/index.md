@@ -4,37 +4,37 @@
 ![Maven](https://img.shields.io/badge/build-Maven-red)
 ![Tests](https://img.shields.io/badge/tests-103%20passing-green)
 
-Neatify est un outil d'organisation automatique de fichiers. Il déplace les fichiers vers des sous-dossiers en fonction de leur extension, selon des règles configurables. Il propose un **mode interactif** (menu) et un **mode CLI** (scriptable, avec JSON output).
+Neatify is an automatic file organization tool. It moves files into subfolders based on their extension, according to configurable rules. It supports an **interactive mode** (menu-driven) and a **CLI mode** (scriptable, with JSON output).
 
 ---
 
-## Table des matières
+## Table of contents
 
 | Document | Description |
 |---|---|
-| [Démarrage rapide](getting-started.md) | Prérequis, build, premiers exemples |
-| [Référence CLI](cli-reference.md) | Toutes les options, comportements par défaut, exemples |
-| [Format des règles](rules-format.md) | Syntaxe `.properties`, validation, règles par défaut |
-| [Mode interactif](interactive-mode.md) | Guide du menu interactif |
-| [Système d'annulation](undo-system.md) | Journalisation `.neatify/runs/`, commandes undo |
-| [Architecture](architecture.md) | Structure des packages, flux de données, patterns |
-| [Sécurité](security.md) | Protections contre traversal, symlinks, repos Git, etc. |
-| [API — core](api/core.md) | Référence du package `io.neatify.core` |
-| [API — cli](api/cli.md) | Référence du package `io.neatify.cli` |
+| [Getting started](getting-started.md) | Prerequisites, build, first examples |
+| [CLI reference](cli-reference.md) | All options, default behavior, examples |
+| [Rules format](rules-format.md) | `.properties` syntax, validation, built-in ruleset |
+| [Interactive mode](interactive-mode.md) | Interactive menu guide |
+| [Undo system](undo-system.md) | `.neatify/runs/` journal format, undo commands |
+| [Architecture](architecture.md) | Package structure, data flow, patterns |
+| [Security](security.md) | Protections against traversal, symlinks, Git repos, etc. |
+| [API — core](api/core.md) | `io.neatify.core` package reference |
+| [API — cli](api/cli.md) | `io.neatify.cli` package reference |
 
 ---
 
-## Vue d'ensemble
+## Overview
 
 ```
 Neatify
-├── Mode interactif  ──→ Menu guidé, prompts, confirmation visuelle
-└── Mode CLI         ──→ Arguments, dry-run par défaut, JSON output
+├── Interactive mode  ──→ Guided menu, prompts, visual confirmation
+└── CLI mode          ──→ Arguments, dry-run by default, JSON output
          │
-         ├── Planning   : scanne les fichiers, applique les règles d'extension
-         ├── Preview    : affiche les changements prévus avant toute action
-         ├── Execution  : déplace les fichiers (RENAME / SKIP / OVERWRITE)
-         └── Undo       : journalise chaque run, annulation complète possible
+         ├── Planning   : scans files, applies extension rules
+         ├── Preview    : displays planned changes before any action
+         ├── Execution  : moves files (RENAME / SKIP / OVERWRITE)
+         └── Undo       : journals every run, full rollback available
 ```
 
 ## Version

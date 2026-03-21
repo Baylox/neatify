@@ -1,82 +1,82 @@
 # Architecture
 
-## Vue d'ensemble
+## Overview
 
-Neatify est structuré en trois couches bien séparées :
+Neatify is structured in three well-separated layers:
 
 ```
 ┌─────────────────────────────────────────────┐
-│                  cli/ui/                     │  Présentation
+│                  cli/ui/                     │  Presentation
 │    Display  Preview  HelpPrinter  InteractiveCLI │
 ├─────────────────────────────────────────────┤
 │              cli/  +  cli/core/              │  Orchestration
 │  FileOrganizationExecutor  FileOrganizer     │
 │  ArgumentParser  CLIConfig  UndoExecutor     │
 ├─────────────────────────────────────────────┤
-│                   core/                      │  Métier
+│                   core/                      │  Business logic
 │  FileMover  FilePlanner  FileExecutor        │
 │  Rules  FileMetadata  PathSecurity           │
 └─────────────────────────────────────────────┘
 ```
 
-La couche `core/` ne dépend d'aucune couche supérieure. Elle est testable indépendamment.
+The `core/` layer has no dependency on upper layers and is independently testable.
 
 ---
 
-## Structure des packages
+## Package structure
 
 ```
 io.neatify/
 │
-├── Neatify.java                     Point d'entrée (main)
+├── Neatify.java                     Entry point (main)
 │
-├── core/                            Logique métier pure
-│   ├── FileMover                    API publique : plan() + execute()
-│   ├── FilePlanner                  (package-private) Parcours arborescence
-│   ├── FileExecutor                 (package-private) Mouvements réels
-│   ├── Rules                        Chargement et validation des règles
-│   ├── DefaultRules                 (package-private) Règles intégrées
-│   ├── FileMetadata                 Record immuable : extension, taille, date
-│   └── PathSecurity                 Validation sécurité des chemins
+├── core/                            Pure business logic
+│   ├── FileMover                    Public API: plan() + execute()
+│   ├── FilePlanner                  (package-private) Tree traversal
+│   ├── FileExecutor                 (package-private) Actual moves
+│   ├── Rules                        Rule loading and validation
+│   ├── DefaultRules                 (package-private) Built-in rules
+│   ├── FileMetadata                 Immutable record: extension, size, date
+│   └── PathSecurity                 Path security validation
 │
 └── cli/
-    ├── AppInfo                      Version et métadonnées de l'app
-    ├── FileOrganizationExecutor     Orchestration du flux CLI complet
+    ├── AppInfo                      Version and app metadata
+    ├── FileOrganizationExecutor     CLI flow orchestration
     │
     ├── args/
-    │   ├── ArgumentParser           Parse les arguments CLI
-    │   └── CLIConfig                Configuration immuable après parsing
+    │   ├── ArgumentParser           Parses CLI arguments
+    │   └── CLIConfig                Immutable configuration after parsing
     │
     ├── core/
-    │   ├── FileOrganizer            Flux d'organisation en mode interactif
-    │   ├── RulesFileCreator         Création de fichier de règles en mode interactif
-    │   └── UndoExecutor             Journalisation et annulation des runs
+    │   ├── FileOrganizer            Organization flow in interactive mode
+    │   ├── RulesFileCreator         Rules file creation in interactive mode
+    │   └── UndoExecutor             Run journaling and undo
     │
     ├── ui/
-    │   ├── Display                  Output console (print, prompts, tables)
-    │   ├── HelpPrinter              Texte d'aide
-    │   ├── Preview                  Aperçu formaté des changements prévus
-    │   └── InteractiveCLI           Menu principal du mode interactif
+    │   ├── Display                  Console output (print, prompts, tables)
+    │   ├── HelpPrinter              Help text
+    │   ├── Preview                  Formatted preview of planned changes
+    │   └── InteractiveCLI           Interactive mode main menu
     │
     └── util/
-        ├── Ansi                     Codes couleur ANSI (auto-détection)
-        ├── AsciiSymbols             Symboles Unicode/ASCII (auto-détection)
-        └── ResultPrinter            Affichage du résumé d'exécution
+        ├── Ansi                     ANSI color codes (auto-detected)
+        ├── AsciiSymbols             Unicode/ASCII symbols (auto-detected)
+        └── ResultPrinter            Execution summary display
 ```
 
 ---
 
-## Flux d'exécution — Mode CLI
+## Execution flow — CLI mode
 
 ```
 main(args)
   │
-  ├── args vide ──→ InteractiveCLI.run()
+  ├── no args ──→ InteractiveCLI.run()
   │
-  └── args présents
+  └── args present
         │
         ├── ArgumentParser.parse(args)
-        │     └── CLIConfig (immuable)
+        │     └── CLIConfig (immutable)
         │
         ├── configureLogLevel(config)
         │
@@ -86,61 +86,61 @@ main(args)
               │     └── PathSecurity.validateSourceDir()
               │
               ├── 2. enforceGitRepositoryPolicy()
-              │     └── isInsideGitRepository() → bloque --apply si repo Git
+              │     └── isInsideGitRepository() → blocks --apply inside Git repo
               │
               ├── 3. loadRules()
-              │     └── Rules.load() ou Rules.getDefaults()
+              │     └── Rules.load() or Rules.getDefaults()
               │
               ├── 4. planActions()
               │     └── FileMover.plan()
               │           └── FilePlanner.plan()
               │                 └── Files.walkFileTree()
-              │                       └── planFor() par fichier
+              │                       └── planFor() per file
               │                             ├── filter includes/excludes
               │                             ├── FileMetadata.from()
               │                             ├── Rules.getTargetFolder()
               │                             └── PathSecurity.safeResolveWithin()
               │
-              ├── 5. showPreview() ou printJson()
+              ├── 5. showPreview() or printJson()
               │     └── Preview.render()
               │
               └── 6. executeActions()
                     └── FileMover.execute(actions, dryRun, strategy, listener)
                           └── FileExecutor.execute()
-                                └── strategy.move() par action
+                                └── strategy.move() per action
                                       └── listener.onMoved() → UndoExecutor.Move
-                          └── UndoExecutor.appendRun() [si apply]
+                          └── UndoExecutor.appendRun() [if apply]
 ```
 
 ---
 
-## Flux d'exécution — Mode interactif
+## Execution flow — Interactive mode
 
 ```
 InteractiveCLI.run()
   │
-  ├── [Banneau]
+  ├── [Banner]
   │
-  └── Boucle menu
+  └── Menu loop
         │
         ├── 1 → FileOrganizer.organize()
         │       ├── Prompt source dir
-        │       ├── Prompt règles
-        │       ├── Prompt filtres
+        │       ├── Prompt rules
+        │       ├── Prompt filters
         │       ├── FileMover.plan()
         │       ├── Preview.print()
         │       ├── Prompt confirmation
-        │       ├── Prompt stratégie collision
-        │       ├── FileMover.execute() avec MoveListener
+        │       ├── Prompt collision strategy
+        │       ├── FileMover.execute() with MoveListener
         │       └── UndoExecutor.appendRun()
         │
         ├── 2 → RulesFileCreator.create()
-        │       ├── Prompt nom fichier
+        │       ├── Prompt file name
         │       ├── PathSecurity.validateRelativeSubpath()
         │       └── Files.writeString(..., CREATE_NEW)
         │
         ├── 3 → UndoExecutor.undoLast()
-        │       └── undoLastV2() ou fallback legacy
+        │       └── undoLastV2() or legacy fallback
         │
         ├── 4 → HelpPrinter.print()
         ├── 5 → AppInfo.neatify().version()
@@ -149,19 +149,19 @@ InteractiveCLI.run()
 
 ---
 
-## Flux d'annulation
+## Undo flow
 
 ```
 UndoExecutor.undoLast(sourceRoot)
   │
   ├── undoLastV2()
-  │     ├── Liste .neatify/runs/*.json
-  │     ├── Sélectionne le plus récent (tri numérique sur timestamp)
+  │     ├── List .neatify/runs/*.json
+  │     ├── Select most recent (numeric sort on timestamp)
   │     └── undoRunFile(runFile)
   │           ├── Gson.fromJson() → RunDoc
-  │           ├── Pour chaque move (from, to) :
-  │           │     ├── Scope check (restent dans sourceRoot)
-  │           │     ├── Existence check (to existe, from n'existe pas)
+  │           ├── For each move (from, to):
+  │           │     ├── Scope check (stays within sourceRoot)
+  │           │     ├── Existence check (to exists, from does not)
   │           │     ├── PathSecurity.assertNoSymlinkInAncestry(from)
   │           │     ├── PathSecurity.assertNoSymlinkInAncestry(to)
   │           │     ├── Files.createDirectories(from.getParent())
@@ -169,32 +169,32 @@ UndoExecutor.undoLast(sourceRoot)
   │           └── Files.deleteIfExists(runFile)
   │
   └── [fallback] undoLastFromLegacyManifest()
-        └── Lit manifest.json (format {"runs":[{"moves":[...]}]})
+        └── Reads manifest.json (format {"runs":[{"moves":[...]}]})
 ```
 
 ---
 
-## Patterns de conception
+## Design patterns
 
-| Pattern | Où | Description |
+| Pattern | Where | Description |
 |---|---|---|
-| **Record** | `FileMover.Action`, `FileMover.Result`, `FileMetadata`, `UndoExecutor.Move` | DTOs immuables, value types Java 21 |
-| **Strategy** | `FileMover.CollisionStrategy` (enum) | Chaque stratégie (RENAME, SKIP, OVERWRITE) encapsule sa logique de `move()` |
-| **Listener** | `FileMover.MoveListener` | Callback `onMoved(from, to)` pour découpler l'exécution de la journalisation |
-| **Builder** | `Preview.Config` | Enchaînement fluide `new Config().maxFilesPerFolder(10).sortMode(EXT)` |
-| **Template Method** | `FilePlanner` (SimpleFileVisitor) | `preVisitDirectory` + `visitFile` surchargés pour customiser le parcours |
-| **Façade** | `FileMover` | Cache `FilePlanner` et `FileExecutor` (package-private) derrière une API simple |
-| **Null Object** | `CollisionStrategy.SKIP` | Retourne `null` au lieu d'une exception quand le move doit être ignoré |
+| **Record** | `FileMover.Action`, `FileMover.Result`, `FileMetadata`, `UndoExecutor.Move` | Immutable DTOs, Java 21 value types |
+| **Strategy** | `FileMover.CollisionStrategy` (enum) | Each strategy (RENAME, SKIP, OVERWRITE) encapsulates its `move()` logic |
+| **Listener** | `FileMover.MoveListener` | `onMoved(from, to)` callback decouples execution from journaling |
+| **Builder** | `Preview.Config` | Fluent chaining: `new Config().maxFilesPerFolder(10).sortMode(EXT)` |
+| **Template Method** | `FilePlanner` (SimpleFileVisitor) | `preVisitDirectory` + `visitFile` overridden to customize traversal |
+| **Facade** | `FileMover` | Hides `FilePlanner` and `FileExecutor` (package-private) behind a simple API |
+| **Null Object** | `CollisionStrategy.SKIP` | Returns `null` instead of an exception when the move should be silently ignored |
 
 ---
 
-## Dépendances externes
+## External dependencies
 
-| Bibliothèque | Version | Usage |
+| Library | Version | Usage |
 |---|---|---|
-| SLF4J API | 2.0.16 | Façade de logging |
-| Logback Classic | 1.5.19 | Implémentation de logging (console + fichiers) |
-| Gson | 2.11.0 | Sérialisation JSON (undo journal, JSON output mode) |
-| JUnit 5 | 5.11.3 | Tests unitaires (scope test) |
+| SLF4J API | 2.0.16 | Logging facade |
+| Logback Classic | 1.5.19 | Logging implementation (console + files) |
+| Gson | 2.11.0 | JSON serialization (undo journal, JSON output mode) |
+| JUnit 5 | 5.11.3 | Unit tests (test scope only) |
 
-Toutes les dépendances sont embarquées dans `target/neatify.jar` via Maven Shade Plugin.
+All dependencies are bundled in `target/neatify.jar` via Maven Shade Plugin.

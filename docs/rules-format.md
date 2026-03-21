@@ -1,26 +1,26 @@
-# Format des fichiers de règles
+# Rules Format
 
-Les règles définissent comment Neatify organise les fichiers : pour chaque extension, quel sous-dossier de destination utiliser.
+Rules tell Neatify how to organize files: for each file extension, which destination subfolder to use.
 
 ---
 
-## Syntaxe
+## Syntax
 
-Un fichier de règles est un fichier `.properties` Java standard :
+A rules file is a standard Java `.properties` file:
 
 ```properties
-extension=DossierDestination
+extension=DestinationFolder
 ```
 
-- Une règle par ligne
-- Les lignes commençant par `#` sont des commentaires
-- Les lignes vides sont ignorées
-- L'extension est insensible à la casse (`PDF` et `pdf` sont équivalents)
-- Le point initial n'est pas inclus : écrire `pdf`, pas `.pdf`
+- One rule per line
+- Lines starting with `#` are comments
+- Empty lines are ignored
+- Extensions are case-insensitive (`PDF` and `pdf` are equivalent)
+- No leading dot: write `pdf`, not `.pdf`
 
-### Sous-dossiers
+### Subfolders
 
-Le dossier destination peut contenir des slashes pour créer des sous-dossiers :
+The destination folder can contain slashes to create subfolders:
 
 ```properties
 xls=Documents/Spreadsheets
@@ -31,22 +31,22 @@ pptx=Documents/Presentations
 
 ## Validation
 
-Neatify rejette ou corrige silencieusement les règles invalides :
+Neatify rejects or silently corrects invalid rules:
 
-| Problème | Comportement |
+| Issue | Behavior |
 |---|---|
-| Extension vide | Règle ignorée |
-| Dossier vide | Règle ignorée |
-| Path traversal (`..`) | Erreur — règle rejetée |
-| Chemin absolu (`/`, `C:\`) | Erreur — règle rejetée |
-| Caractères illégaux (`< > : " \ \| ? *`) | Remplacés par `_` automatiquement |
-| Extension avec point (`.pdf`) | Le point est retiré automatiquement |
+| Empty extension | Rule ignored |
+| Empty folder | Rule ignored |
+| Path traversal (`..`) | Error — rule rejected |
+| Absolute path (`/`, `C:\`) | Error — rule rejected |
+| Illegal characters (`< > : " \ \| ? *`) | Replaced by `_` automatically |
+| Extension with dot (`.pdf`) | Dot is stripped automatically |
 
 ---
 
-## Règles par défaut (`--use-default-rules`)
+## Default rules (`--use-default-rules`)
 
-Ces 67 règles sont intégrées dans le JAR et disponibles via `--use-default-rules` :
+These 67 rules are bundled in the JAR and available via `--use-default-rules`:
 
 ```properties
 # Images
@@ -59,7 +59,7 @@ svg=Images
 webp=Images
 ico=Images
 
-# Documents texte
+# Text documents
 pdf=Documents
 doc=Documents
 docx=Documents
@@ -68,13 +68,13 @@ odt=Documents
 rtf=Documents
 md=Documents
 
-# Tableurs
+# Spreadsheets
 xls=Documents/Spreadsheets
 xlsx=Documents/Spreadsheets
 csv=Documents/Spreadsheets
 ods=Documents/Spreadsheets
 
-# Présentations
+# Presentations
 ppt=Documents/Presentations
 pptx=Documents/Presentations
 odp=Documents/Presentations
@@ -87,7 +87,7 @@ tar=Archives
 gz=Archives
 bz2=Archives
 
-# Vidéos
+# Videos
 mp4=Videos
 avi=Videos
 mkv=Videos
@@ -104,7 +104,7 @@ aac=Music
 ogg=Music
 m4a=Music
 
-# Code source
+# Source code
 java=Code
 py=Code
 js=Code
@@ -124,7 +124,7 @@ xml=Code
 yaml=Code
 yml=Code
 
-# Exécutables
+# Executables
 exe=Executables
 msi=Executables
 dmg=Executables
@@ -132,7 +132,7 @@ pkg=Executables
 deb=Executables
 rpm=Executables
 
-# Images disque
+# Disk images
 iso=Disk_Images
 
 # Torrents
@@ -141,44 +141,44 @@ torrent=Torrents
 
 ---
 
-## Fichier de règles custom
+## Custom rules file
 
-### Créer un fichier manuellement
+### Creating a file manually
 
 ```properties
-# Mon organisation personnelle
-pdf=Travail/Documents
-docx=Travail/Documents
+# My personal organization
+pdf=Work/Documents
+docx=Work/Documents
 jpg=Photos
 png=Photos
-mp4=Medias/Videos
-mp3=Medias/Musique
+mp4=Media/Videos
+mp3=Media/Music
 zip=Archives
-exe=Logiciels
+exe=Software
 ```
 
-### Créer un fichier via Neatify
+### Creating a file via Neatify
 
-En mode interactif (option `2` du menu), ou via CLI à venir. Neatify génère un fichier `.properties` pré-rempli avec toutes les règles par défaut, prêt à être modifié.
+In interactive mode (menu option `2`), Neatify generates a pre-filled `.properties` file with all default rules, ready to edit.
 
 ---
 
-## Utilisation
+## Usage
 
 ```bash
-# Avec fichier de règles custom
-java -jar target/neatify.jar --source ~/Downloads --rules mon-fichier.properties
+# With a custom rules file
+java -jar target/neatify.jar --source ~/Downloads --rules my-rules.properties
 
-# Avec règles intégrées
+# With built-in rules
 java -jar target/neatify.jar --source ~/Downloads --use-default-rules
 ```
 
 ---
 
-## Notes importantes
+## Important notes
 
-- Les fichiers **sans extension** sont toujours ignorés (ex: `Makefile`, `LICENSE`)
-- Les fichiers **cachés** (nom commençant par `.`) sont toujours ignorés
-- Le dossier `.neatify/` (journal d'annulation) est toujours exclu du scan
-- Si une extension n'a pas de règle, le fichier est laissé en place
-- Un fichier déjà dans son dossier cible ne génère pas de mouvement (no-op détecté)
+- Files **without an extension** are always ignored (e.g. `Makefile`, `LICENSE`)
+- **Hidden files** (name starting with `.`) are always ignored
+- The `.neatify/` folder (undo journal) is always excluded from the scan
+- If an extension has no matching rule, the file is left in place
+- A file already in its target folder does not generate a move (no-op detected)

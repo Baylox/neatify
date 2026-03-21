@@ -1,110 +1,110 @@
-# Référence CLI
+# CLI Reference
 
 ```
 java -jar target/neatify.jar [OPTIONS]
 ```
 
-Sans aucun argument, Neatify démarre en **mode interactif**. Avec des arguments, il fonctionne en **mode CLI**.
+Without any argument, Neatify starts in **interactive mode**. With arguments, it runs in **CLI mode**.
 
 ---
 
-## Comportements par défaut
+## Default behavior
 
-| Paramètre | Valeur par défaut |
+| Parameter | Default value |
 |---|---|
-| Mode | Dry-run (aucun fichier déplacé) |
-| Stratégie de collision | `rename` (ajoute `_1`, `_2`…) |
-| Quota max fichiers | 100 000 |
-| Aperçu par dossier | 5 fichiers |
-| Tri de l'aperçu | `alpha` (alphabétique) |
-| Couleurs ANSI | Activées (auto-détection terminal) |
-| Symboles | Unicode (auto-détection encoding) |
+| Mode | Dry-run (no file is moved) |
+| Collision strategy | `rename` (appends `_1`, `_2`…) |
+| Max file quota | 100,000 |
+| Preview per folder | 5 files |
+| Preview sort | `alpha` (alphabetical) |
+| ANSI colors | Enabled (auto-detected) |
+| Symbols | Unicode (auto-detected) |
 
 ---
 
-## Sélection du mode
+## Mode selection
 
 | Option | Description |
 |---|---|
-| *(aucun argument)* | Lance le mode interactif |
-| `--interactive`, `-i` | Force le mode interactif même avec d'autres flags |
-| `--undo` | Annule le dernier run journalisé |
-| `--undo-list` | Liste tous les runs journalisés avec leurs métadonnées |
-| `--undo-run <timestamp>` | Annule le run identifié par son timestamp (ms Unix) |
-| `--help`, `-h` | Affiche l'aide et quitte |
-| `--version`, `-v` | Affiche la version et quitte |
+| *(no argument)* | Starts interactive mode |
+| `--interactive`, `-i` | Forces interactive mode even with other flags |
+| `--undo` | Undoes the last journaled run |
+| `--undo-list` | Lists all journaled runs with metadata |
+| `--undo-run <timestamp>` | Undoes the run identified by its Unix ms timestamp |
+| `--help`, `-h` | Prints help and exits |
+| `--version`, `-v` | Prints version and exits |
 
 ---
 
-## Chemins (obligatoires en mode organisation)
+## Paths (required for organization)
 
 | Option | Description |
 |---|---|
-| `--source <dir>`, `-s <dir>` | **Obligatoire.** Dossier à organiser. |
-| `--rules <file>`, `-r <file>` | Fichier de règles `.properties` à utiliser. |
-| `--use-default-rules` | Utilise les règles intégrées (67 extensions prédéfinies). Remplace `--rules`. |
+| `--source <dir>`, `-s <dir>` | **Required.** Directory to organize. |
+| `--rules <file>`, `-r <file>` | Rules `.properties` file to use. |
+| `--use-default-rules` | Use the built-in rules (67 pre-defined extensions). Replaces `--rules`. |
 
-`--rules` et `--use-default-rules` sont mutuellement exclusifs. L'un des deux est obligatoire (sauf pour `--undo`).
+`--rules` and `--use-default-rules` are mutually exclusive. One is required (except for `--undo`).
 
 ---
 
-## Exécution
+## Execution
 
 | Option | Description |
 |---|---|
-| `--apply`, `-a` | Applique les changements. Sans ce flag : dry-run. |
-| `--on-collision <mode>` | Stratégie si un fichier destination existe déjà. Voir ci-dessous. |
-| `--max-files <n>` | Limite le nombre de fichiers scannés (défaut : 100 000). |
+| `--apply`, `-a` | Applies changes. Without this flag: dry-run. |
+| `--on-collision <mode>` | Strategy when a destination file already exists. See below. |
+| `--max-files <n>` | Limits the number of scanned files (default: 100,000). |
 
-### Stratégies de collision (`--on-collision`)
+### Collision strategies (`--on-collision`)
 
-| Valeur | Comportement |
+| Value | Behavior |
 |---|---|
-| `rename` *(défaut)* | Renomme la destination : `file.pdf` → `file_1.pdf`, `file_2.pdf`… (max 1000 tentatives) |
-| `skip` | Ignore les fichiers dont la destination existe déjà. Ils ne sont ni déplacés ni comptés comme erreur. |
-| `overwrite` | Remplace le fichier destination (opération atomique si le système le permet). |
+| `rename` *(default)* | Renames the destination: `file.pdf` → `file_1.pdf`, `file_2.pdf`… (max 1000 attempts) |
+| `skip` | Ignores files whose destination already exists. Not moved, not counted as error. |
+| `overwrite` | Replaces the destination file (atomic operation when supported). |
 
 ---
 
-## Filtres
+## Filters
 
-Les filtres utilisent la syntaxe **glob** de Java NIO (`**` pour n'importe quelle profondeur).
+Filters use Java NIO **glob** syntax (`**` matches any depth).
 
 | Option | Description |
 |---|---|
-| `--include <glob>` | N'inclut que les fichiers correspondant au pattern. Répétable. |
-| `--exclude <glob>` | Exclut les fichiers correspondant au pattern. Répétable. |
+| `--include <glob>` | Only includes files matching the pattern. Repeatable. |
+| `--exclude <glob>` | Excludes files matching the pattern. Repeatable. |
 
 ```bash
-# Inclure uniquement PDFs et DOCX
+# Include only PDFs and DOCX
 --include "**/*.pdf" --include "**/*.docx"
 
-# Exclure le dossier node_modules et les fichiers temporaires
+# Exclude node_modules and temp files
 --exclude "**/node_modules/**" --exclude "**/*.tmp"
 ```
 
-Quand `--include` est spécifié, seuls les fichiers correspondants sont candidats. Les `--exclude` s'appliquent ensuite en soustraction.
+When `--include` is specified, only matching files are candidates. `--exclude` then applies as a subtraction.
 
 ---
 
-## Affichage de l'aperçu
+## Preview display
 
 | Option | Description |
 |---|---|
-| `--per-folder-preview <n>` | Nombre maximum de fichiers affichés par dossier dans l'aperçu (défaut : 5). |
-| `--sort <mode>` | Ordre de tri de l'aperçu : `alpha` (défaut), `ext` (par extension), `size` (par taille décroissante). |
-| `--no-color` | Désactive les couleurs ANSI dans la sortie. |
-| `--ascii` | Utilise des symboles ASCII à la place des caractères Unicode (pour terminaux basiques). |
+| `--per-folder-preview <n>` | Maximum files shown per folder in the preview (default: 5). |
+| `--sort <mode>` | Preview sort order: `alpha` (default), `ext` (by extension), `size` (by size descending). |
+| `--no-color` | Disables ANSI colors. |
+| `--ascii` | Uses ASCII symbols instead of Unicode (for basic terminals). |
 
 ---
 
-## Sortie JSON
+## JSON output
 
 | Option | Description |
 |---|---|
-| `--json` | Émet un objet JSON sur `stdout`. Les logs sont redirigés sur `stderr`. |
+| `--json` | Emits a JSON object on `stdout`. Logs are redirected to `stderr`. |
 
-Format de la sortie JSON :
+JSON output format:
 
 ```json
 {
@@ -114,8 +114,8 @@ Format de la sortie JSON :
   "planned": 5,
   "actions": [
     {
-      "source": "/home/user/Downloads/rapport.pdf",
-      "target": "/home/user/Downloads/Documents/rapport.pdf",
+      "source": "/home/user/Downloads/report.pdf",
+      "target": "/home/user/Downloads/Documents/report.pdf",
       "reason": "extension: pdf -> Documents"
     }
   ],
@@ -127,64 +127,64 @@ Format de la sortie JSON :
 }
 ```
 
-En dry-run, `result.moved` correspond au nombre d'actions planifiées ; aucun fichier n'est réellement déplacé.
+In dry-run, `result.moved` reflects the number of planned actions; no file is actually moved.
 
 ---
 
-## Logs
+## Logging
 
 | Option | Description |
 |---|---|
-| `--debug` | Niveau de log DEBUG (très verbeux). |
-| `--verbose` | Niveau de log INFO. |
-| `--quiet`, `-q` | Niveau de log WARN (minimal). |
+| `--debug` | Log level DEBUG (very verbose). |
+| `--verbose` | Log level INFO. |
+| `--quiet`, `-q` | Log level WARN (minimal). |
 
-Sans ces flags, le niveau par défaut est INFO (configuré dans `logback.xml`).
+Without these flags, the default level is INFO (configured in `logback.xml`).
 
-Les logs sont écrits dans `logs/` :
-- `logs/neatify.<date>.log` — logs applicatifs
-- `logs/security.<date>.log` — violations de sécurité uniquement
+Logs are written to `logs/`:
+- `logs/neatify.<date>.log` — application logs
+- `logs/security.<date>.log` — security violations only
 
 ---
 
-## Sécurité
+## Security
 
 | Option | Description |
 |---|---|
-| `--allow-inside-git` | Autorise `--apply` à l'intérieur d'un dépôt Git. **Dangereux.** Par défaut, `--apply` est bloqué dans un repo Git pour éviter de réorganiser du code source versionné. |
+| `--allow-inside-git` | Allows `--apply` inside a Git repository. **Dangerous.** By default, `--apply` is blocked inside a Git repo to avoid reorganizing versioned source code. |
 
 ---
 
-## Exemples
+## Examples
 
 ```bash
-# Aperçu rapide avec règles par défaut
+# Quick preview with default rules
 java -jar target/neatify.jar -s ~/Downloads --use-default-rules
 
-# Appliquer avec règles custom
+# Apply with custom rules
 java -jar target/neatify.jar -s ~/Downloads -r rules.properties --apply
 
-# Filtrer et appliquer (PDFs uniquement, SKIP si collision)
+# Filter and apply (PDFs only, skip on collision)
 java -jar target/neatify.jar -s ~/Documents -r rules.properties \
   --include "**/*.pdf" --on-collision skip --apply
 
-# Sortie JSON (pour scripts)
+# JSON output (for scripts)
 java -jar target/neatify.jar -s ~/Downloads --use-default-rules --json 2>/dev/null
 
-# Undo du dernier run
+# Undo last run
 java -jar target/neatify.jar -s ~/Downloads --undo
 
-# Lister tous les runs journalisés
+# List all journaled runs
 java -jar target/neatify.jar -s ~/Downloads --undo-list
 
-# Annuler un run spécifique
+# Undo a specific run
 java -jar target/neatify.jar -s ~/Downloads --undo-run 1710953471234
 
-# Mode debug avec aperçu étendu
+# Debug mode with extended preview
 java -jar target/neatify.jar -s ~/Downloads --use-default-rules \
   --per-folder-preview 20 --sort size --debug
 
-# Dans un repo Git (avec confirmation explicite)
+# Inside a Git repo (explicit override)
 java -jar target/neatify.jar -s ~/project/assets -r rules.properties \
   --apply --allow-inside-git
 ```

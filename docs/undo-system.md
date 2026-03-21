@@ -1,33 +1,33 @@
-# Système d'annulation
+# Undo System
 
-Neatify journalise chaque opération d'organisation dans un répertoire `.neatify/` créé automatiquement dans le dossier source. Cela permet d'annuler intégralement ou partiellement toute opération passée.
+Neatify journals every organization operation in a `.neatify/` directory automatically created inside the source folder. This allows fully or partially undoing any past operation.
 
 ---
 
-## Structure du répertoire `.neatify/`
+## `.neatify/` directory structure
 
 ```
 <source>/
 └── .neatify/
-    ├── .gitignore          # Exclut les journaux du versioning Git
+    ├── .gitignore          # Excludes journals from Git versioning
     └── runs/
-        ├── 1710953471234.json          # Run du 20/03/2026 15:51:11
-        ├── 1710953502891.json          # Run du 20/03/2026 15:51:42
-        └── 1710953502891_1.json        # Collision (même milliseconde)
+        ├── 1710953471234.json          # Run from 2026-03-20 15:51:11
+        ├── 1710953502891.json          # Run from 2026-03-20 15:51:42
+        └── 1710953502891_1.json        # Collision (same millisecond)
 ```
 
-Le `.gitignore` contient :
+The `.gitignore` contains:
 ```
 *
 !.gitignore
 ```
-Tous les journaux sont exclus du versioning Git, mais le répertoire lui-même peut être commité.
+All journals are excluded from Git versioning, but the directory itself can be committed.
 
 ---
 
-## Format d'un journal de run
+## Run journal format
 
-Chaque fichier `<timestamp>.json` enregistre les mouvements effectués :
+Each `<timestamp>.json` file records the moves performed:
 
 ```json
 {
@@ -35,8 +35,8 @@ Chaque fichier `<timestamp>.json` enregistre les mouvements effectués :
   "onCollision": "rename",
   "moves": [
     {
-      "from": "/home/user/Downloads/rapport.pdf",
-      "to": "/home/user/Downloads/Documents/rapport.pdf"
+      "from": "/home/user/Downloads/report.pdf",
+      "to": "/home/user/Downloads/Documents/report.pdf"
     },
     {
       "from": "/home/user/Downloads/photo.jpg",
@@ -46,32 +46,32 @@ Chaque fichier `<timestamp>.json` enregistre les mouvements effectués :
 }
 ```
 
-- `time` : timestamp Unix en millisecondes du moment de l'exécution
-- `onCollision` : stratégie utilisée lors du run
-- `moves[].from` : chemin absolu original du fichier
-- `moves[].to` : chemin absolu de destination
+- `time`: Unix timestamp in milliseconds at execution time
+- `onCollision`: strategy used during the run
+- `moves[].from`: original absolute path of the file
+- `moves[].to`: absolute destination path
 
-Seuls les **mouvements réellement effectués** sont journalisés. Les fichiers skippés ou en erreur n'apparaissent pas.
+Only **actually performed moves** are journaled. Skipped or errored files are not recorded.
 
 ---
 
-## Commandes d'annulation
+## Undo commands
 
-### Annuler le dernier run
+### Undo the last run
 
 ```bash
 java -jar target/neatify.jar --source ~/Downloads --undo
 ```
 
-Cherche le run le plus récent dans `.neatify/runs/` et inverse tous ses mouvements.
+Finds the most recent run in `.neatify/runs/` and reverses all its moves.
 
-### Lister les runs journalisés
+### List journaled runs
 
 ```bash
 java -jar target/neatify.jar --source ~/Downloads --undo-list
 ```
 
-Affiche la liste des runs disponibles :
+Displays available runs:
 
 ```
 Run history for /home/user/Downloads:
@@ -80,30 +80,30 @@ Run history for /home/user/Downloads:
   [2] 2026-03-20 15:51:11  —  3 moves  (skip)      [1710953471234]
 ```
 
-### Annuler un run spécifique
+### Undo a specific run
 
 ```bash
 java -jar target/neatify.jar --source ~/Downloads --undo-run 1710953471234
 ```
 
-Annule uniquement le run identifié par son timestamp. Les autres runs ne sont pas affectés.
+Undoes only the run identified by its timestamp. Other runs are not affected.
 
 ---
 
-## Logique d'annulation
+## Undo logic
 
-Pour chaque mouvement `from → to` enregistré :
+For each recorded move `from → to`:
 
-1. Vérifie que `to` (destination actuelle) existe
-2. Vérifie que `from` (destination d'undo) n'existe pas déjà
-3. Vérifie que les deux chemins restent dans le dossier source (scope check)
-4. Vérifie l'absence de symlinks dans les chemins parents
-5. Crée les répertoires parents de `from` si nécessaire
-6. Déplace `to → from`
+1. Checks that `to` (current destination) exists
+2. Checks that `from` (undo destination) does not already exist
+3. Checks that both paths stay within the source folder (scope check)
+4. Checks for symlinks in parent paths
+5. Creates parent directories of `from` if needed
+6. Moves `to → from`
 
-Après succès : le fichier journal est supprimé.
+On success: the journal file is deleted.
 
-### Résultat d'une annulation
+### Undo result
 
 ```
 [OK] Restored: 9
@@ -111,32 +111,32 @@ Après succès : le fichier journal est supprimé.
 [!!] Errors:   0
 ```
 
-| Compteur | Signification |
+| Counter | Meaning |
 |---|---|
-| `Restored` | Fichiers replacés à leur emplacement original |
-| `Skipped` | Fichiers ignorés (destination absente, ou original déjà présent) |
-| `Errors` | Erreurs I/O pendant le déplacement |
+| `Restored` | Files moved back to their original location |
+| `Skipped` | Files ignored (destination absent, or original already present) |
+| `Errors` | I/O errors during the move |
 
-L'annulation est partielle en cas d'erreur : les autres mouvements continuent.
+Undo is partial on error: remaining moves continue.
 
 ---
 
-## Compatibilité legacy
+## Legacy compatibility
 
-Les versions antérieures de Neatify utilisaient un fichier `manifest.json` dans `.neatify/`. Ce format est automatiquement détecté en fallback si aucun run v2 n'existe :
+Older versions of Neatify used a `manifest.json` file inside `.neatify/`. This format is automatically detected as a fallback if no v2 run exists:
 
 ```
 .neatify/
-└── manifest.json    # Format legacy : {"runs": [{"moves": [...]}]}
+└── manifest.json    # Legacy format: {"runs": [{"moves": [...]}]}
 ```
 
-Le fallback est transparent pour l'utilisateur. Il est recommandé de migrer en réexécutant Neatify pour générer des journaux au format v2.
+The fallback is transparent to the user. It is recommended to let Neatify generate v2 journals by running a new operation.
 
 ---
 
-## Gestion des collisions de timestamp
+## Timestamp collision handling
 
-Si deux runs se terminent dans la même milliseconde (rare mais possible en test), Neatify utilise un suffixe numérique :
+If two runs complete within the same millisecond (rare, mainly in tests), Neatify appends a numeric suffix:
 
 ```
 1710953471234.json
@@ -144,4 +144,4 @@ Si deux runs se terminent dans la même milliseconde (rare mais possible en test
 1710953471234_2.json
 ```
 
-L'ordre est déterminé numériquement lors de `--undo-list` et `--undo`.
+Ordering is determined numerically during `--undo-list` and `--undo`.

@@ -1,12 +1,12 @@
-# Démarrage rapide
+# Getting Started
 
-## Prérequis
+## Prerequisites
 
-- **Java 21** ou supérieur
-- **Maven 3.8+** (ou utiliser le wrapper `mvnw` inclus — aucune installation requise)
+- **Java 21** or higher
+- **Maven 3.8+** (or use the included `mvnw` wrapper — no installation required)
 
 ```bash
-java -version   # doit afficher Java 21+
+java -version   # must show Java 21+
 ```
 
 ---
@@ -14,75 +14,75 @@ java -version   # doit afficher Java 21+
 ## Build
 
 ```bash
-# Compiler et générer le JAR autonome
+# Compile and generate the standalone JAR
 ./mvnw clean package
 
-# L'artefact est dans :
+# Output artifact:
 target/neatify.jar
 ```
 
-Le JAR est autonome (toutes les dépendances sont incluses via Maven Shade Plugin). Aucune installation supplémentaire n'est nécessaire.
+The JAR is self-contained (all dependencies are bundled via Maven Shade Plugin). No additional installation is needed.
 
 ---
 
-## Lancer Neatify
+## Running Neatify
 
-### Mode interactif (recommandé pour débuter)
+### Interactive mode (recommended for first use)
 
 ```bash
 java -jar target/neatify.jar
 ```
 
-Un menu s'affiche. Sélectionnez `1` pour organiser un dossier, `2` pour créer un fichier de règles, `3` pour annuler la dernière opération.
+A menu is displayed. Select `1` to organize a folder, `2` to create a rules file, `3` to undo the last operation.
 
-Voir [Mode interactif](interactive-mode.md) pour le guide complet.
+See [Interactive mode](interactive-mode.md) for the full guide.
 
-### Mode CLI — aperçu rapide (dry-run)
+### CLI mode — quick preview (dry-run)
 
 ```bash
-# Avec les règles par défaut intégrées
+# Using built-in default rules
 java -jar target/neatify.jar --source ~/Downloads --use-default-rules
 
-# Avec un fichier de règles custom
+# Using a custom rules file
 java -jar target/neatify.jar --source ~/Downloads --rules rules.properties
 ```
 
-Par défaut, Neatify fonctionne en **dry-run** : il affiche ce qu'il ferait sans déplacer aucun fichier.
+By default, Neatify runs in **dry-run** mode: it displays what it would do without moving any file.
 
-### Mode CLI — appliquer les changements
+### CLI mode — apply changes
 
 ```bash
-# Appliquer avec les règles par défaut
+# Apply with default rules
 java -jar target/neatify.jar --source ~/Downloads --use-default-rules --apply
 
-# Appliquer avec un fichier de règles, stratégie de collision skip
+# Apply with custom rules, skip on collision
 java -jar target/neatify.jar --source ~/Downloads --rules rules.properties --apply --on-collision skip
 ```
 
 ---
 
-## Exemple complet
+## Full example
 
-**Avant :**
+**Before:**
 ```
 Downloads/
-  rapport.pdf
+  report.pdf
   photo.jpg
   archive.zip
   notes.txt
   video.mp4
 ```
 
-**Commande :**
+**Command:**
 ```bash
 java -jar target/neatify.jar --source ~/Downloads --use-default-rules --apply
 ```
 
-**Après :**
+**After:**
 ```
 Downloads/
   Documents/
-    rapport.pdf
+    report.pdf
     notes.txt
   Images/
     photo.jpg
@@ -94,18 +94,18 @@ Downloads/
 
 ---
 
-## Annuler la dernière opération
+## Undoing the last operation
 
 ```bash
 java -jar target/neatify.jar --source ~/Downloads --undo
 ```
 
-Neatify conserve un journal de chaque opération dans `.neatify/runs/`. Voir [Système d'annulation](undo-system.md).
+Neatify keeps a journal of every operation in `.neatify/runs/`. See [Undo system](undo-system.md).
 
 ---
 
-## Étapes suivantes
+## Next steps
 
-- Configurer ses propres règles : [Format des règles](rules-format.md)
-- Toutes les options disponibles : [Référence CLI](cli-reference.md)
-- Comprendre l'architecture : [Architecture](architecture.md)
+- Configure your own rules: [Rules format](rules-format.md)
+- All available options: [CLI reference](cli-reference.md)
+- Understand the architecture: [Architecture](architecture.md)
