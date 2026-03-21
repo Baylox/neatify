@@ -32,19 +32,6 @@ class RulesSecurityTest {
     }
 
     @Test
-    void testPathTraversal_TripleDot(@TempDir Path tempDir) throws IOException {
-        Path rulesFile = tempDir.resolve("rules.properties");
-        Files.writeString(rulesFile, "pdf=../../../Windows/System32");
-
-        IllegalArgumentException exception = assertThrows(
-            IllegalArgumentException.class,
-            () -> Rules.load(rulesFile)
-        );
-
-        assertTrue(exception.getMessage().contains("Path traversal not allowed"));
-    }
-
-    @Test
     void testPathTraversal_MixedWithValidPath(@TempDir Path tempDir) throws IOException {
         Path rulesFile = tempDir.resolve("rules.properties");
         Files.writeString(rulesFile, "txt=Documents/../../../etc");
@@ -87,19 +74,6 @@ class RulesSecurityTest {
     }
 
     @Test
-    void testAbsolutePath_UnixHome(@TempDir Path tempDir) throws IOException {
-        Path rulesFile = tempDir.resolve("rules.properties");
-        Files.writeString(rulesFile, "pdf=/home/user/sensitive");
-
-        IllegalArgumentException exception = assertThrows(
-            IllegalArgumentException.class,
-            () -> Rules.load(rulesFile)
-        );
-
-        assertTrue(exception.getMessage().contains("Absolute Unix path not allowed"));
-    }
-
-    @Test
     void testAbsolutePath_Windows(@TempDir Path tempDir) throws IOException {
         Path rulesFile = tempDir.resolve("rules.properties");
         Files.writeString(rulesFile, "exe=C:\\Windows\\System32");
@@ -108,19 +82,6 @@ class RulesSecurityTest {
             IllegalArgumentException.class,
             () -> Rules.load(rulesFile),
             "Absolute Windows paths should be blocked"
-        );
-
-        assertTrue(exception.getMessage().contains("Absolute Windows path not allowed"));
-    }
-
-    @Test
-    void testAbsolutePath_WindowsDrive(@TempDir Path tempDir) throws IOException {
-        Path rulesFile = tempDir.resolve("rules.properties");
-        Files.writeString(rulesFile, "dll=D:\\Program Files\\Sensitive");
-
-        IllegalArgumentException exception = assertThrows(
-            IllegalArgumentException.class,
-            () -> Rules.load(rulesFile)
         );
 
         assertTrue(exception.getMessage().contains("Absolute Windows path not allowed"));

@@ -10,6 +10,9 @@ package io.neatify.cli;
  */
 public record AppInfo(String name, String version, String description) {
 
+    /** Single source of truth for the application version. */
+    public static final String NEATIFY_VERSION = "1.0.0";
+
     /**
      * Compact constructor with validation.
      */
@@ -37,5 +40,10 @@ public record AppInfo(String name, String version, String description) {
             version,
             "Automatic organization tool"
         );
+    }
+
+    /** Convenience factory using the built-in version constant. */
+    public static AppInfo neatify() {
+        return neatify(NEATIFY_VERSION);
     }
 }

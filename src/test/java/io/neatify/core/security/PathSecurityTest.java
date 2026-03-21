@@ -108,8 +108,25 @@ class PathSecurityTest {
     }
 
     private boolean testWindowsSystem() {
-        // On Windows, we just test that validation works without crashing
-        // Specific Windows folder blocking is difficult to test in a portable way
-        return true;
+        // Verify that the Windows-specific forbidden path list blocks C:\Windows
+        // PathSecurity.validateSourceDir uses Paths.get(forbidden) internally,
+        // so we test via validateRelativeSubpath + safeResolveWithin as a proxy,
+        // OR directly check that C:\Windows is in the forbidden list by calling
+        // validateSourceDir with a synthetic path that matches it.
+        try {
+            Path windowsDir = Path.of("C:\\Windows");
+            // If the path is invalid on this OS this will throw InvalidPathException — skip
+            PathSecurity.validateSourceDir(windowsDir);
+            // If no exception is thrown, the block didn't fire — fail visibly
+            System.err.println("WARNING: C:\\Windows should have been blocked but wasn't");
+            return false;
+        } catch (SecurityException e) {
+            assertTrue(e.getMessage().contains("Forbidden system directory"),
+                "Expected 'Forbidden system directory' in: " + e.getMessage());
+            return true;
+        } catch (java.nio.file.InvalidPathException | IOException e) {
+            // Path not valid on this OS (e.g., running on Linux in CI) — test not applicable
+            return true;
+        }
     }
 }

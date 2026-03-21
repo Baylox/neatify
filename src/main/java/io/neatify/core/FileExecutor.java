@@ -31,7 +31,10 @@ final class FileExecutor {
                 continue;
             }
             try {
-                Files.createDirectories(action.target().getParent());
+                Path targetParent = action.target().getParent();
+                if (targetParent != null) {
+                    Files.createDirectories(targetParent);
+                }
                 Path finalTarget = strategy.move(action.source(), action.target());
                 if (finalTarget == null) {
                     logger.info("[SKIPPED] {} (target exists)", action.source().getFileName());
@@ -45,7 +48,7 @@ final class FileExecutor {
                 String msg = String.format("Failed to move %s: %s", action.source(), e.getMessage());
                 errors.add(msg);
                 logger.error("Failed to move file: {}", msg, e);
-                skipped++;
+                // Do NOT increment skipped: this is an error, not an intentional skip
             }
         }
         return new FileMover.Result(moved, skipped, errors);

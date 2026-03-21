@@ -90,8 +90,8 @@ public record FileMetadata(
      */
     public String formattedSize() {
         if (sizeInBytes < 1024) return sizeInBytes + " B";
-        if (sizeInBytes < 1024 * 1024) return String.format("%.2f KB", sizeInBytes / 1024.0);
-        if (sizeInBytes < 1024 * 1024 * 1024) return String.format("%.2f MB", sizeInBytes / (1024.0 * 1024));
-        return String.format("%.2f GB", sizeInBytes / (1024.0 * 1024 * 1024));
+        if (sizeInBytes < 1024 * 1024) return String.format(java.util.Locale.ROOT, "%.2f KB", sizeInBytes / 1024.0);
+        if (sizeInBytes < 1024 * 1024 * 1024) return String.format(java.util.Locale.ROOT, "%.2f MB", sizeInBytes / (1024.0 * 1024));
+        return String.format(java.util.Locale.ROOT, "%.2f GB", sizeInBytes / (1024.0 * 1024 * 1024));
     }
 }

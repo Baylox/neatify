@@ -7,9 +7,9 @@ import io.neatify.cli.util.AsciiSymbols;
 import io.neatify.core.FileMover;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -36,9 +36,9 @@ class PreviewRendererTest extends TestHelper {
     }
 
     @Test
-    void testRender_SingleFile() {
-        Path source = Paths.get("/tmp/test.txt");
-        Path target = Paths.get("/tmp/Documents/test.txt");
+    void testRender_SingleFile(@TempDir Path tempDir) {
+        Path source = tempDir.resolve("test.txt");
+        Path target = tempDir.resolve("Documents").resolve("test.txt");
         FileMover.Action action = createAction(source, target);
 
         List<FileMover.Action> actions = List.of(action);
@@ -53,15 +53,15 @@ class PreviewRendererTest extends TestHelper {
     }
 
     @Test
-    void testRender_MultipleFolders() {
+    void testRender_MultipleFolders(@TempDir Path tempDir) {
         List<FileMover.Action> actions = List.of(
             createAction(
-                Paths.get("/tmp/doc.pdf"),
-                Paths.get("/tmp/Documents/doc.pdf")
+                tempDir.resolve("doc.pdf"),
+                tempDir.resolve("Documents").resolve("doc.pdf")
             ),
             createAction(
-                Paths.get("/tmp/photo.jpg"),
-                Paths.get("/tmp/Images/photo.jpg")
+                tempDir.resolve("photo.jpg"),
+                tempDir.resolve("Images").resolve("photo.jpg")
             )
         );
 
@@ -76,11 +76,17 @@ class PreviewRendererTest extends TestHelper {
     }
 
     @Test
-    void testRender_DuplicateCounting() {
+    void testRender_DuplicateCounting(@TempDir Path tempDir) {
+        // Three source files with the same name targeting the same folder
+        Path sub1 = tempDir.resolve("sub1");
+        Path sub2 = tempDir.resolve("sub2");
+        Path sub3 = tempDir.resolve("sub3");
+        Path imagesDir = tempDir.resolve("Images");
+
         List<FileMover.Action> actions = List.of(
-            createAction(Paths.get("/tmp/1/photo.jpg"), Paths.get("/tmp/Images/photo.jpg")),
-            createAction(Paths.get("/tmp/2/photo.jpg"), Paths.get("/tmp/Images/photo.jpg")),
-            createAction(Paths.get("/tmp/3/photo.jpg"), Paths.get("/tmp/Images/photo.jpg"))
+            createAction(sub1.resolve("photo.jpg"), imagesDir.resolve("photo.jpg")),
+            createAction(sub2.resolve("photo.jpg"), imagesDir.resolve("photo.jpg")),
+            createAction(sub3.resolve("photo.jpg"), imagesDir.resolve("photo.jpg"))
         );
 
         Preview.Config config = new Preview.Config().showDuplicates(true);

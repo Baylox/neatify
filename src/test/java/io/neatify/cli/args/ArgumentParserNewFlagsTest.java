@@ -18,15 +18,18 @@ class ArgumentParserNewFlagsTest {
     }
 
     @Test
-    void testUndoListAndUndoRunParsing() {
-        String[] a1 = {"--undo", "--undo-list", "--source", "/tmp"};
-        CLIConfig c1 = parser.parse(a1);
-        assertTrue(c1.isUndo());
-        assertTrue(c1.isUndoList());
+    void testUndoListFlag() {
+        String[] args = {"--undo", "--undo-list", "--source", "/tmp"};
+        CLIConfig config = parser.parse(args);
+        assertTrue(config.isUndo());
+        assertTrue(config.isUndoList());
+    }
 
-        String[] a2 = {"--undo", "--undo-run", "1719930000000", "--source", "/tmp"};
-        CLIConfig c2 = parser.parse(a2);
-        assertTrue(c2.isUndo());
-        assertEquals("1719930000000", c2.getUndoRun());
+    @Test
+    void testUndoRunFlag() {
+        String[] args = {"--undo", "--undo-run", "1719930000000", "--source", "/tmp"};
+        CLIConfig config = parser.parse(args);
+        assertTrue(config.isUndo());
+        assertEquals("1719930000000", config.getUndoRun());
     }
 }
