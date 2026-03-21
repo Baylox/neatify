@@ -24,9 +24,9 @@ public final class Preview {
 
     /** Rendering configuration. */
     public static class Config {
-        public int maxFilesPerFolder = 5;
-        public SortMode sortMode = SortMode.ALPHA;
-        public boolean showDuplicates = true;
+        private int maxFilesPerFolder = 5;
+        private SortMode sortMode = SortMode.ALPHA;
+        private boolean showDuplicates = true;
 
         public Config maxFilesPerFolder(int value) { this.maxFilesPerFolder = value; return this; }
         public Config sortMode(SortMode mode) { this.sortMode = mode; return this; }
@@ -85,19 +85,28 @@ public final class Preview {
 
     // ============ Internal logic ============
 
-    /** Groups actions by destination folder. */
+    /** Groups actions by destination folder. Uses the full absolute path as key to avoid
+     *  collisions between two different folders sharing the same last component
+     *  (e.g. "Work/Images" and "Personal/Images" must not be merged). */
     private static Map<String, List<FileMover.Action>> groupByFolder(List<FileMover.Action> actions) {
         Map<String, List<FileMover.Action>> grouped = new LinkedHashMap<>();
         for (FileMover.Action action : actions) {
             Path parent = action.target().getParent();
-            String folderName = parent != null ? parent.getFileName().toString() : "(root)";
-            grouped.computeIfAbsent(folderName, k -> new ArrayList<>()).add(action);
+            // Use the full normalized path as key so that e.g. "Work/Images" and
+            // "Personal/Images" are kept as separate groups in the preview.
+            String key = parent != null ? parent.toAbsolutePath().normalize().toString() : "(root)";
+            grouped.computeIfAbsent(key, k -> new ArrayList<>()).add(action);
         }
         return grouped;
     }
 
-    /** Creates a FolderGroup with duplicate counting. */
-    private static FolderGroup createFolderGroup(String folderName, List<FileMover.Action> actions, Config config) {
+    /** Creates a FolderGroup with duplicate counting.
+     *  @param key full absolute path of the destination folder (used only as map key)
+     */
+    private static FolderGroup createFolderGroup(String key, List<FileMover.Action> actions, Config config) {
+        // Derive a human-readable display name from the actual target path
+        Path parent = actions.get(0).target().getParent();
+        String folderName = parent != null ? parent.getFileName().toString() : "(root)";
         // group by file name
         Map<String, List<FileMover.Action>> byName = actions.stream()
             .collect(Collectors.groupingBy(a -> a.source().getFileName().toString(), LinkedHashMap::new, Collectors.toList()));

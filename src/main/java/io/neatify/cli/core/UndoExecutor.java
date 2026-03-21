@@ -62,7 +62,13 @@ public final class UndoExecutor {
         ensureGitignore(sourceRoot);
 
         long now = System.currentTimeMillis();
+        // Guard against two runs completing within the same millisecond (CREATE_NEW would fail)
         Path runFile = dir.resolve(now + ".json");
+        int attempt = 1;
+        while (Files.exists(runFile) && attempt <= 100) {
+            runFile = dir.resolve(now + "_" + attempt + ".json");
+            attempt++;
+        }
 
         // Convert Move records to DTOs
         List<MoveDto> moveDtos = moves.stream()
@@ -104,7 +110,17 @@ public final class UndoExecutor {
         if (!Files.exists(dir) || !Files.isDirectory(dir)) return null;
         try (java.util.stream.Stream<Path> s = Files.list(dir)) {
             Path latest = s.filter(p -> p.getFileName().toString().endsWith(".json"))
-                .max((a,b) -> a.getFileName().toString().compareTo(b.getFileName().toString()))
+                .max((a, b) -> {
+                    // Compare numerically using the leading timestamp in the filename
+                    // (handles both "<ts>.json" and "<ts>_N.json" from same-millisecond retries)
+                    try {
+                        long ta = Long.parseLong(a.getFileName().toString().split("[._]")[0]);
+                        long tb = Long.parseLong(b.getFileName().toString().split("[._]")[0]);
+                        int cmp = Long.compare(ta, tb);
+                        if (cmp != 0) return cmp;
+                    } catch (NumberFormatException ignored) { }
+                    return a.getFileName().toString().compareTo(b.getFileName().toString());
+                })
                 .orElse(null);
             if (latest == null) return null;
             return undoRunFile(sourceRoot, latest);
@@ -160,6 +176,7 @@ public final class UndoExecutor {
             if (!Files.exists(to)) { skipped++; errors.add("Absent: " + to); continue; }
             try {
                 PathSecurity.assertNoSymlinkInAncestry(from);
+                PathSecurity.assertNoSymlinkInAncestry(to);  // also protect the source-of-truth path
                 Files.createDirectories(from.getParent());
                 if (Files.exists(from)) { skipped++; continue; }
                 Files.move(to, from);
@@ -176,32 +193,50 @@ public final class UndoExecutor {
     }
 
     // ====== Legacy manifest.json fallback ======
+
+    /** DTOs for the legacy manifest.json format: {"runs":[{"moves":[{"from":…,"to":…}]}]} */
+    private static final class LegacyManifest {
+        java.util.List<LegacyRun> runs;
+    }
+    private static final class LegacyRun {
+        java.util.List<MoveDto> moves;
+    }
+
     private static UndoResult undoLastFromLegacyManifest(Path sourceRoot) throws IOException {
         Path mf = manifestPath(sourceRoot);
         if (!Files.exists(mf)) return null;
         String content = Files.readString(mf, StandardCharsets.UTF_8).trim();
-        int runsStart = content.indexOf("[", content.indexOf("\"runs\""));
-        int runsEnd = content.lastIndexOf("]");
-        if (runsStart < 0 || runsEnd < 0 || runsEnd <= runsStart) return null;
-        String runs = content.substring(runsStart + 1, runsEnd);
-        int lastObjStart = runs.lastIndexOf('{');
-        int lastObjEnd = runs.lastIndexOf('}');
-        if (lastObjStart < 0 || lastObjEnd <= lastObjStart) return null;
-        String lastRun = runs.substring(lastObjStart, lastObjEnd + 1);
 
-        int ms = lastRun.indexOf("\"moves\"");
-        if (ms < 0) return null;
-        int arrStart = lastRun.indexOf('[', ms);
-        int arrEnd = lastRun.indexOf(']', arrStart);
-        if (arrStart < 0 || arrEnd < 0) return null;
-        String movesArr = lastRun.substring(arrStart + 1, arrEnd).trim();
-        List<Move> moves = parseMoves(movesArr);
+        LegacyManifest manifest;
+        try {
+            manifest = gson.fromJson(content, LegacyManifest.class);
+        } catch (Exception e) {
+            logger.warn("Cannot parse legacy manifest.json: {}", e.getMessage());
+            return null;
+        }
+        if (manifest == null || manifest.runs == null || manifest.runs.isEmpty()) return null;
+
+        // Take the last run and remove it from the list
+        LegacyRun lastRun = manifest.runs.remove(manifest.runs.size() - 1);
+        if (lastRun == null || lastRun.moves == null) return null;
+
+        List<Move> moves = lastRun.moves.stream()
+            .filter(dto -> dto.from != null && dto.to != null)
+            .map(dto -> new Move(Paths.get(dto.from), Paths.get(dto.to)))
+            .collect(Collectors.toList());
 
         int restored = 0, skipped = 0; List<String> errors = new ArrayList<>();
+        Path normalizedRoot = sourceRoot.toAbsolutePath().normalize();
         for (Move m : moves) {
-            Path from = m.from; Path to = m.to;
+            Path from = m.from.toAbsolutePath().normalize();
+            Path to   = m.to.toAbsolutePath().normalize();
+            if (!from.startsWith(normalizedRoot) || !to.startsWith(normalizedRoot)) {
+                skipped++; errors.add("Out of scope: " + from + " / " + to); continue;
+            }
             if (!Files.exists(to)) { skipped++; errors.add("Absent: " + to); continue; }
             try {
+                PathSecurity.assertNoSymlinkInAncestry(from);
+                PathSecurity.assertNoSymlinkInAncestry(to);
                 Files.createDirectories(from.getParent());
                 if (Files.exists(from)) { skipped++; continue; }
                 Files.move(to, from);
@@ -209,39 +244,9 @@ public final class UndoExecutor {
             } catch (IOException e) { skipped++; errors.add(e.getMessage()); }
         }
 
-        String newRuns = (lastObjStart > 0 ? runs.substring(0, lastObjStart - 1) : "").trim();
-        String newContent = content.substring(0, runsStart + 1) + newRuns + content.substring(runsEnd);
-        Files.writeString(mf, newContent, StandardCharsets.UTF_8, StandardOpenOption.TRUNCATE_EXISTING);
+        // Write the manifest back with the last run removed
+        Files.writeString(mf, gson.toJson(manifest), StandardCharsets.UTF_8, StandardOpenOption.TRUNCATE_EXISTING);
 
         return new UndoResult(restored, skipped, errors);
-    }
-
-    // Legacy manifest.json parsing helpers (still needed for backward compatibility)
-    private static List<Move> parseMoves(String movesArr) {
-        List<Move> list = new ArrayList<>();
-        if (movesArr.isEmpty()) return list;
-        String[] objs = movesArr.split("},\\{");
-        for (String o : objs) {
-            String obj = o;
-            if (!obj.startsWith("{")) obj = "{" + obj;
-            if (!obj.endsWith("}")) obj = obj + "}";
-            String from = extract(obj, "from");
-            String to = extract(obj, "to");
-            if (from != null && to != null) {
-                list.add(new Move(Paths.get(from), Paths.get(to)));
-            }
-        }
-        return list;
-    }
-
-    private static String extract(String jsonObj, String key) {
-        String k = "\"" + key + "\"";
-        int p = jsonObj.indexOf(k);
-        if (p < 0) return null;
-        int c = jsonObj.indexOf(':', p);
-        int q1 = jsonObj.indexOf('"', c + 1);
-        int q2 = jsonObj.indexOf('"', q1 + 1);
-        if (q1 < 0 || q2 < 0) return null;
-        return jsonObj.substring(q1 + 1, q2).replace("\\\"", "\"").replace("\\\\", "\\");
     }
 }

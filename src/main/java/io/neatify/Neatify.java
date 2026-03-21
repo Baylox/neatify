@@ -22,7 +22,7 @@ import static io.neatify.cli.ui.Display.printErr;
 public final class Neatify {
 
     private static final Logger logger = LoggerFactory.getLogger(Neatify.class);
-    private static final String VERSION = "1.0.0";
+    private static final String VERSION = io.neatify.cli.AppInfo.NEATIFY_VERSION;
 
     public static void main(String[] args) {
         try {
@@ -43,23 +43,27 @@ public final class Neatify {
                 MDC.put("jsonMode", "true");
             }
 
-            if (config.isShowHelp()) {
-                HelpPrinter.print();
-                return;
-            }
+            try {
+                if (config.isShowHelp()) {
+                    HelpPrinter.print();
+                    return;
+                }
 
-            if (config.isShowVersion()) {
-                System.out.println("Neatify version " + VERSION);
-                return;
-            }
+                if (config.isShowVersion()) {
+                    System.out.println("Neatify version " + VERSION);
+                    return;
+                }
 
-            if (config.isInteractive()) {
-                new InteractiveCLI(VERSION).run();
-                return;
-            }
+                if (config.isInteractive()) {
+                    new InteractiveCLI(VERSION).run();
+                    return;
+                }
 
-            // Normal execution
-            new FileOrganizationExecutor().execute(config);
+                // Normal execution
+                new FileOrganizationExecutor().execute(config);
+            } finally {
+                MDC.remove("jsonMode");
+            }
 
         } catch (IllegalArgumentException e) {
             logger.error("Invalid argument: {}", e.getMessage(), e);

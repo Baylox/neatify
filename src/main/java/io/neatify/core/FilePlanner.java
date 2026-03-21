@@ -66,12 +66,7 @@ final class FilePlanner {
             }
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-                // Never process files under the internal .neatify directory
-                Path relToRoot = sourceRoot.relativize(file);
-                if (relToRoot.getNameCount() > 0 &&
-                    relToRoot.getName(0).toString().equals(".neatify")) {
-                    return FileVisitResult.CONTINUE;
-                }
+                // Note: .neatify/ is already excluded via preVisitDirectory → SKIP_SUBTREE
                 if (fileCount.incrementAndGet() > maxFiles) {
                     throw new IllegalStateException("File quota exceeded: " + maxFiles);
                 }
