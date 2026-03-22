@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!--
+        SpotBugs exclusion filter for Neatify.
+        Add exclusions here when a finding is a confirmed false positive.
+        Documentation: https://spotbugs.readthedocs.io/en/stable/filter.html
+    -->
+
+    <!-- Exclude test helper classes from analysis -->
+    <Match>
+        <Class name="~io\.neatify\.TestHelper" />
+    </Match>
+</FindBugsFilter>
