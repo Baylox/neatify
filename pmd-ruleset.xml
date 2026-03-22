@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<ruleset name="Neatify PMD Rules"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0
+                             https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+
+    <description>Custom PMD ruleset for Neatify CLI application</description>
+
+    <!-- Best Practices -->
+    <rule ref="category/java/bestpractices.xml">
+        <!-- CLI app: System.out is the primary output mechanism -->
+        <exclude name="SystemPrintln"/>
+        <!-- SLF4J handles this at runtime, guard statements are unnecessary -->
+        <exclude name="GuardLogStatement"/>
+        <!-- Records and builders legitimately share field/method names -->
+        <exclude name="AvoidFieldNameMatchingMethodName"/>
+        <!-- Not useful for small CLI projects -->
+        <exclude name="UseVarargs"/>
+        <!-- Overly strict for internal code -->
+        <exclude name="AvoidReassigningParameters"/>
+        <!-- Literals in if-conditions are fine for simple checks -->
+        <exclude name="AvoidLiteralsInIfCondition"/>
+        <!-- Overly noisy -->
+        <exclude name="LooseCoupling"/>
+    </rule>
+
+    <!-- Error Prone -->
+    <rule ref="category/java/errorprone.xml">
+        <!-- Too many false positives with SLF4J parameterized logging -->
+        <exclude name="InvalidLogMessageFormat"/>
+        <!-- One declaration per line is stylistic, not error-prone -->
+        <exclude name="OneDeclarationPerLine"/>
+        <!-- String literal duplication is acceptable in small projects -->
+        <exclude name="AvoidDuplicateLiterals"/>
+    </rule>
+
+</ruleset>
