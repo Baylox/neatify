@@ -125,6 +125,27 @@ public final class PathSecurity {
     }
 
     /**
+     * Checks whether the given path resides inside a Git repository.
+     * Walks up the directory tree looking for a .git directory or file (worktree).
+     *
+     * @param start the directory to check
+     * @return true if a .git ancestor is found
+     */
+    public static boolean isInsideGitRepository(Path start) {
+        if (start == null) return false;
+        Path current = start.toAbsolutePath().normalize();
+        while (current != null) {
+            Path gitDir = current.resolve(".git");
+            if (Files.exists(gitDir)) {
+                // .git can be a directory or a file (worktree); both indicate a repo
+                return true;
+            }
+            current = current.getParent();
+        }
+        return false;
+    }
+
+    /**
      * Verifies no ancestor of the path is a symlink.
      * Protects against symlink attacks along the path.
      *

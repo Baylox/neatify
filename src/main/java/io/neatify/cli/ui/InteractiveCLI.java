@@ -62,7 +62,7 @@ public final class InteractiveCLI {
         printSection("UNDO LAST RUN");
         String sourcePath = readInput("Source folder (used during organization)");
         java.nio.file.Path sourceDir = java.nio.file.Paths.get(sourcePath);
-        UndoExecutor.UndoResult r = UndoExecutor.undoLastV2(sourceDir);
+        UndoExecutor.UndoResult r = UndoExecutor.undoLast(sourceDir);
         if (r == null) {
             printWarning("No journal found. Nothing to undo.");
             return;

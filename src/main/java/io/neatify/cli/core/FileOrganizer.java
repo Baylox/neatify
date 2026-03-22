@@ -56,12 +56,27 @@ public final class FileOrganizer {
 
         try {
             PathSecurity.validateSourceDir(sourceDir);
-            return sourceDir;
         } catch (SecurityException e) {
             printError("SECURITY: " + e.getMessage());
             waitForEnter();
             return null;
         }
+
+        // Hard block if the source directory is inside a Git repository
+        // Equivalent to CLI's --apply block unless --allow-inside-git is set
+        if (PathSecurity.isInsideGitRepository(sourceDir)) {
+            printError("BLOCKED: This folder is inside a Git repository.");
+            printWarning("Organizing may move versioned files.");
+            String confirm = readInput("Type FORCE to override this protection, or press Enter to cancel", "");
+            if (!"FORCE".equals(confirm)) {
+                printWarning("Operation cancelled. Use a non-Git directory or type FORCE to proceed.");
+                waitForEnter();
+                return null;
+            }
+            printWarning("Protection overridden. Proceeding inside Git repository.");
+        }
+
+        return sourceDir;
     }
 
     private static Map<String, String> promptAndLoadRules() throws IOException {

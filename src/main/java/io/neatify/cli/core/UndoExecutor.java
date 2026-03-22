@@ -150,9 +150,29 @@ public final class UndoExecutor {
     }
 
     public static UndoResult undoRun(Path sourceRoot, long timestamp) throws IOException {
-        Path file = runsDir(sourceRoot).resolve(timestamp + ".json");
-        if (!Files.exists(file)) return null;
-        return undoRunFile(sourceRoot, file);
+        Path dir = runsDir(sourceRoot);
+        // Try exact match first
+        Path file = dir.resolve(timestamp + ".json");
+        if (Files.exists(file)) return undoRunFile(sourceRoot, file);
+
+        // Search for suffixed files (e.g., timestamp_1.json, timestamp_2.json)
+        if (!Files.exists(dir) || !Files.isDirectory(dir)) return null;
+        String prefix = String.valueOf(timestamp);
+        try (java.util.stream.Stream<Path> s = Files.list(dir)) {
+            Path match = s.filter(p -> {
+                        String name = p.getFileName().toString();
+                        if (!name.endsWith(".json")) return false;
+                        String base = name.substring(0, name.length() - 5); // strip .json
+                        // Match "timestamp" or "timestamp_N"
+                        return base.equals(prefix) || base.startsWith(prefix + "_");
+                    })
+                    // Sort descending so the highest suffix (latest run) is selected first
+                    .sorted((a, b) -> b.getFileName().toString().compareTo(a.getFileName().toString()))
+                    .findFirst()
+                    .orElse(null);
+            if (match == null) return null;
+            return undoRunFile(sourceRoot, match);
+        }
     }
 
     private static UndoResult undoRunFile(Path sourceRoot, Path runFile) throws IOException {
@@ -181,7 +201,7 @@ public final class UndoExecutor {
                 if (Files.exists(from)) { skipped++; continue; }
                 Files.move(to, from);
                 restored++;
-            } catch (IOException e) { skipped++; errors.add(e.getMessage()); }
+            } catch (IOException | SecurityException e) { skipped++; errors.add(e.getMessage()); }
         }
 
         try {
@@ -241,7 +261,7 @@ public final class UndoExecutor {
                 if (Files.exists(from)) { skipped++; continue; }
                 Files.move(to, from);
                 restored++;
-            } catch (IOException e) { skipped++; errors.add(e.getMessage()); }
+            } catch (IOException | SecurityException e) { skipped++; errors.add(e.getMessage()); }
         }
 
         // Write the manifest back with the last run removed

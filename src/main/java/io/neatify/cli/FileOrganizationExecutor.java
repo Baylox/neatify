@@ -104,17 +104,7 @@ public class FileOrganizationExecutor {
     }
 
     private boolean isInsideGitRepository(Path start) {
-        if (start == null) return false;
-        Path current = start.toAbsolutePath().normalize();
-        while (current != null) {
-            Path gitDir = current.resolve(".git");
-            if (Files.exists(gitDir)) {
-                // .git can be a directory or a file (worktree); both indicate a repo
-                return true;
-            }
-            current = current.getParent();
-        }
-        return false;
+        return PathSecurity.isInsideGitRepository(start);
     }
 
     private void validatePaths(CLIConfig config) {
@@ -299,7 +289,7 @@ public class FileOrganizationExecutor {
             } else {
                 printSection("AVAILABLE JOURNALS (.neatify/runs)");
                 for (var m : runs) {
-                    println("  - " + m.time() + " (" + m.movesCount() + " moves, collision=" + m.onCollision() + ")");
+                    println("  - " + m.file().getFileName() + " (" + m.movesCount() + " moves, collision=" + m.onCollision() + ")");
                 }
             }
             return;

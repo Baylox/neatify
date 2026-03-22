@@ -28,13 +28,14 @@ public final class RulesFileCreator {
         Path rulesFile = Paths.get(filename).toAbsolutePath().normalize();
 
         if (!validateSecurity(rulesFile)) return;
+        boolean fileExists = Files.exists(rulesFile);
         if (!confirmOverwriteIfExists(rulesFile)) return;
 
         String content = generateDefaultContent();
 
         createParentDirectoryIfNeeded(rulesFile);
 
-        if (!writeSecurely(rulesFile, content)) return;
+        if (!writeSecurely(rulesFile, content, fileExists)) return;
 
         printSuccess(rulesFile);
     }
@@ -111,7 +112,7 @@ public final class RulesFileCreator {
         }
     }
 
-    private static boolean writeSecurely(Path rulesFile, String content) throws IOException {
+    private static boolean writeSecurely(Path rulesFile, String content, boolean overwrite) throws IOException {
         // SECURITY: check for symlinks in ancestry
         try {
             PathSecurity.assertNoSymlinkInAncestry(rulesFile);
@@ -119,6 +120,11 @@ public final class RulesFileCreator {
             printError("SECURITY: " + e.getMessage());
             waitForEnter();
             return false;
+        }
+
+        // If overwrite was confirmed, delete existing file before atomic CREATE_NEW
+        if (overwrite) {
+            Files.deleteIfExists(rulesFile);
         }
 
         // SECURITY: Atomic write via CREATE_NEW (anti-TOCTOU)
