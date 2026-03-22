@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
+    <!-- Suppress Logback internal status messages (prevents stderr pollution when logs/ is not writable) -->
+    <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
+
     <!-- Property: log directory (can be overridden via -Dneatify.log.dir) -->
     <property name="LOG_DIR" value="${neatify.log.dir:-logs}" />
 
@@ -37,6 +40,7 @@
 
     <!-- File Appender: main log with rotation -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <prudent>true</prudent>
         <file>${LOG_DIR}/neatify.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>${LOG_DIR}/neatify.%d{yyyy-MM-dd}.log</fileNamePattern>
@@ -51,6 +55,7 @@
 
     <!-- File Appender: security log (marker-based) -->
     <appender name="SECURITY_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <prudent>true</prudent>
         <file>${LOG_DIR}/security.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>${LOG_DIR}/security.%d{yyyy-MM-dd}.log</fileNamePattern>
