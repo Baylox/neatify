@@ -147,12 +147,13 @@ public final class Preview {
         List<String> lines = new ArrayList<>();
 
         int totalFiles = group.files.stream().mapToInt(FileEntry::count).sum();
-        String header = String.format("\n%s %s/  (%d file%s)",
+        String header = String.format("%s %s/  (%d file%s)",
             Ansi.cyan(AsciiSymbols.arrow()),
             Ansi.cyan(group.folderName),
             totalFiles,
             totalFiles > 1 ? "s" : ""
         );
+        lines.add("");
         lines.add(header);
 
         int maxShow = Math.min(config.maxFilesPerFolder, group.files.size());

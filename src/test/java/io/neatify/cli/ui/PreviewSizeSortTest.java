@@ -36,10 +36,12 @@ class PreviewSizeSortTest {
 
         List<String> lines = Preview.render(actions, cfg);
 
-        // Find the "Test/" group header
+        // Find the "Test/" group header (strip ANSI codes before matching)
         int idxTestHeader = -1;
         for (int i = 0; i < lines.size(); i++) {
-            if (lines.get(i).contains("Test/")) { idxTestHeader = i; break; }
+            if (lines.get(i).replaceAll("\u001B\\[[;\\d]*m", "").contains("Test/")) {
+                idxTestHeader = i; break;
+            }
         }
         assertTrue(idxTestHeader >= 0, "Folder header not found in preview");
 
