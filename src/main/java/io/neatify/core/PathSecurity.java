@@ -16,10 +16,14 @@ public final class PathSecurity {
         // Utility class
     }
 
-    // System directories that are forbidden
+    // System directories that are forbidden as an organization source.
+    // Note: /var and /tmp are intentionally NOT listed — they host legitimate
+    // user temp areas (e.g. macOS /var/folders, /tmp) and are reached through
+    // system symlinks (/var -> /private/var on macOS). The entries below cover
+    // system binaries and configuration, which is what actually matters here.
     private static final List<String> FORBIDDEN_PATHS_UNIX = List.of(
         "/etc", "/bin", "/sbin", "/usr/bin", "/usr/sbin",
-        "/var", "/sys", "/proc", "/dev", "/boot", "/root"
+        "/sys", "/proc", "/dev", "/boot", "/root"
     );
 
     private static final List<String> FORBIDDEN_PATHS_WINDOWS = List.of(
@@ -29,7 +33,8 @@ public final class PathSecurity {
 
     /**
      * Validates that a path is safe to use as the organization source.
-     * Blocks system directories and symlinks.
+     * Resolves symlinks first (so a link pointing at a system directory is
+     * caught by its real target), then blocks forbidden system directories.
      *
      * @param sourcePath path to validate
      * @throws SecurityException if the path is not safe
@@ -40,27 +45,30 @@ public final class PathSecurity {
             throw new IllegalArgumentException("Path cannot be null");
         }
 
-        Path normalized = sourcePath.toAbsolutePath().normalize();
+        Path resolved = resolveRealPathOrNormalized(sourcePath);
 
-        assertNoSymlinkInAncestry(normalized);
-        checkNotForbiddenPath(normalized, FORBIDDEN_PATHS_UNIX);
-        checkNotForbiddenPath(normalized, FORBIDDEN_PATHS_WINDOWS);
+        checkNotForbiddenPath(resolved, FORBIDDEN_PATHS_UNIX);
+        checkNotForbiddenPath(resolved, FORBIDDEN_PATHS_WINDOWS);
     }
 
     /**
-     * Verifies a path does not match a forbidden directories list.
+     * Verifies a (already symlink-resolved) path does not match a forbidden
+     * directories list. Each forbidden entry is itself resolved to its real
+     * path so that e.g. an usrmerge {@code /bin -> /usr/bin} still matches.
      */
-    private static void checkNotForbiddenPath(Path normalized, List<String> forbiddenPaths) {
+    private static void checkNotForbiddenPath(Path resolved, List<String> forbiddenPaths) throws IOException {
         for (String forbidden : forbiddenPaths) {
+            Path forbiddenPath;
             try {
-                Path forbiddenPath = Paths.get(forbidden).toAbsolutePath().normalize();
-                if (normalized.equals(forbiddenPath) || normalized.startsWith(forbiddenPath)) {
-                    throw new SecurityException(
-                        "Forbidden system directory: " + normalized + " (area: " + forbidden + ")"
-                    );
-                }
+                forbiddenPath = resolveRealPathOrNormalized(Paths.get(forbidden));
             } catch (java.nio.file.InvalidPathException ignored) {
-                // Ignore if path is invalid on this system (e.g., Windows path on Unix)
+                // Path not valid on this system (e.g., a Windows path on Unix) — skip it.
+                continue;
+            }
+            if (resolved.equals(forbiddenPath) || resolved.startsWith(forbiddenPath)) {
+                throw new SecurityException(
+                    "Forbidden system directory: " + resolved + " (area: " + forbidden + ")"
+                );
             }
         }
     }
@@ -146,43 +154,60 @@ public final class PathSecurity {
     }
 
     /**
-     * Verifies no ancestor of the path is a symlink.
-     * Protects against symlink attacks along the path.
+     * Asserts that the real (symlink-resolved) location of {@code candidate}
+     * stays within the real location of {@code root}.
      *
-     * @param path path to check
-     * @throws SecurityException if a symlink is detected
-     * @throws IOException on I/O error
+     * <p>This blocks any symlink or {@code ..} segment that would make the path
+     * escape the trusted area (the real attack: a symlink inside the work area
+     * pointing somewhere else), while allowing legitimate system symlinks that
+     * sit <em>above</em> root (e.g. macOS {@code /var -> /private/var}, or an
+     * usrmerge {@code /bin -> /usr/bin}).
+     *
+     * @param root      trusted base directory (expected to exist)
+     * @param candidate path to validate (may or may not exist yet)
+     * @throws SecurityException if the resolved candidate escapes root
+     * @throws IOException on I/O error resolving root
      */
-    public static void assertNoSymlinkInAncestry(Path path) throws IOException {
-        if (path == null) {
-            return;
+    public static void assertResolvedWithin(Path root, Path candidate) throws IOException {
+        if (root == null || candidate == null) {
+            throw new IllegalArgumentException("root and candidate must not be null");
         }
 
-        checkSymlinkSelf(path);
-        checkSymlinkAncestors(path);
+        Path realRoot = resolveRealPathOrNormalized(root);
+        Path realCandidate = resolveRealPathOrNormalized(candidate);
+
+        if (!realCandidate.startsWith(realRoot)) {
+            throw new SecurityException(
+                "Resolved path escapes the trusted root: " + candidate
+                    + " -> " + realCandidate + " (root: " + realRoot + ")"
+            );
+        }
     }
 
     /**
-     * Verifies that the path itself is not a symlink.
+     * Resolves a path to its real (symlink-followed) absolute form. When the
+     * path does not exist yet, resolves the closest existing ancestor to its
+     * real path and re-attaches the remaining (normalized) segments. This makes
+     * symlink resolution work for not-yet-created targets too — crucial so that
+     * a {@code root/link/file} target is judged by where {@code link} really
+     * points, even though {@code file} does not exist.
      */
-    private static void checkSymlinkSelf(Path path) throws IOException {
-        if (Files.exists(path) && Files.isSymbolicLink(path)) {
-            throw new SecurityException("Symlink not allowed: " + path);
-        }
-    }
-
-    /**
-     * Verifies that no ancestor of the path is a symlink.
-     */
-    private static void checkSymlinkAncestors(Path path) throws IOException {
-        Path current = path.getParent();
-        while (current != null) {
-            if (Files.exists(current) && Files.isSymbolicLink(current)) {
-                throw new SecurityException(
-                    "Symlink detected in parent path: " + current + " (full path: " + path + ")"
-                );
+    private static Path resolveRealPathOrNormalized(Path path) throws IOException {
+        Path absolute = path.toAbsolutePath().normalize();
+        try {
+            return absolute.toRealPath();
+        } catch (IOException notFullyPresent) {
+            // Walk up to the nearest existing ancestor, resolve it, then rebuild.
+            Path existing = absolute;
+            while (existing != null && !Files.exists(existing)) {
+                existing = existing.getParent();
             }
-            current = current.getParent();
+            if (existing == null) {
+                return absolute;
+            }
+            Path realExisting = existing.toRealPath();
+            Path remainder = existing.relativize(absolute);
+            return realExisting.resolve(remainder).normalize();
         }
     }
 }

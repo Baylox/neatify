@@ -113,9 +113,10 @@ public final class RulesFileCreator {
     }
 
     private static boolean writeSecurely(Path rulesFile, String content, boolean overwrite) throws IOException {
-        // SECURITY: check for symlinks in ancestry
+        // SECURITY: the real (symlink-resolved) target must stay inside custom-rules/
         try {
-            PathSecurity.assertNoSymlinkInAncestry(rulesFile);
+            Path safeDir = Paths.get("custom-rules").toAbsolutePath().normalize();
+            PathSecurity.assertResolvedWithin(safeDir, rulesFile);
         } catch (SecurityException e) {
             printError("SECURITY: " + e.getMessage());
             waitForEnter();
