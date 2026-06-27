@@ -6,6 +6,10 @@ import java.util.Map;
 
 import io.neatify.core.contract.RulesProvider;
 
+/**
+ * {@link RulesProvider} implementation reading rules from {@code .properties}
+ * files, delegating parsing and validation to {@link Rules}.
+ */
 public final class PropertiesRulesProvider implements RulesProvider {
 
     @Override

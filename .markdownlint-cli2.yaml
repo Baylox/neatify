@@ -1,0 +1,16 @@
+# markdownlint configuration — intentionally permissive for prose docs.
+config:
+  default: true
+  MD013: false   # line length: prose and tables are free-form
+  MD033: false   # inline HTML: needed for the AUTOGEN markers
+  MD040: false   # fenced code language: ASCII diagrams are intentionally plain
+  MD041: false   # first line need not be a top-level heading everywhere
+  MD060: false   # table pipe spacing: generated tables use a compact style
+
+globs:
+  - "**/*.md"
+
+ignores:
+  - "target/**"
+  - ".github/**"
+  - "custom-rules/**"

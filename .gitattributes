@@ -7,6 +7,9 @@
 neatify text eol=lf
 mvnw    text eol=lf
 
+# Markdown stays LF so the generated doc tables compare cleanly on every OS.
+*.md    text eol=lf
+
 # Windows batch scripts want CRLF.
 *.cmd   text eol=crlf
 *.bat   text eol=crlf

@@ -7,6 +7,10 @@ import java.util.Map;
 
 import io.neatify.core.contract.FileMover;
 
+/**
+ * {@link FileMover} implementation backed by the local filesystem. Planning is
+ * delegated to {@link FilePlanner} and execution to {@link FileExecutor}.
+ */
 public final class LocalFileMover implements FileMover {
 
     private static final int DEFAULT_MAX_FILES = 100_000;
