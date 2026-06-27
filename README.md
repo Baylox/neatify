@@ -15,22 +15,22 @@
 
 [Install](#quick-start) · [Usage](#usage) · [Docs](docs/index.md) · [Security](docs/explanation/security.md)
 
-</div>
-
-<table>
+<table align="center">
 <tr>
 <td valign="middle"><img src="docs/assets/icons/rocket.svg" height="20" alt=""></td>
-<td valign="middle"><b>One JDK, no install</b><br><sub>Run a self-contained jar, or use the launchers.</sub></td>
+<td valign="middle" align="left"><b>One JDK, no install</b><br><sub>Run a self-contained jar, or use the launchers.</sub></td>
 <td valign="middle"><img src="docs/assets/icons/shield.svg" height="20" alt=""></td>
-<td valign="middle"><b>Safe by default</b><br><sub>Dry-run preview, full undo, repo-aware.</sub></td>
+<td valign="middle" align="left"><b>Safe by default</b><br><sub>Dry-run preview, full undo, repo-aware.</sub></td>
 </tr>
 <tr>
 <td valign="middle"><img src="docs/assets/icons/terminal.svg" height="20" alt=""></td>
-<td valign="middle"><b>Scriptable</b><br><sub>Flags, JSON output, exit codes.</sub></td>
+<td valign="middle" align="left"><b>Scriptable</b><br><sub>Flags, JSON output, exit codes.</sub></td>
 <td valign="middle"><img src="docs/assets/icons/check-badge.svg" height="20" alt=""></td>
-<td valign="middle"><b>Tested everywhere</b><br><sub>CI on Linux, macOS &amp; Windows.</sub></td>
+<td valign="middle" align="left"><b>Tested everywhere</b><br><sub>CI on Linux, macOS &amp; Windows.</sub></td>
 </tr>
 </table>
+
+</div>
 
 ---
 
@@ -41,17 +41,35 @@ folders, driven by simple extension rules. It **previews changes by default** (d
 **journals every run** so you can undo it, and refuses to touch Git repos or system
 directories.
 
+**Before** — a messy `~/Downloads`:
+
 ```text
-~/Downloads (before)              ~/Downloads (after  →  neatify --apply)
-├── report.pdf                    ├── Documents/
-├── invoice.docx                  │   ├── report.pdf
-├── photo.png                     │   └── invoice.docx
-├── screenshot.png        ──▶     ├── Images/
-├── song.mp3                      │   ├── photo.png
-├── movie.mkv                     │   └── screenshot.png
-└── archive.zip                   ├── Music/      └── song.mp3
-                                  ├── Videos/     └── movie.mkv
-                                  └── Archives/   └── archive.zip
+~/Downloads/
+├── report.pdf
+├── invoice.docx
+├── photo.png
+├── screenshot.png
+├── song.mp3
+├── movie.mkv
+└── archive.zip
+```
+
+**After** — `neatify --source ~/Downloads --use-default-rules --apply`:
+
+```text
+~/Downloads/
+├── Documents/
+│   ├── report.pdf
+│   └── invoice.docx
+├── Images/
+│   ├── photo.png
+│   └── screenshot.png
+├── Music/
+│   └── song.mp3
+├── Videos/
+│   └── movie.mkv
+└── Archives/
+    └── archive.zip
 ```
 
 ---
