@@ -15,22 +15,22 @@
 
 [Install](#quick-start) · [Usage](#usage) · [Docs](docs/index.md) · [Security](docs/explanation/security.md)
 
-</div>
-
-<table>
+<table align="center">
 <tr>
 <td valign="middle"><img src="docs/assets/icons/rocket.svg" height="20" alt=""></td>
-<td valign="middle"><b>One JDK, no install</b><br><sub>Run a self-contained jar, or use the launchers.</sub></td>
+<td valign="middle" align="left"><b>One JDK, no install</b><br><sub>Run a self-contained jar, or use the launchers.</sub></td>
 <td valign="middle"><img src="docs/assets/icons/shield.svg" height="20" alt=""></td>
-<td valign="middle"><b>Safe by default</b><br><sub>Dry-run preview, full undo, repo-aware.</sub></td>
+<td valign="middle" align="left"><b>Safe by default</b><br><sub>Dry-run preview, full undo, repo-aware.</sub></td>
 </tr>
 <tr>
 <td valign="middle"><img src="docs/assets/icons/terminal.svg" height="20" alt=""></td>
-<td valign="middle"><b>Scriptable</b><br><sub>Flags, JSON output, exit codes.</sub></td>
+<td valign="middle" align="left"><b>Scriptable</b><br><sub>Flags, JSON output, exit codes.</sub></td>
 <td valign="middle"><img src="docs/assets/icons/check-badge.svg" height="20" alt=""></td>
-<td valign="middle"><b>Tested everywhere</b><br><sub>CI on Linux, macOS &amp; Windows.</sub></td>
+<td valign="middle" align="left"><b>Tested everywhere</b><br><sub>CI on Linux, macOS &amp; Windows.</sub></td>
 </tr>
 </table>
+
+</div>
 
 ---
 
