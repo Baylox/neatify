@@ -203,8 +203,8 @@ public final class UndoExecutor {
             }
             if (!Files.exists(to)) { skipped++; errors.add("Absent: " + to); continue; }
             try {
-                PathSecurity.assertNoSymlinkInAncestry(from);
-                PathSecurity.assertNoSymlinkInAncestry(to);  // also protect the source-of-truth path
+                PathSecurity.assertResolvedWithin(sourceRoot, from);
+                PathSecurity.assertResolvedWithin(sourceRoot, to);  // block any symlink/.. escaping the source root
                 Path fromParent = from.getParent();
                 if (fromParent != null) {
                     Files.createDirectories(fromParent);
@@ -266,8 +266,8 @@ public final class UndoExecutor {
             }
             if (!Files.exists(to)) { skipped++; errors.add("Absent: " + to); continue; }
             try {
-                PathSecurity.assertNoSymlinkInAncestry(from);
-                PathSecurity.assertNoSymlinkInAncestry(to);
+                PathSecurity.assertResolvedWithin(sourceRoot, from);
+                PathSecurity.assertResolvedWithin(sourceRoot, to);
                 Path fromParent = from.getParent();
                 if (fromParent != null) {
                     Files.createDirectories(fromParent);
