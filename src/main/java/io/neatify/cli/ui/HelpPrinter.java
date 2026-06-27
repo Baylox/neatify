@@ -1,9 +1,15 @@
 package io.neatify.cli.ui;
 
+import io.neatify.cli.args.CliOption;
+
 import static io.neatify.cli.ui.Display.printLine;
 
 /**
  * Prints application help.
+ *
+ * <p>The option list is derived from {@link CliOption} (the single source of
+ * truth), so the help output, the parser and the generated CLI reference stay
+ * in sync automatically.
  */
 public final class HelpPrinter {
 
@@ -14,48 +20,51 @@ public final class HelpPrinter {
     public static void print() {
         System.out.println();
         printLine();
-        System.out.println(io.neatify.cli.ui.Display.center("HELP - NEATIFY"));
+        System.out.println(Display.center("HELP - NEATIFY"));
         printLine();
         System.out.println();
         System.out.println("USAGE:");
-        System.out.println("  java -jar neatify.jar [options]");
-        System.out.println();
-        System.out.println("MODES:");
-        System.out.println("  No arguments                Start interactive mode");
-        System.out.println("  --interactive, -i           Start interactive mode");
-        System.out.println("  --undo                      Undo the last run (journal)");
-        System.out.println("  --undo-list                 List journaled runs (.neatify/runs)");
-        System.out.println("  --undo-run <timestamp>      Undo a specific run");
-        System.out.println();
-        System.out.println("OPTIONS (command mode):");
-        System.out.println("  --source, -s <dir>          Directory to organize (required)");
-        System.out.println("  --rules, -r <file>          Rules file (required)");
-        System.out.println("  --use-default-rules         Use built-in default rules (no --rules)");
-        System.out.println("  --apply, -a                 Apply changes (otherwise dry-run)");
-        System.out.println("  --json                      JSON output (preview + result)");
-        System.out.println("  --on-collision <mode>       Collision: rename (default), skip, overwrite");
-        System.out.println("  --max-files <n>             Max files to scan (default: 100000)");
-        System.out.println("  --include <glob>            Include (repeatable), e.g. **/*.pdf");
-        System.out.println("  --exclude <glob>            Exclude (repeatable), e.g. **/node_modules/**");
-        System.out.println("  --allow-inside-git          Allow operating inside Git repositories (unsafe)");
-        System.out.println("  --help, -h                  Show this help");
-        System.out.println("  --version, -v               Show version");
-        System.out.println();
-        System.out.println("DISPLAY OPTIONS:");
-        System.out.println("  --no-color                  Disable ANSI colors");
-        System.out.println("  --ascii                     Use ASCII symbols instead of Unicode");
-        System.out.println("  --per-folder-preview <n>    Files per folder to display (default: 5)");
-        System.out.println("  --sort <mode>               File sort: alpha, ext or size (default: alpha)");
+        System.out.println("  neatify [options]");
+        System.out.println("  (no arguments starts interactive mode)");
+
+        for (CliOption.Group group : CliOption.Group.values()) {
+            System.out.println();
+            System.out.println(group.title() + ":");
+            for (CliOption option : CliOption.values()) {
+                if (option.group() == group) {
+                    System.out.println("  " + formatInvocation(option) + describe(option));
+                }
+            }
+        }
+
         System.out.println();
         System.out.println("EXAMPLES:");
         System.out.println("  # Interactive mode");
-        System.out.println("  java -jar neatify.jar");
+        System.out.println("  neatify");
         System.out.println();
         System.out.println("  # Simulation (dry-run)");
-        System.out.println("  java -jar neatify.jar --source ~/Downloads --rules rules.properties");
+        System.out.println("  neatify --source ~/Downloads --rules rules.properties");
         System.out.println();
         System.out.println("  # Real apply");
-        System.out.println("  java -jar neatify.jar --source ~/Downloads --rules rules.properties --apply");
+        System.out.println("  neatify --source ~/Downloads --rules rules.properties --apply");
         System.out.println();
+    }
+
+    /** Left column: "--flag, -alias <arg>" padded to a fixed width. */
+    private static String formatInvocation(CliOption option) {
+        StringBuilder sb = new StringBuilder(option.flag());
+        if (option.alias() != null) {
+            sb.append(", ").append(option.alias());
+        }
+        if (option.argMeta() != null) {
+            sb.append(' ').append(option.argMeta());
+        }
+        return sb.toString();
+    }
+
+    private static String describe(CliOption option) {
+        String left = formatInvocation(option);
+        int pad = Math.max(1, 28 - left.length());
+        return " ".repeat(pad) + option.description();
     }
 }
