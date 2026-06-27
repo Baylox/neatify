@@ -2,6 +2,9 @@
 
 Automatic file organization based on simple rules.
 
+[![CI](https://github.com/Baylox/neatify/actions/workflows/ci.yml/badge.svg)](https://github.com/Baylox/neatify/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/Baylox/neatify/actions/workflows/codeql.yml/badge.svg)](https://github.com/Baylox/neatify/actions/workflows/codeql.yml)
+
 ---
 
 ## What It Does
