@@ -4,6 +4,7 @@ Automatic file organization based on simple rules.
 
 [![CI](https://github.com/Baylox/neatify/actions/workflows/ci.yml/badge.svg)](https://github.com/Baylox/neatify/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/Baylox/neatify/actions/workflows/codeql.yml/badge.svg)](https://github.com/Baylox/neatify/actions/workflows/codeql.yml)
+[![Javadoc](https://img.shields.io/badge/javadoc-online-blue)](https://baylox.github.io/neatify/)
 
 Neatify is a small Java CLI that tidies a folder by moving files into category folders
 (Documents, Images, Videos…) based on their extension. It defaults to a safe **dry-run**
