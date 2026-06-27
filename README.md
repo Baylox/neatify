@@ -41,17 +41,35 @@ folders, driven by simple extension rules. It **previews changes by default** (d
 **journals every run** so you can undo it, and refuses to touch Git repos or system
 directories.
 
+**Before** — a messy `~/Downloads`:
+
 ```text
-~/Downloads (before)              ~/Downloads (after  →  neatify --apply)
-├── report.pdf                    ├── Documents/
-├── invoice.docx                  │   ├── report.pdf
-├── photo.png                     │   └── invoice.docx
-├── screenshot.png        ──▶     ├── Images/
-├── song.mp3                      │   ├── photo.png
-├── movie.mkv                     │   └── screenshot.png
-└── archive.zip                   ├── Music/      └── song.mp3
-                                  ├── Videos/     └── movie.mkv
-                                  └── Archives/   └── archive.zip
+~/Downloads/
+├── report.pdf
+├── invoice.docx
+├── photo.png
+├── screenshot.png
+├── song.mp3
+├── movie.mkv
+└── archive.zip
+```
+
+**After** — `neatify --source ~/Downloads --use-default-rules --apply`:
+
+```text
+~/Downloads/
+├── Documents/
+│   ├── report.pdf
+│   └── invoice.docx
+├── Images/
+│   ├── photo.png
+│   └── screenshot.png
+├── Music/
+│   └── song.mp3
+├── Videos/
+│   └── movie.mkv
+└── Archives/
+    └── archive.zip
 ```
 
 ---
