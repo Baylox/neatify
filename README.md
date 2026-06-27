@@ -17,9 +17,24 @@
 
 </div>
 
+<table>
+<tr>
+<td valign="middle"><img src="docs/assets/icons/rocket.svg" height="20" alt=""></td>
+<td valign="middle"><b>One JDK, no install</b><br><sub>Run a self-contained jar, or use the launchers.</sub></td>
+<td valign="middle"><img src="docs/assets/icons/shield.svg" height="20" alt=""></td>
+<td valign="middle"><b>Safe by default</b><br><sub>Dry-run preview, full undo, repo-aware.</sub></td>
+</tr>
+<tr>
+<td valign="middle"><img src="docs/assets/icons/terminal.svg" height="20" alt=""></td>
+<td valign="middle"><b>Scriptable</b><br><sub>Flags, JSON output, exit codes.</sub></td>
+<td valign="middle"><img src="docs/assets/icons/check-badge.svg" height="20" alt=""></td>
+<td valign="middle"><b>Tested everywhere</b><br><sub>CI on Linux, macOS &amp; Windows.</sub></td>
+</tr>
+</table>
+
 ---
 
-## <img src="docs/assets/icons/sparkles.svg" height="22" align="center" alt=""> What it does
+## What it does
 
 Point Neatify at a messy folder and it sorts every file into a tidy set of category
 folders, driven by simple extension rules. It **previews changes by default** (dry-run),
@@ -43,7 +58,7 @@ directories.
 
 <a id="quick-start"></a>
 
-## <img src="docs/assets/icons/rocket.svg" height="22" align="center" alt=""> Quick start
+## Quick start
 
 > **Requires Java 21+** (a JDK). That's the only thing you need — the jar is self-contained.
 
@@ -80,7 +95,7 @@ Building also gives you the launchers — `./neatify` (Linux/macOS/WSL) and `.\n
 
 <a id="usage"></a>
 
-## <img src="docs/assets/icons/terminal.svg" height="22" align="center" alt=""> Usage
+## Usage
 
 ```bash
 ./neatify                                                   # interactive menu
@@ -102,7 +117,7 @@ make help                     # list all targets and variables
 
 ---
 
-## <img src="docs/assets/icons/book.svg" height="22" align="center" alt=""> Documentation
+## Documentation
 
 Full docs live in [`docs/`](docs/index.md):
 
@@ -120,7 +135,7 @@ Full docs live in [`docs/`](docs/index.md):
 
 ---
 
-## <img src="docs/assets/icons/shield.svg" height="22" align="center" alt=""> Safety by default
+## Safety by default
 
 | | |
 |---|---|
@@ -132,7 +147,7 @@ Full docs live in [`docs/`](docs/index.md):
 
 ---
 
-## <img src="docs/assets/icons/check-badge.svg" height="22" align="center" alt=""> Quality gate
+## Quality gate
 
 `./mvnw verify` runs the full gate: Enforcer (JDK 21+), JUnit 5, JaCoCo (≥ 55% line
 coverage), Spotless, SpotBugs and PMD — and the CI runs it on **Linux, macOS and
@@ -148,6 +163,6 @@ redirect the build dir: `./mvnw verify -Dneatify.buildDirectory=C:\tmp\neatify-t
 
 ---
 
-## <img src="docs/assets/icons/scale.svg" height="22" align="center" alt=""> License
+## License
 
 [MIT](./LICENSE) © [Baylox](https://github.com/Baylox)
