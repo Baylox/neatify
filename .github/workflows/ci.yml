@@ -4,41 +4,67 @@ on:
   push:
     branches: [master]
   pull_request:
+  workflow_dispatch:
+
+# Cancel superseded runs on a PR; keep every run on master.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Least privilege by default; no job needs more for now.
+permissions:
+  contents: read
 
 jobs:
-  # Full quality gate on the three major OSes. This is what proves the launch
-  # scripts and the build are portable: target/neatify.jar is produced and the
-  # whole test suite (including LauncherScriptsTest) runs on each platform.
-  build:
-    name: build (${{ matrix.os }})
+  # Single source of static analysis + coverage. Runs the full Maven quality
+  # gate (Enforcer, tests, JaCoCo, Spotless, SpotBugs, PMD) ONCE on Linux —
+  # these checks are OS-independent, so there is no point repeating them per OS.
+  quality:
+    name: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Set up JDK 21
+        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Verify (full quality gate)
+        run: ./mvnw -B -ntp verify
+
+  # Portability matrix: prove the app builds and the whole test suite passes on
+  # the three OSes, and that the launchers run against the freshly built jar.
+  # Static analysis is skipped here (already covered by `quality`); `package`
+  # is used (not `test`) because the smoke test needs the shaded jar.
+  test:
+    name: test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
-      - uses: actions/checkout@v4
-
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
         with:
           distribution: temurin
           java-version: '21'
           cache: maven
 
-      - name: Build and verify (POSIX)
+      - name: Build and test (POSIX)
         if: runner.os != 'Windows'
-        run: ./mvnw -B verify
-
-      - name: Build and verify (Windows)
+        run: ./mvnw -B -ntp package -Dspotbugs.skip=true -Dpmd.skip=true -Dspotless.check.skip=true -Djacoco.skip=true
+      - name: Build and test (Windows)
         if: runner.os == 'Windows'
-        run: .\mvnw.cmd -B verify
+        run: .\mvnw.cmd -B -ntp package "-Dspotbugs.skip=true" "-Dpmd.skip=true" "-Dspotless.check.skip=true" "-Djacoco.skip=true"
 
-      # Smoke-test the launcher end to end against the jar just built by verify.
       - name: Run launcher (POSIX)
         if: runner.os != 'Windows'
         run: ./neatify --version
-
       - name: Run launcher (Windows)
         if: runner.os == 'Windows'
         run: .\neatify.cmd --version
@@ -49,8 +75,9 @@ jobs:
   scripts:
     name: script metadata
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       - name: neatify must be tracked as executable (100755)
         run: |
           mode=$(git ls-files --stage neatify | awk '{print $1}')
@@ -59,3 +86,26 @@ jobs:
             echo "::error file=neatify::neatify must be executable (git mode 100755), found $mode. Fix with: git update-index --chmod=+x neatify"
             exit 1
           }
+
+  # Single aggregate check — point branch protection at this one job. It stays
+  # stable when the matrix changes and reports failure if any job failed or was
+  # cancelled. `if: always()` is required, otherwise it would be skipped when a
+  # dependency fails (and a skipped check does not block a required gate).
+  ci-success:
+    name: ci-success
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [quality, test, scripts]
+    if: always()
+    steps:
+      - name: Verify all jobs succeeded
+        run: |
+          results="${{ needs.quality.result }} ${{ needs.test.result }} ${{ needs.scripts.result }}"
+          echo "Job results: $results"
+          for r in $results; do
+            if [ "$r" != "success" ]; then
+              echo "::error::A required job did not succeed ($r)."
+              exit 1
+            fi
+          done
+          echo "All required jobs succeeded."
