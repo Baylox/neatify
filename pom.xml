@@ -35,6 +35,7 @@
         <spotless-maven-plugin.version>3.7.0</spotless-maven-plugin.version>
         <versions-maven-plugin.version>2.21.0</versions-maven-plugin.version>
         <dependency-check-maven.version>12.2.2</dependency-check-maven.version>
+        <maven-javadoc-plugin.version>3.11.2</maven-javadoc-plugin.version>
     </properties>
 
     <dependencies>
@@ -303,6 +304,19 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>versions-maven-plugin</artifactId>
                 <version>${versions-maven-plugin.version}</version>
+            </plugin>
+
+            <!-- Javadoc — API docs (mvn javadoc:javadoc → target/site/apidocs). Not bound to a
+                 phase, so it never slows the normal build; published to GitHub Pages by docs.yml. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>${maven-javadoc-plugin.version}</version>
+                <configuration>
+                    <quiet>true</quiet>
+                    <notimestamp>true</notimestamp>
+                    <doclint>none</doclint>
+                </configuration>
             </plugin>
         </plugins>
     </build>
