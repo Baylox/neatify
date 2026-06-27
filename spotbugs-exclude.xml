@@ -10,4 +10,11 @@
     <Match>
         <Class name="~io\.neatify\.TestHelper" />
     </Match>
+
+    <!-- Gson DTOs: fields are populated by reflection during deserialization,
+         SpotBugs cannot see the writes (UWF_UNWRITTEN_FIELD is a false positive here) -->
+    <Match>
+        <Class name="~io\.neatify\.cli\.core\.UndoExecutor\$(Legacy.*|RunDoc|MoveDto)" />
+        <Bug pattern="UWF_UNWRITTEN_FIELD" />
+    </Match>
 </FindBugsFilter>

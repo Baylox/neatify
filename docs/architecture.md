@@ -192,9 +192,23 @@ UndoExecutor.undoLast(sourceRoot)
 
 | Library | Version | Usage |
 |---|---|---|
-| SLF4J API | 2.0.16 | Logging facade |
-| Logback Classic | 1.5.19 | Logging implementation (console + files) |
-| Gson | 2.11.0 | JSON serialization (undo journal, JSON output mode) |
+| SLF4J API | 2.0.17 | Logging facade |
+| Logback Classic | 1.5.34 | Logging implementation (console + files) |
+| Gson | 2.14.0 | JSON serialization (undo journal, JSON output mode) |
+| SpotBugs annotations | 4.10.2 | `@SuppressFBWarnings` (provided scope, not shipped) |
 | JUnit 5 | 5.11.3 | Unit tests (test scope only) |
 
-All dependencies are bundled in `target/neatify.jar` via Maven Shade Plugin.
+All runtime dependencies are bundled in `target/neatify.jar` via Maven Shade Plugin.
+
+---
+
+## Quality gate (mvn verify)
+
+| Tool | Role |
+|---|---|
+| Maven Enforcer | JDK 21+, Maven 3.8+, dependency convergence |
+| JaCoCo | Coverage report + 55% line floor |
+| Spotless | Import order and whitespace hygiene |
+| SpotBugs | Static bug detection (effort max, medium threshold) |
+| PMD | Code smells (custom ruleset in `pmd-ruleset.xml`) |
+| OWASP Dependency-Check | CVE scan, opt-in via `-Psecurity-scan` |

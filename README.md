@@ -198,6 +198,37 @@ java -jar target/neatify.jar --source ~/Downloads --rules my-rules.properties --
 
 ---
 
+## Quality & Build Checks
+
+The `verify` phase runs the full quality gate:
+
+```bash
+./mvnw verify
+```
+
+| Tool | Purpose | Failure threshold |
+|---|---|---|
+| **Enforcer** | Requires JDK 21+, Maven 3.8+, dependency convergence | any violation |
+| **Surefire + JUnit 5** | Unit tests | any failure |
+| **JaCoCo** | Test coverage (`target/site/jacoco/index.html`) | < 55% line coverage |
+| **Spotless** | Source hygiene (import order, whitespace) | any unformatted file |
+| **SpotBugs** | Static bug detection (effort max) | medium+ priority bug |
+| **PMD** | Code smells, dead code | any violation |
+
+Useful commands:
+
+```bash
+./mvnw spotless:apply                          # auto-format sources
+./mvnw versions:display-dependency-updates    # check for dependency updates
+./mvnw verify -Psecurity-scan                  # OWASP dependency CVE scan (set NVD_API_KEY)
+```
+
+> **Note:** if the working tree sits on a network share that does not support
+> file locking (e.g. `\\wsl.localhost` from Windows), redirect the build
+> directory: `./mvnw verify -Dneatify.buildDirectory=C:\tmp\neatify-target`.
+
+---
+
 ## License
 
 MIT – see [LICENSE](./LICENSE).
