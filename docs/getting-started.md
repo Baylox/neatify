@@ -61,18 +61,21 @@ By default Neatify runs a **dry-run**: it shows what it would do without moving 
 ## Full example
 
 **Before:**
-```
+
+```text
 Downloads/
   report.pdf  photo.jpg  archive.zip  notes.txt  video.mp4
 ```
 
 **Command:**
+
 ```bash
 ./neatify --source ~/Downloads --use-default-rules --apply
 ```
 
 **After:**
-```
+
+```text
 Downloads/
   Documents/  report.pdf  notes.txt
   Images/     photo.jpg
