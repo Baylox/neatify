@@ -19,7 +19,7 @@
 
 ---
 
-## ✨ What it does
+## <img src="docs/assets/icons/sparkles.svg" height="22" align="center" alt=""> What it does
 
 Point Neatify at a messy folder and it sorts every file into a tidy set of category
 folders, driven by simple extension rules. It **previews changes by default** (dry-run),
@@ -43,7 +43,7 @@ directories.
 
 <a id="quick-start"></a>
 
-## 🚀 Quick start
+## <img src="docs/assets/icons/rocket.svg" height="22" align="center" alt=""> Quick start
 
 > **Requires Java 21+** (a JDK). That's the only thing you need — the jar is self-contained.
 
@@ -80,7 +80,7 @@ Building also gives you the launchers — `./neatify` (Linux/macOS/WSL) and `.\n
 
 <a id="usage"></a>
 
-## 🛠 Usage
+## <img src="docs/assets/icons/terminal.svg" height="22" align="center" alt=""> Usage
 
 ```bash
 ./neatify                                                   # interactive menu
@@ -102,25 +102,25 @@ make help                     # list all targets and variables
 
 ---
 
-## 📚 Documentation
+## <img src="docs/assets/icons/book.svg" height="22" align="center" alt=""> Documentation
 
 Full docs live in [`docs/`](docs/index.md):
 
 | Guide | What's inside |
 |-------|---------------|
-| 🏁 [Getting started](docs/getting-started.md) | Install, build, first run |
-| 💬 [Interactive mode](docs/guides/interactive-mode.md) | The menu-driven flow |
-| 📑 [Rules](docs/guides/rules.md) | Map extensions to folders (+ built-in defaults) |
-| ↩️ [Undo](docs/guides/undo.md) | Reverse a run |
-| ⚙️ [CLI reference](docs/reference/cli.md) | Every option (generated from the code) |
-| 🧾 [JSON output](docs/reference/json-output.md) | Machine-readable results |
-| 🏛 [Architecture](docs/explanation/architecture.md) | How it works |
-| 🔒 [Security](docs/explanation/security.md) | Protections and rationale |
-| ☕ [API (Javadoc)](https://baylox.github.io/neatify/) | Generated from the source |
+| [Getting started](docs/getting-started.md) | Install, build, first run |
+| [Interactive mode](docs/guides/interactive-mode.md) | The menu-driven flow |
+| [Rules](docs/guides/rules.md) | Map extensions to folders (+ built-in defaults) |
+| [Undo](docs/guides/undo.md) | Reverse a run |
+| [CLI reference](docs/reference/cli.md) | Every option (generated from the code) |
+| [JSON output](docs/reference/json-output.md) | Machine-readable results |
+| [Architecture](docs/explanation/architecture.md) | How it works |
+| [Security](docs/explanation/security.md) | Protections and rationale |
+| [API (Javadoc)](https://baylox.github.io/neatify/) | Generated from the source |
 
 ---
 
-## 🔒 Safety by default
+## <img src="docs/assets/icons/shield.svg" height="22" align="center" alt=""> Safety by default
 
 | | |
 |---|---|
@@ -132,7 +132,7 @@ Full docs live in [`docs/`](docs/index.md):
 
 ---
 
-## ✅ Quality gate
+## <img src="docs/assets/icons/check-badge.svg" height="22" align="center" alt=""> Quality gate
 
 `./mvnw verify` runs the full gate: Enforcer (JDK 21+), JUnit 5, JaCoCo (≥ 55% line
 coverage), Spotless, SpotBugs and PMD — and the CI runs it on **Linux, macOS and
@@ -148,6 +148,6 @@ redirect the build dir: `./mvnw verify -Dneatify.buildDirectory=C:\tmp\neatify-t
 
 ---
 
-## 📄 License
+## <img src="docs/assets/icons/scale.svg" height="22" align="center" alt=""> License
 
 [MIT](./LICENSE) © [Baylox](https://github.com/Baylox)
