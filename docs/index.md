@@ -1,42 +1,40 @@
-# Neatify — Documentation
+# Neatify documentation
 
-![Java 21](https://img.shields.io/badge/Java-21-blue)
-![Maven](https://img.shields.io/badge/build-Maven-red)
-![Tests](https://img.shields.io/badge/tests-103%20passing-green)
+Neatify is a small Java CLI that tidies a folder by moving files into category folders
+(Documents, Images, Videos…) based on their extension. It defaults to a safe dry-run
+preview, and offers both an interactive menu and a scriptable CLI with JSON output.
 
-Neatify is an automatic file organization tool. It moves files into subfolders based on their extension, according to configurable rules. It supports an **interactive mode** (menu-driven) and a **CLI mode** (scriptable, with JSON output).
+The docs follow the [Diátaxis](https://diataxis.fr/) quadrants.
 
----
+## Tutorial
 
-## Table of contents
+Start here if you're new.
 
-| Document | Description |
-|---|---|
-| [Getting started](getting-started.md) | Prerequisites, build, first examples |
-| [CLI reference](cli-reference.md) | All options, default behavior, examples |
-| [Rules format](rules-format.md) | `.properties` syntax, validation, built-in ruleset |
-| [Interactive mode](interactive-mode.md) | Interactive menu guide |
-| [Undo system](undo-system.md) | `.neatify/runs/` journal format, undo commands |
-| [Architecture](architecture.md) | Package structure, data flow, patterns |
-| [Security](security.md) | Protections against traversal, symlinks, Git repos, etc. |
-| [API — core](api/core.md) | `io.neatify.core` package reference |
-| [API — cli](api/cli.md) | `io.neatify.cli` package reference |
+- [Getting started](getting-started.md) — install, build, first run.
 
----
+## How-to guides
 
-## Overview
+Task-focused recipes.
 
-```
-Neatify
-├── Interactive mode  ──→ Guided menu, prompts, visual confirmation
-└── CLI mode          ──→ Arguments, dry-run by default, JSON output
-         │
-         ├── Planning   : scans files, applies extension rules
-         ├── Preview    : displays planned changes before any action
-         ├── Execution  : moves files (RENAME / SKIP / OVERWRITE)
-         └── Undo       : journals every run, full rollback available
-```
+- [Interactive mode](guides/interactive-mode.md) — the menu-driven flow.
+- [Rules](guides/rules.md) — map extensions to folders (incl. the built-in defaults).
+- [Undo](guides/undo.md) — reverse a run.
 
-## Version
+## Reference
 
-**1.0.0** — Java 21, Maven, SLF4J + Logback, Gson
+Precise; generated from the code where possible.
+
+- [CLI reference](reference/cli.md) — every option.
+- [JSON output](reference/json-output.md) — machine-readable results.
+
+## Explanation
+
+Background and design.
+
+- [Architecture](explanation/architecture.md) — layers, packages, flows, patterns.
+- [Security](explanation/security.md) — the protections and their rationale.
+
+## API
+
+The Java API is documented as Javadoc, generated from the source. Build it locally with
+`./mvnw javadoc:javadoc` (output in `target/site/apidocs/`).

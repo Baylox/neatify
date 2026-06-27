@@ -1,111 +1,95 @@
-# Getting Started
+# Getting started
 
 ## Prerequisites
 
-- **Java 21** or higher
-- **Maven 3.8+** (or use the included `mvnw` wrapper — no installation required)
+- **Java 21+** (a JDK). That's the only prerequisite — Maven comes from the bundled
+  wrapper.
 
 ```bash
-java -version   # must show Java 21+
+java -version   # must show 21+
 ```
-
----
 
 ## Build
 
-```bash
-# Compile and generate the standalone JAR
-./mvnw clean package
+The Maven Wrapper downloads Maven automatically, so the same command works everywhere:
 
-# Output artifact:
-target/neatify.jar
+```bash
+./mvnw package          # Linux / macOS / WSL
+.\mvnw.cmd package      # Windows
 ```
 
-The JAR is self-contained (all dependencies are bundled via Maven Shade Plugin). No additional installation is needed.
+The artifact is `target/neatify.jar`, self-contained (all dependencies bundled via the
+Maven Shade Plugin).
 
----
+## Run
 
-## Running Neatify
+Two launchers ship at the repo root and run the built jar with your arguments:
+
+- `./neatify` — Linux, macOS, WSL, Git-Bash
+- `.\neatify.cmd` — Windows (cmd / PowerShell)
+
+The examples below use `./neatify`; substitute `.\neatify.cmd` on Windows.
 
 ### Interactive mode (recommended for first use)
 
 ```bash
-java -jar target/neatify.jar
+./neatify
 ```
 
-A menu is displayed. Select `1` to organize a folder, `2` to create a rules file, `3` to undo the last operation.
+A menu appears: `1` organize a folder, `2` create a rules file, `3` undo the last run.
+See the [interactive mode guide](guides/interactive-mode.md).
 
-See [Interactive mode](interactive-mode.md) for the full guide.
-
-### CLI mode — quick preview (dry-run)
+### Preview (dry-run)
 
 ```bash
-# Using built-in default rules
-java -jar target/neatify.jar --source ~/Downloads --use-default-rules
+# Built-in default rules
+./neatify --source ~/Downloads --use-default-rules
 
-# Using a custom rules file
-java -jar target/neatify.jar --source ~/Downloads --rules rules.properties
+# A custom rules file
+./neatify --source ~/Downloads --rules rules.properties
 ```
 
-By default, Neatify runs in **dry-run** mode: it displays what it would do without moving any file.
+By default Neatify runs a **dry-run**: it shows what it would do without moving anything.
 
-### CLI mode — apply changes
+### Apply changes
 
 ```bash
-# Apply with default rules
-java -jar target/neatify.jar --source ~/Downloads --use-default-rules --apply
-
-# Apply with custom rules, skip on collision
-java -jar target/neatify.jar --source ~/Downloads --rules rules.properties --apply --on-collision skip
+./neatify --source ~/Downloads --use-default-rules --apply
+./neatify --source ~/Downloads --rules rules.properties --apply --on-collision skip
 ```
-
----
 
 ## Full example
 
 **Before:**
 ```
 Downloads/
-  report.pdf
-  photo.jpg
-  archive.zip
-  notes.txt
-  video.mp4
+  report.pdf  photo.jpg  archive.zip  notes.txt  video.mp4
 ```
 
 **Command:**
 ```bash
-java -jar target/neatify.jar --source ~/Downloads --use-default-rules --apply
+./neatify --source ~/Downloads --use-default-rules --apply
 ```
 
 **After:**
 ```
 Downloads/
-  Documents/
-    report.pdf
-    notes.txt
-  Images/
-    photo.jpg
-  Archives/
-    archive.zip
-  Videos/
-    video.mp4
+  Documents/  report.pdf  notes.txt
+  Images/     photo.jpg
+  Archives/   archive.zip
+  Videos/     video.mp4
 ```
 
----
-
-## Undoing the last operation
+## Undo
 
 ```bash
-java -jar target/neatify.jar --source ~/Downloads --undo
+./neatify --source ~/Downloads --undo
 ```
 
-Neatify keeps a journal of every operation in `.neatify/runs/`. See [Undo system](undo-system.md).
-
----
+Every run is journaled under `.neatify/runs/`. See the [undo guide](guides/undo.md).
 
 ## Next steps
 
-- Configure your own rules: [Rules format](rules-format.md)
-- All available options: [CLI reference](cli-reference.md)
-- Understand the architecture: [Architecture](architecture.md)
+- [Rules](guides/rules.md) — configure your own mappings
+- [CLI reference](reference/cli.md) — all options
+- [Architecture](explanation/architecture.md) — how it works
