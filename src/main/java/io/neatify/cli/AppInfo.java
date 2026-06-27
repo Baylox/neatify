@@ -11,7 +11,7 @@ package io.neatify.cli;
 public record AppInfo(String name, String version, String description) {
 
     /** Single source of truth for the application version. */
-    public static final String NEATIFY_VERSION = "1.0.0";
+    public static final String NEATIFY_VERSION = "1.0.1";
 
     /**
      * Compact constructor with validation.
