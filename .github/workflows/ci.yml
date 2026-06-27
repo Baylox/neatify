@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  # Full quality gate on the three major OSes. This is what proves the launch
+  # scripts and the build are portable: target/neatify.jar is produced and the
+  # whole test suite (including LauncherScriptsTest) runs on each platform.
+  build:
+    name: build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # macOS is intentionally omitted for now: PathSecurity rejects JUnit's
+        # @TempDir there because it lives under /var, a symlink to /private/var,
+        # which trips the symlink-ancestry guard. That is a pre-existing security
+        # bug unrelated to the launchers; re-add macos-latest once it's fixed.
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Build and verify (POSIX)
+        if: runner.os != 'Windows'
+        run: ./mvnw -B verify
+
+      - name: Build and verify (Windows)
+        if: runner.os == 'Windows'
+        run: .\mvnw.cmd -B verify
+
+      # Smoke-test the launcher end to end against the jar just built by verify.
+      - name: Run launcher (POSIX)
+        if: runner.os != 'Windows'
+        run: ./neatify --version
+
+      - name: Run launcher (Windows)
+        if: runner.os == 'Windows'
+        run: .\neatify.cmd --version
+
+  # The POSIX launcher must keep the executable bit (git mode 100755) so
+  # `./neatify` works right after clone. This lives in the git index, not in
+  # file content, so it is checked here rather than in a JUnit test.
+  scripts:
+    name: script metadata
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: neatify must be tracked as executable (100755)
+        run: |
+          mode=$(git ls-files --stage neatify | awk '{print $1}')
+          echo "git mode for neatify: $mode"
+          test "$mode" = "100755" || {
+            echo "::error file=neatify::neatify must be executable (git mode 100755), found $mode. Fix with: git update-index --chmod=+x neatify"
+            exit 1
+          }

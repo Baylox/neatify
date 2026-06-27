@@ -1,0 +1,57 @@
+#!/usr/bin/env sh
+# ----------------------------------------------------------------------------
+# Neatify launcher (POSIX) for Linux, macOS, WSL and Git-Bash.
+#
+# Runs the built uber-jar (target/neatify.jar) with all arguments forwarded
+# as-is, e.g.:
+#   ./neatify                                   # interactive mode (no args)
+#   ./neatify --source ~/Downloads --use-default-rules
+#   ./neatify --source ~/Downloads --use-default-rules --apply
+#
+# Requires only a JDK 21+. Build the jar first with: ./mvnw package
+# ----------------------------------------------------------------------------
+set -eu
+
+# Resolve the directory this script lives in (portable; avoids realpath/readlink
+# which differ between GNU and BSD/macOS). Follows a symlink-on-PATH if present.
+PRG="$0"
+while [ -h "$PRG" ]; do
+  ls=$(ls -ld "$PRG")
+  link=$(expr "$ls" : '.*-> \(.*\)$')
+  case $link in
+    /*) PRG="$link" ;;
+    *)  PRG=$(dirname "$PRG")/"$link" ;;
+  esac
+done
+APP_DIR=$(CDPATH= cd -- "$(dirname -- "$PRG")" && pwd)
+
+JAR="$APP_DIR/target/neatify.jar"
+
+# Determine the Java command to use (same strategy as the Maven wrapper):
+# prefer $JAVA_HOME/bin/java, otherwise fall back to `java` on PATH.
+if [ -n "${JAVA_HOME:-}" ]; then
+  JAVACMD="$JAVA_HOME/bin/java"
+  if [ ! -x "$JAVACMD" ]; then
+    echo "Error: JAVA_HOME is set to an invalid directory: $JAVA_HOME" >&2
+    echo "       expected an executable at $JAVACMD" >&2
+    echo "Please point JAVA_HOME at a valid JDK 21+ installation." >&2
+    exit 1
+  fi
+else
+  JAVACMD="java"
+  if ! command -v java >/dev/null 2>&1; then
+    echo "Error: no 'java' command found on PATH and JAVA_HOME is not set." >&2
+    echo "Please install a JDK 21+ or set JAVA_HOME." >&2
+    exit 1
+  fi
+fi
+
+if [ ! -f "$JAR" ]; then
+  echo "Error: $JAR not found." >&2
+  echo "Build it first:  ./mvnw package    (or:  make build)" >&2
+  exit 1
+fi
+
+# exec replaces this shell so signals and stdin go straight to the JVM,
+# which keeps the interactive mode (Scanner on System.in) working correctly.
+exec "$JAVACMD" -jar "$JAR" "$@"

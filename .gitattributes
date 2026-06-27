@@ -1,0 +1,15 @@
+# Normalize line endings so the scripts survive cross-OS clones regardless of
+# each contributor's core.autocrlf setting.
+* text=auto
+
+# POSIX shell scripts MUST stay LF (a CR would break the interpreter on *nix).
+*.sh    text eol=lf
+neatify text eol=lf
+mvnw    text eol=lf
+
+# Windows batch scripts want CRLF.
+*.cmd   text eol=crlf
+*.bat   text eol=crlf
+
+# Never touch binary artifacts.
+*.jar   binary

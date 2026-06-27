@@ -101,7 +101,13 @@ class PathSecurityTest {
             System.err.println("WARNING: /bin should have been blocked but wasn't");
             return false;
         } catch (SecurityException e) {
-            assertTrue(e.getMessage().contains("Forbidden system directory"));
+            // /bin must be refused. Depending on the distribution this is either
+            // the forbidden-system-directory guard, or the symlink guard on
+            // usrmerge systems (Debian/Ubuntu) where /bin -> usr/bin. Both are
+            // valid security rejections of /bin.
+            String msg = e.getMessage();
+            assertTrue(msg.contains("Forbidden system directory") || msg.contains("Symlink"),
+                "/bin must be rejected as a forbidden or symlinked path, got: " + msg);
             return true;
         } catch (IOException e) {
             return false;
