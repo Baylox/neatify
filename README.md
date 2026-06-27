@@ -13,8 +13,7 @@ Neatify is a small Java CLI that tidies a folder by moving files into category f
 ## Getting Started
 
 ### Requirements
-- Java 21+
-- Maven 3.8+ (or the Maven Wrapper)
+- Java 21+ (a JDK). That's the only prerequisite — Maven is provided by the bundled wrapper.
 
 ### Clone
 ```bash
@@ -23,58 +22,86 @@ cd neatify
 ```
 
 ### Build
-**Linux / macOS:**
+The Maven Wrapper downloads Maven automatically, so the same command works on every OS:
+
+**Linux / macOS / WSL:**
 ```bash
-mvn clean package
+./mvnw package
 ```
-**Windows (wrapper):**
+**Windows:**
 ```bash
-.\mvnw.cmd clean package
+.\mvnw.cmd package
 ```
 
 **Build Artifact:** `target/neatify.jar`
 
 ### Usage
 
+Two launchers ship at the repo root and simply run the built jar with your arguments,
+so you don't have to type `java -jar target/neatify.jar` every time:
+
+- `./neatify` — Linux, macOS, WSL, Git‑Bash
+- `.\neatify.cmd` — Windows (cmd.exe / PowerShell)
+
+The examples below use `./neatify`; on Windows substitute `.\neatify.cmd`.
+
 **Interactive mode (recommended):**
 ```bash
-java -jar target/neatify.jar
+./neatify
 ```
 
 **Basic usage:**
 ```bash
 # Preview (dry‑run)
-java -jar target/neatify.jar --source ~/Downloads --rules rules.properties
+./neatify --source ~/Downloads --rules rules.properties
 
 # Apply changes
-java -jar target/neatify.jar --source ~/Downloads --rules rules.properties --apply
+./neatify --source ~/Downloads --rules rules.properties --apply
 
 # Use built‑in default rules (no file)
-java -jar target/neatify.jar --source ~/Downloads --use-default-rules
+./neatify --source ~/Downloads --use-default-rules
 ```
 
 **Advanced options:**
 ```bash
 # Include / Exclude globs
-java -jar target/neatify.jar --source ~/Downloads --rules rules.properties \
+./neatify --source ~/Downloads --rules rules.properties \
   --include "**/*.pdf" --exclude "**/node_modules/**"
 
 # Collision strategy (rename | skip | overwrite)
-java -jar target/neatify.jar --source ~/Downloads --rules rules.properties --on-collision skip
+./neatify --source ~/Downloads --rules rules.properties --on-collision skip
 ```
 
 **Help & Version:**
 ```bash
-java -jar target/neatify.jar --help
-java -jar target/neatify.jar --version
+./neatify --help
+./neatify --version
 ```
 
 **Undo operations:**
 ```bash
-java -jar target/neatify.jar --source <dir> --undo            # undo last run
-java -jar target/neatify.jar --source <dir> --undo-list       # list journals
-java -jar target/neatify.jar --source <dir> --undo-run <ts>   # undo by timestamp
+./neatify --source <dir> --undo            # undo last run
+./neatify --source <dir> --undo-list       # list journals
+./neatify --source <dir> --undo-run <ts>   # undo by timestamp
 ```
+
+### Shortcuts (Linux / macOS / WSL)
+
+A `Makefile` wraps the common flows (`make` is not available by default on Windows — use
+`.\neatify.cmd` there):
+```bash
+make build                       # ./mvnw package
+make run                         # interactive mode
+make preview DIR=~/Downloads     # dry-run on DIR
+make apply   DIR=~/Downloads     # organize DIR for real
+make dev     DIR=~/Downloads     # build, then preview
+make help                        # list all targets and variables
+```
+Variables: `DIR` (folder to tidy), `RULES` (`default` ⇒ built‑in rules, or a `.properties` path),
+`ARGS` (extra flags, e.g. `ARGS="--on-collision skip"`).
+
+> No build yet? You can also run without packaging a jar (non‑interactive modes only):
+> `./mvnw -q exec:java -Dexec.args="--source ~/Downloads --use-default-rules"`.
 
 ## JSON Output
 
