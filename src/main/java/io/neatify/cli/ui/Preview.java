@@ -1,19 +1,24 @@
 package io.neatify.cli.ui;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.stream.Collectors;
+
 import io.neatify.cli.util.Ansi;
 import io.neatify.cli.util.AsciiSymbols;
 import io.neatify.core.FileMetadata;
-import io.neatify.core.FileMover;
+import io.neatify.core.contract.FileMover;
 
-import java.nio.file.Path;
-import java.nio.file.Files;
-import java.util.*;
-import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Utility to generate and display a preview of planned changes.
  */
 public final class Preview {
+
+    private static final Logger logger = LoggerFactory.getLogger(Preview.class);
 
     /** Sorting options for display. */
     public enum SortMode {
@@ -63,8 +68,8 @@ public final class Preview {
         Map<String, List<FileMover.Action>> byFolder = groupByFolder(actions);
 
         // Convert to FolderGroup with duplicate counting
-        List<FolderGroup> groups = byFolder.entrySet().stream()
-            .map(entry -> createFolderGroup(entry.getKey(), entry.getValue(), config))
+        List<FolderGroup> groups = byFolder.values().stream()
+            .map(folderActions -> createFolderGroup(folderActions, config))
             .toList();
 
         // Generate output lines
@@ -100,13 +105,15 @@ public final class Preview {
         return grouped;
     }
 
-    /** Creates a FolderGroup with duplicate counting.
-     *  @param key full absolute path of the destination folder (used only as map key)
-     */
-    private static FolderGroup createFolderGroup(String key, List<FileMover.Action> actions, Config config) {
+    /** Creates a FolderGroup with duplicate counting. */
+    private static FolderGroup createFolderGroup(List<FileMover.Action> actions, Config config) {
         // Derive a human-readable display name from the actual target path
         Path parent = actions.get(0).target().getParent();
-        String folderName = parent != null ? parent.getFileName().toString() : "(root)";
+        String folderName = "(root)";
+        if (parent != null) {
+            Path parentName = parent.getFileName();
+            folderName = parentName != null ? parentName.toString() : parent.toString();
+        }
         // group by file name
         Map<String, List<FileMover.Action>> byName = actions.stream()
             .collect(Collectors.groupingBy(a -> a.source().getFileName().toString(), LinkedHashMap::new, Collectors.toList()));
@@ -118,7 +125,11 @@ public final class Preview {
             int count = group.size();
             long size = 0L;
             for (FileMover.Action a : group) {
-                try { size += Files.size(a.source()); } catch (Exception ignore) { /* best-effort */ }
+                try {
+                    size += Files.size(a.source());
+                } catch (Exception ex) {
+                    logger.debug("Could not read size of {}: {}", a.source(), ex.getMessage());
+                }
             }
             entries.add(new FileEntry(name, FileMetadata.extensionOf(name), count, size));
         }

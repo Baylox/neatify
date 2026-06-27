@@ -1,8 +1,9 @@
 package io.neatify.cli.ui;
 
-import io.neatify.cli.AppInfo;
-
+import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
+
+import io.neatify.cli.AppInfo;
 
 /**
  * Lightweight console display utility.
@@ -11,7 +12,7 @@ import java.util.Scanner;
 public final class Display {
 
     public static final int LINE_WIDTH = 63;
-    private static final Scanner scanner = new Scanner(System.in);
+    private static final Scanner scanner = new Scanner(System.in, StandardCharsets.UTF_8);
 
     private Display() {
         // Utility class
@@ -162,4 +163,3 @@ public final class Display {
         return " ".repeat(left) + t + " ".repeat(right);
     }
 }
-

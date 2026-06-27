@@ -1,11 +1,12 @@
 package io.neatify.cli.ui;
 
-import io.neatify.core.FileMover;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-
 import java.nio.file.Path;
 import java.util.List;
+
+import io.neatify.core.contract.FileMover;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.*;
 

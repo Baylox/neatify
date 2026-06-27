@@ -1,7 +1,7 @@
 package io.neatify.cli.util;
 
 import io.neatify.cli.ui.Display;
-import io.neatify.core.FileMover;
+import io.neatify.core.contract.FileMover;
 
 /**
  * Helper to print the execution summary.

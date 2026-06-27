@@ -63,8 +63,8 @@ public class CLIConfig {
     public boolean isQuiet() { return quiet; }
     public boolean isVerbose() { return verbose; }
     public boolean isDebug() { return debug; }
-    public java.util.List<String> getIncludes() { return includes; }
-    public java.util.List<String> getExcludes() { return excludes; }
+    public java.util.List<String> getIncludes() { return java.util.List.copyOf(includes); }
+    public java.util.List<String> getExcludes() { return java.util.List.copyOf(excludes); }
 
     // Setters (package-private, intended for ArgumentParser only)
     void setSourceDir(Path sourceDir) { this.sourceDir = sourceDir; }

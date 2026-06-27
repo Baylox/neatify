@@ -59,7 +59,7 @@ public final class PathSecurity {
                         "Forbidden system directory: " + normalized + " (area: " + forbidden + ")"
                     );
                 }
-            } catch (java.nio.file.InvalidPathException e) {
+            } catch (java.nio.file.InvalidPathException ignored) {
                 // Ignore if path is invalid on this system (e.g., Windows path on Unix)
             }
         }

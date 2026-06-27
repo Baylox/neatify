@@ -1,10 +1,10 @@
 package io.neatify;
 
+import java.nio.file.Path;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.MDC;
-
-import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
 

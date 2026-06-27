@@ -52,7 +52,8 @@ public record FileMetadata(
      * @return lowercase extension or empty string if none
      */
     private static String extractExtension(Path filePath) {
-        return extensionOf(filePath.getFileName().toString());
+        Path name = filePath.getFileName();
+        return name == null ? "" : extensionOf(name.toString());
     }
 
     /**
@@ -65,7 +66,7 @@ public record FileMetadata(
         int dotIndex = fileName.lastIndexOf('.');
 
         if (dotIndex > 0 && dotIndex < fileName.length() - 1) {
-            return fileName.substring(dotIndex + 1).toLowerCase();
+            return fileName.substring(dotIndex + 1).toLowerCase(java.util.Locale.ROOT);
         }
 
         return "";
@@ -75,7 +76,8 @@ public record FileMetadata(
      * @return file name (with extension)
      */
     public String fileName() {
-        return path.getFileName().toString();
+        Path name = path.getFileName();
+        return name != null ? name.toString() : path.toString();
     }
 
     /**

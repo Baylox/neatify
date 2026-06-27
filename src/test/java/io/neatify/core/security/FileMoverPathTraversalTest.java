@@ -1,20 +1,17 @@
 package io.neatify.core.security;
 
-import io.neatify.core.FileMover;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
+import io.neatify.core.contract.FileMover;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Security tests for FileMover - Path Traversal Protection.
- * Second level of protection after Rules.sanitizeFolderName().
- */
 class FileMoverPathTraversalTest extends FileMoverSecurityTestBase {
 
     @Test
@@ -31,11 +28,8 @@ class FileMoverPathTraversalTest extends FileMoverSecurityTestBase {
     void testValidNestedPath_Works(@TempDir Path tempDir) throws IOException {
         createTestFile(tempDir, "photo.jpg");
 
-        Map<String, String> validRules = Map.of(
-            "jpg", "Media/Photos/Vacation"
-        );
-
-        List<FileMover.Action> actions = FileMover.plan(tempDir, validRules);
+        Map<String, String> validRules = Map.of("jpg", "Media/Photos/Vacation");
+        List<FileMover.Action> actions = mover.plan(tempDir, validRules, 100_000, List.of(), List.of(), true);
 
         assertEquals(1, actions.size());
 
@@ -62,36 +56,30 @@ class FileMoverPathTraversalTest extends FileMoverSecurityTestBase {
         createTestFile(tempDir, "script.exe");
 
         Map<String, String> mixedRules = Map.of(
-            "jpg", "Images",                    // Valid
-            "pdf", "../../../etc",              // Malicious
-            "exe", "Applications/Tools"         // Valid
+            "jpg", "Images",
+            "pdf", "../../../etc",
+            "exe", "Applications/Tools"
         );
 
-        List<FileMover.Action> actions = FileMover.plan(tempDir, mixedRules);
+        List<FileMover.Action> actions = mover.plan(tempDir, mixedRules, 100_000, List.of(), List.of(), true);
 
-        assertEquals(2, actions.size(),
-            "Only valid rules should generate actions");
-
+        assertEquals(2, actions.size(), "Only valid rules should generate actions");
         assertActionExists(actions, "image.jpg");
         assertActionExists(actions, "script.exe");
-        assertActionNotExists(actions, "document.pdf",
-            "document.pdf should NOT be processed (malicious rule)");
+        assertActionNotExists(actions, "document.pdf", "document.pdf should NOT be processed (malicious rule)");
     }
 
     @Test
     void testPathNormalization(@TempDir Path tempDir) throws IOException {
         createTestFile(tempDir, "test.txt");
 
-        Map<String, String> rules = Map.of(
-            "txt", "Documents/./Subfolder"
-        );
-
-        List<FileMover.Action> actions = FileMover.plan(tempDir, rules);
+        Map<String, String> rules = Map.of("txt", "Documents/./Subfolder");
+        List<FileMover.Action> actions = mover.plan(tempDir, rules, 100_000, List.of(), List.of(), true);
 
         assertEquals(1, actions.size());
 
         Path targetPath = actions.get(0).target().normalize();
-        assertFalse(targetPath.toString().contains("/./" ),
+        assertFalse(targetPath.toString().contains("/./"),
             "The path should not contain './' after normalization");
     }
 }

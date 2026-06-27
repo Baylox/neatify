@@ -1,10 +1,10 @@
 package io.neatify;
 
-import io.neatify.core.FileMover;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+
+import io.neatify.core.contract.FileMover;
 
 /**
  * Base class for all tests with common helpers.

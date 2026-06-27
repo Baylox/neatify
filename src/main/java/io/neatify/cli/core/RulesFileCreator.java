@@ -1,11 +1,11 @@
 package io.neatify.cli.core;
 
-import io.neatify.core.PathSecurity;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
+import io.neatify.core.PathSecurity;
 
 import static io.neatify.cli.ui.Display.*;
 
@@ -65,7 +65,7 @@ public final class RulesFileCreator {
     private static boolean confirmOverwriteIfExists(Path rulesFile) {
         if (Files.exists(rulesFile)) {
             String overwrite = readInput("File already exists. Overwrite? (y/N)", "n");
-            if (!overwrite.equalsIgnoreCase("y") && !overwrite.equalsIgnoreCase("yes")) {
+            if (!"y".equalsIgnoreCase(overwrite) && !"yes".equalsIgnoreCase(overwrite)) {
                 printWarning("Operation cancelled.");
                 waitForEnter();
                 return false;
