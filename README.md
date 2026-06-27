@@ -12,7 +12,29 @@ preview, so you always see changes before they happen.
 
 ## Quick start
 
-Requirements: **Java 21+** (a JDK). Maven comes from the bundled wrapper.
+Requirements: **Java 21+** (a JDK). That's the only thing you need.
+
+### Install (download the release)
+
+Grab the latest `neatify-<version>.jar` from the
+[releases page](https://github.com/Baylox/neatify/releases/latest) and run it:
+
+```bash
+# Download (replace the version as needed)
+curl -LO https://github.com/Baylox/neatify/releases/latest/download/neatify-1.0.0.jar
+
+# Optional: verify the checksum
+curl -LO https://github.com/Baylox/neatify/releases/latest/download/neatify-1.0.0.jar.sha256
+sha256sum -c neatify-1.0.0.jar.sha256
+
+# Run it
+java -jar neatify-1.0.0.jar                                          # interactive menu
+java -jar neatify-1.0.0.jar --source ~/Downloads --use-default-rules # preview (dry-run)
+```
+
+The jar is self-contained — no install step, just a JDK 21+.
+
+### Build from source
 
 ```bash
 git clone https://github.com/Baylox/neatify.git
@@ -20,7 +42,8 @@ cd neatify
 ./mvnw package        # build target/neatify.jar  (.\mvnw.cmd on Windows)
 ```
 
-Run it with the launcher (`./neatify` on Linux/macOS/WSL, `.\neatify.cmd` on Windows):
+This also gives you the launchers (`./neatify` on Linux/macOS/WSL, `.\neatify.cmd` on
+Windows), which run the built jar so you don't have to type `java -jar` every time:
 
 ```bash
 ./neatify                                                   # interactive menu
