@@ -1,17 +1,18 @@
 package io.neatify;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.LoggerContext;
+import java.io.IOException;
+
 import io.neatify.cli.FileOrganizationExecutor;
 import io.neatify.cli.args.ArgumentParser;
 import io.neatify.cli.args.CLIConfig;
 import io.neatify.cli.ui.HelpPrinter;
 import io.neatify.cli.ui.InteractiveCLI;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-
-import java.io.IOException;
 
 import static io.neatify.cli.ui.Display.printErr;
 

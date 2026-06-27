@@ -1,50 +1,56 @@
 package io.neatify.cli.core;
 
-import io.neatify.cli.ui.Preview;
-import io.neatify.cli.util.ResultPrinter;
-import io.neatify.core.FileMover;
-import io.neatify.core.PathSecurity;
-import io.neatify.core.Rules;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
+
+import io.neatify.cli.ui.Preview;
+import io.neatify.cli.util.ResultPrinter;
+import io.neatify.core.LocalFileMover;
+import io.neatify.core.PathSecurity;
+import io.neatify.core.PropertiesRulesProvider;
+import io.neatify.core.contract.FileMover;
+import io.neatify.core.contract.RulesProvider;
 
 import static io.neatify.cli.ui.Display.*;
 
-/**
- * Handles file organization flow in interactive mode.
- */
 public final class FileOrganizer {
 
-    private FileOrganizer() {
-        // Classe utilitaire
+    private final FileMover fileMover;
+    private final RulesProvider rulesProvider;
+
+    public FileOrganizer() {
+        this(new LocalFileMover(), new PropertiesRulesProvider());
     }
 
-    /**
-     * Starts the full interactive organization process.
-     */
-    public static void organize() throws IOException {
+    public FileOrganizer(FileMover fileMover, RulesProvider rulesProvider) {
+        this.fileMover = fileMover;
+        this.rulesProvider = rulesProvider;
+    }
+
+    public void organize() throws IOException {
         printSection("FILE ORGANIZATION");
 
         Path sourceDir = promptAndValidateSourceDir();
         if (sourceDir == null) return;
 
-        Map<String, String> rules = promptAndLoadRules();
-        if (rules == null) return;
+        Optional<Map<String, String>> rules = promptAndLoadRules();
+        if (rules.isEmpty()) return;
 
         Filters filters = promptFilters();
 
-        List<FileMover.Action> actions = planActions(sourceDir, rules, filters);
-        if (actions == null) return;
+        List<FileMover.Action> actions = planActions(sourceDir, rules.get(), filters);
+        if (actions.isEmpty()) return;
 
         executeIfConfirmed(actions, sourceDir);
     }
 
-    private static Path promptAndValidateSourceDir() throws IOException {
+    private Path promptAndValidateSourceDir() throws IOException {
         String sourcePath = readInput("Folder to organize (full path)");
         Path sourceDir = Paths.get(sourcePath);
 
@@ -62,8 +68,6 @@ public final class FileOrganizer {
             return null;
         }
 
-        // Hard block if the source directory is inside a Git repository
-        // Equivalent to CLI's --apply block unless --allow-inside-git is set
         if (PathSecurity.isInsideGitRepository(sourceDir)) {
             printError("BLOCKED: This folder is inside a Git repository.");
             printWarning("Organizing may move versioned files.");
@@ -79,72 +83,49 @@ public final class FileOrganizer {
         return sourceDir;
     }
 
-    private static Map<String, String> promptAndLoadRules() throws IOException {
+    private Optional<Map<String, String>> promptAndLoadRules() throws IOException {
         String rulesPath = readInput("Rules file (.properties) [Enter = default rules]", "");
 
         if (rulesPath.isBlank()) {
-            return loadDefaultRules();
+            printInfo("Using built-in default rules...");
+            Map<String, String> rules = rulesProvider.getDefaults();
+            printSuccess(rules.size() + " default rule(s) loaded");
+            return Optional.of(rules);
         } else {
-            return loadCustomRules(rulesPath);
+            Path rulesFile = Paths.get(rulesPath);
+            if (!Files.exists(rulesFile)) {
+                printError("File does not exist: " + rulesPath);
+                waitForEnter();
+                return Optional.empty();
+            }
+            printInfo("Loading rules from file...");
+            Map<String, String> rules = rulesProvider.load(rulesFile);
+            printSuccess(rules.size() + " rule(s) loaded");
+            return Optional.of(rules);
         }
     }
 
-    private static Map<String, String> loadDefaultRules() {
-        printInfo("Using built-in default rules...");
-        Map<String, String> rules = Rules.getDefaults();
-        printSuccess(rules.size() + " default rule(s) loaded");
-        return rules;
-    }
-
-    private static Map<String, String> loadCustomRules(String rulesPath) throws IOException {
-        Path rulesFile = Paths.get(rulesPath);
-
-        if (!Files.exists(rulesFile)) {
-            printError("File does not exist: " + rulesPath);
-            waitForEnter();
-            return null;
-        }
-
-        printInfo("Loading rules from file...");
-        Map<String, String> rules = Rules.load(rulesFile);
-        printSuccess(rules.size() + " rule(s) loaded");
-        return rules;
-    }
-
-    private static List<FileMover.Action> planActions(Path sourceDir, Map<String, String> rules, Filters filters) throws IOException {
+    private List<FileMover.Action> planActions(Path sourceDir, Map<String, String> rules, Filters filters) throws IOException {
         printInfo("Scanning folder...");
-        List<FileMover.Action> actions = FileMover.plan(
-            sourceDir,
-            rules,
-            100_000,
-            filters.includes,
-            filters.excludes
+        List<FileMover.Action> actions = fileMover.plan(
+            sourceDir, rules, 100_000, filters.includes(), filters.excludes(), true
         );
 
         if (actions.isEmpty()) {
             printWarning("No files to move.");
             waitForEnter();
-            return null;
+            return List.of();
         }
 
         printSuccess(actions.size() + " file(s) to move");
-        showPreview(actions);
+        Preview.print(actions, new Preview.Config().maxFilesPerFolder(5).sortMode(Preview.SortMode.ALPHA).showDuplicates(true));
         return actions;
     }
 
-    private static void showPreview(List<FileMover.Action> actions) {
-        Preview.Config config = new Preview.Config()
-            .maxFilesPerFolder(5)
-            .sortMode(Preview.SortMode.ALPHA)
-            .showDuplicates(true);
-
-        Preview.print(actions, config);
-    }
-
-    private static void executeIfConfirmed(List<FileMover.Action> actions, Path sourceDir) throws IOException {
+    private void executeIfConfirmed(List<FileMover.Action> actions, Path sourceDir) throws IOException {
         String confirm = readInput("Apply these changes? (y/N)", "n");
 
-        if (!confirm.equalsIgnoreCase("y") && !confirm.equalsIgnoreCase("yes")) {
+        if (!"y".equalsIgnoreCase(confirm) && !"yes".equalsIgnoreCase(confirm)) {
             printWarning("Operation cancelled.");
             waitForEnter();
             return;
@@ -152,57 +133,43 @@ public final class FileOrganizer {
 
         FileMover.CollisionStrategy strategy = promptCollisionStrategy();
         printInfo("Applying changes...");
-        java.util.List<io.neatify.cli.core.UndoExecutor.Move> moves = new java.util.ArrayList<>();
-        FileMover.Result result = FileMover.execute(actions, false, strategy, (src, dst) -> {
-            moves.add(new io.neatify.cli.core.UndoExecutor.Move(src, dst));
-        });
+        List<UndoExecutor.Move> moves = new java.util.ArrayList<>();
+        FileMover.Result result = fileMover.execute(actions, false, strategy, (src, dst) ->
+            moves.add(new UndoExecutor.Move(src, dst))
+        );
         try {
-            java.nio.file.Path runPath = io.neatify.cli.core.UndoExecutor.appendRun(sourceDir, strategy.name().toLowerCase(), moves);
-            if (runPath != null) {
-                printInfo("Journal written: " + runPath.toAbsolutePath());
-            }
+            Path runPath = UndoExecutor.appendRun(sourceDir, strategy.name().toLowerCase(Locale.ROOT), moves);
+            if (runPath != null) printInfo("Journal written: " + runPath.toAbsolutePath());
         } catch (IOException e) {
             printErr("Undo journal not written: " + e.getMessage());
         }
 
-        showSummary(result);
+        System.out.println();
+        ResultPrinter.print(result);
         waitForEnter();
     }
 
-    private static void showSummary(FileMover.Result result) {
-        System.out.println();
-        ResultPrinter.print(result);
-    }
+    private record Filters(List<String> includes, List<String> excludes) {}
 
-    // ======= Options interactives =======
-    private record Filters(java.util.List<String> includes, java.util.List<String> excludes) {}
-
-    private static Filters promptFilters() {
+    private Filters promptFilters() {
         String inc = readInput("Include (glob, comma-separated) [Enter = none]", "");
         String exc = readInput("Exclude (glob, comma-separated) [Enter = none]", "");
-
-        java.util.List<String> includes = parseCommaSeparatedPatterns(inc);
-        java.util.List<String> excludes = parseCommaSeparatedPatterns(exc);
-
-        return new Filters(includes, excludes);
+        return new Filters(parsePatterns(inc), parsePatterns(exc));
     }
 
-    private static java.util.List<String> parseCommaSeparatedPatterns(String input) {
-        if (input == null) return java.util.List.of();
-        String trimmed = input.trim();
-        if (trimmed.isBlank()) return java.util.List.of();
-
-        java.util.List<String> out = new java.util.ArrayList<>();
-        for (String part : trimmed.split(",")) {
+    private List<String> parsePatterns(String input) {
+        if (input == null || input.isBlank()) return List.of();
+        List<String> out = new java.util.ArrayList<>();
+        for (String part : input.split(",")) {
             String s = part.trim();
             if (!s.isEmpty()) out.add(s);
         }
         return out;
     }
 
-    private static FileMover.CollisionStrategy promptCollisionStrategy() {
+    private FileMover.CollisionStrategy promptCollisionStrategy() {
         String s = readInput("Collision strategy [rename|skip|overwrite]", "rename");
-        return switch (s.toLowerCase()) {
+        return switch (s.toLowerCase(Locale.ROOT)) {
             case "skip" -> FileMover.CollisionStrategy.SKIP;
             case "overwrite" -> FileMover.CollisionStrategy.OVERWRITE;
             default -> FileMover.CollisionStrategy.RENAME;

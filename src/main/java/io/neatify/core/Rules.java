@@ -118,7 +118,7 @@ public final class Rules {
      * Normalizes an extension (no dot, lowercase).
      */
     private static String normalizeExtension(String extension) {
-        return extension.trim().toLowerCase().replaceFirst("^\\.", "");
+        return extension.trim().toLowerCase(java.util.Locale.ROOT).replaceFirst("^\\.", "");
     }
 
     /**
@@ -155,6 +155,6 @@ public final class Rules {
             return null;
         }
 
-        return rules.get(extension.toLowerCase());
+        return rules.get(extension.toLowerCase(java.util.Locale.ROOT));
     }
 }

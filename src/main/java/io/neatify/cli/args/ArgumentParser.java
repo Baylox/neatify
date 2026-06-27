@@ -24,9 +24,12 @@ public class ArgumentParser {
      * @param arguments CLI arguments
      * @return parsed configuration
      */
+    @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+        value = "EI_EXPOSE_REP",
+        justification = "Builder-style parser: returning the config it just built is the API contract")
     public CLIConfig parse(String[] arguments) {
         this.config = new CLIConfig();
-        this.args = arguments;
+        this.args = arguments.clone();
 
         for (index = 0; index < args.length; index++) {
             String arg = args[index];
@@ -102,7 +105,7 @@ public class ArgumentParser {
             config.setPerFolderPreview(value);
             return i + 1;
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("--per-folder-preview requires a number");
+            throw new IllegalArgumentException("--per-folder-preview requires a number", e);
         }
     }
 
@@ -114,13 +117,13 @@ public class ArgumentParser {
             config.setMaxFiles(value);
             return i + 1;
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("--max-files requires a number");
+            throw new IllegalArgumentException("--max-files requires a number", e);
         }
     }
 
     private int parseSort(int i) {
         requireNextArgument(i, "--sort");
-        String sort = args[i + 1].toLowerCase();
+        String sort = args[i + 1].toLowerCase(java.util.Locale.ROOT);
         if (!sort.matches("alpha|ext|size")) {
             throw new IllegalArgumentException("--sort must be one of: alpha, ext or size");
         }
@@ -130,7 +133,7 @@ public class ArgumentParser {
 
     private int parseCollision(int i) {
         requireNextArgument(i, "--on-collision");
-        String strategy = args[i + 1].toLowerCase();
+        String strategy = args[i + 1].toLowerCase(java.util.Locale.ROOT);
         if (!strategy.matches("rename|skip|overwrite")) {
             throw new IllegalArgumentException("--on-collision must be one of: rename, skip or overwrite");
         }

@@ -1,14 +1,16 @@
 package io.neatify.core;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Marker;
-import org.slf4j.MarkerFactory;
-
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
+
+import io.neatify.core.contract.FileMover;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 final class FilePlanner {
 
@@ -37,17 +39,14 @@ final class FilePlanner {
         Files.walkFileTree(sourceRoot, new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
-                // Skip internal journal directory to avoid moving undo files
                 Path name = dir.getFileName();
-                if (name != null && name.toString().equals(".neatify")) {
+                if (name != null && ".neatify".equals(name.toString())) {
                     return FileVisitResult.SKIP_SUBTREE;
                 }
-                // Skip VCS repositories by default to avoid reorganizing projects
-                // Detected markers: .git, .hg, .svn, .bzr, _darcs, .pijul, Fossil (.fslckout), repo tool (.repo)
                 if (skipGitRepos) {
                     try {
                         String n = name == null ? "" : name.toString();
-                        if (n.equals(".git") || n.equals(".hg") || n.equals(".svn") || n.equals(".bzr") || n.equals("_darcs") || n.equals(".pijul")) {
+                        if (".git".equals(n) || ".hg".equals(n) || ".svn".equals(n) || ".bzr".equals(n) || "_darcs".equals(n) || ".pijul".equals(n)) {
                             return FileVisitResult.SKIP_SUBTREE;
                         }
                         if (Files.exists(dir.resolve(".git")) ||
@@ -64,9 +63,9 @@ final class FilePlanner {
                 }
                 return FileVisitResult.CONTINUE;
             }
+
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-                // Note: .neatify/ is already excluded via preVisitDirectory → SKIP_SUBTREE
                 if (fileCount.incrementAndGet() > maxFiles) {
                     throw new IllegalStateException("File quota exceeded: " + maxFiles);
                 }
@@ -83,8 +82,10 @@ final class FilePlanner {
                                                       Map<String, String> rules,
                                                       List<PathMatcher> includes,
                                                       List<PathMatcher> excludes) {
-        String baseName = file.getFileName().toString();
-        if (baseName.startsWith(".")) return Optional.empty(); // ignore hidden
+        Path fileNameElement = file.getFileName();
+        if (fileNameElement == null) return Optional.empty();
+        String baseName = fileNameElement.toString();
+        if (baseName.startsWith(".")) return Optional.empty();
 
         try {
             Path rel = sourceRoot.relativize(file);
@@ -108,7 +109,6 @@ final class FilePlanner {
 
             Path targetFile = targetDir.resolve(metadata.fileName());
 
-            // Avoid planning a no-op move (already in the right place)
             if (file.toAbsolutePath().normalize().equals(targetFile.toAbsolutePath().normalize())) {
                 return Optional.empty();
             }

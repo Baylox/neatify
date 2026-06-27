@@ -18,7 +18,7 @@ public final class AsciiSymbols {
     private static boolean detectUnicodeSupport() {
         // Be conservative: only enable Unicode when the JVM reports a UTF-capable encoding.
         // This avoids garbled characters on terminals not configured for UTF-8.
-        String encoding = System.getProperty("file.encoding", "").toLowerCase();
+        String encoding = System.getProperty("file.encoding", "").toLowerCase(java.util.Locale.ROOT);
         return encoding.contains("utf");
     }
 
@@ -30,7 +30,7 @@ public final class AsciiSymbols {
     /** Returns whether Unicode mode is active. */
     public static boolean useUnicode() {
         String force = System.getenv("NEATIFY_FORCE_UNICODE");
-        if (force != null && force.equalsIgnoreCase("true")) {
+        if ("true".equalsIgnoreCase(force)) {
             return true;
         }
         return useUnicode;

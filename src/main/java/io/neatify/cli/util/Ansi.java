@@ -29,7 +29,7 @@ public final class Ansi {
         }
 
         // Windows 10+ generally supports ANSI
-        String os = System.getProperty("os.name").toLowerCase();
+        String os = System.getProperty("os.name").toLowerCase(java.util.Locale.ROOT);
         if (os.contains("win")) {
             return true;
         }

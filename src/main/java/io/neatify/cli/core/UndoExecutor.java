@@ -1,18 +1,19 @@
 package io.neatify.cli.core;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.annotations.SerializedName;
-import io.neatify.core.PathSecurity;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import io.neatify.core.PathSecurity;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.annotations.SerializedName;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Handles journaling and undoing operations. */
 public final class UndoExecutor {
@@ -23,7 +24,11 @@ public final class UndoExecutor {
     private UndoExecutor() {}
 
     public record Move(java.nio.file.Path from, java.nio.file.Path to) {}
-    public record UndoResult(int restored, int skipped, List<String> errors) {}
+    public record UndoResult(int restored, int skipped, List<String> errors) {
+        public UndoResult {
+            errors = List.copyOf(errors);
+        }
+    }
     public record RunMeta(long time, String onCollision, int movesCount, Path file) {}
 
     // JSON DTOs for Gson serialization
@@ -88,7 +93,10 @@ public final class UndoExecutor {
         try {
             Path gi = gitignore(sourceRoot);
             if (!Files.exists(gi)) {
-                Files.createDirectories(gi.getParent());
+                Path parent = gi.getParent();
+                if (parent != null) {
+                    Files.createDirectories(parent);
+                }
                 Files.writeString(gi, "*\n!.gitignore\n", StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW);
             }
         } catch (IOException e) {
@@ -197,7 +205,10 @@ public final class UndoExecutor {
             try {
                 PathSecurity.assertNoSymlinkInAncestry(from);
                 PathSecurity.assertNoSymlinkInAncestry(to);  // also protect the source-of-truth path
-                Files.createDirectories(from.getParent());
+                Path fromParent = from.getParent();
+                if (fromParent != null) {
+                    Files.createDirectories(fromParent);
+                }
                 if (Files.exists(from)) { skipped++; continue; }
                 Files.move(to, from);
                 restored++;
@@ -257,7 +268,10 @@ public final class UndoExecutor {
             try {
                 PathSecurity.assertNoSymlinkInAncestry(from);
                 PathSecurity.assertNoSymlinkInAncestry(to);
-                Files.createDirectories(from.getParent());
+                Path fromParent = from.getParent();
+                if (fromParent != null) {
+                    Files.createDirectories(fromParent);
+                }
                 if (Files.exists(from)) { skipped++; continue; }
                 Files.move(to, from);
                 restored++;

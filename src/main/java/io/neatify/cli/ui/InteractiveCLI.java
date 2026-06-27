@@ -1,11 +1,11 @@
 package io.neatify.cli.ui;
 
+import java.io.IOException;
+
 import io.neatify.cli.AppInfo;
 import io.neatify.cli.core.FileOrganizer;
 import io.neatify.cli.core.RulesFileCreator;
 import io.neatify.cli.core.UndoExecutor;
-
-import java.io.IOException;
 
 import static io.neatify.cli.ui.Display.*;
 
@@ -29,7 +29,7 @@ public final class InteractiveCLI {
             String choice = readInput("Your choice");
 
             switch (choice) {
-                case "1" -> FileOrganizer.organize();
+                case "1" -> new FileOrganizer().organize();
                 case "2" -> RulesFileCreator.create();
                 case "3" -> { performUndo(); waitForEnter(); }
                 case "4" -> { HelpPrinter.print(); waitForEnter(); }

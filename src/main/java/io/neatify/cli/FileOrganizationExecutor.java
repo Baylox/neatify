@@ -1,43 +1,50 @@
 package io.neatify.cli;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import io.neatify.cli.args.CLIConfig;
-import io.neatify.cli.ui.Preview;
-import io.neatify.cli.util.Ansi;
-import io.neatify.cli.util.AsciiSymbols;
-import io.neatify.cli.util.ResultPrinter;
-import io.neatify.core.FileMover;
-import io.neatify.core.PathSecurity;
-import io.neatify.core.Rules;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
+import io.neatify.cli.args.CLIConfig;
+import io.neatify.cli.ui.Preview;
+import io.neatify.cli.util.Ansi;
+import io.neatify.cli.util.AsciiSymbols;
+import io.neatify.cli.util.ResultPrinter;
+import io.neatify.core.LocalFileMover;
+import io.neatify.core.PathSecurity;
+import io.neatify.core.PropertiesRulesProvider;
+import io.neatify.core.contract.FileMover;
+import io.neatify.core.contract.RulesProvider;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+
 import static io.neatify.cli.ui.Display.*;
 
-/**
- * Executes the CLI file-organization workflow.
- * Encapsulates validation, planning, preview, and execution.
- */
 public class FileOrganizationExecutor {
 
     private static final Logger logger = LoggerFactory.getLogger(FileOrganizationExecutor.class);
 
+    private final FileMover fileMover;
+    private final RulesProvider rulesProvider;
+
+    public FileOrganizationExecutor(FileMover fileMover, RulesProvider rulesProvider) {
+        this.fileMover = fileMover;
+        this.rulesProvider = rulesProvider;
+    }
+
     /**
-     * Executes the full file-organization workflow.
-     *
-     * @param config CLI configuration
-     * @throws IOException on I/O errors during execution
+     * Convenience constructor wiring the default local implementations.
      */
+    public FileOrganizationExecutor() {
+        this(new LocalFileMover(), new PropertiesRulesProvider());
+    }
+
     public void execute(CLIConfig config) throws IOException {
-        // Set run ID for correlation in logs
         String runId = String.valueOf(System.currentTimeMillis());
         MDC.put("runId", runId);
         logger.debug("Starting execution with runId: {}", runId);
@@ -57,7 +64,6 @@ public class FileOrganizationExecutor {
 
             if (actions.isEmpty()) {
                 if (config.isJson()) {
-                    // In JSON mode, emit a valid JSON envelope even when nothing is planned
                     printJson(config, actions, new FileMover.Result(0, 0, List.of()));
                 } else {
                     printWarning("No files to move.");
@@ -79,21 +85,15 @@ public class FileOrganizationExecutor {
         }
     }
 
-    /**
-     * Enforces a safety policy: applying changes is blocked by default when the
-     * source directory is inside a Git repository (unless --allow-inside-git is set).
-     * This prevents accidental destructive reorganizations of project files.
-     */
     private void enforceGitRepositoryPolicy(CLIConfig config) {
         Path source = config.getSourceDir();
-        boolean insideGit = isInsideGitRepository(source);
+        boolean insideGit = PathSecurity.isInsideGitRepository(source);
         if (config.isApply() && insideGit && !config.isAllowInsideGit()) {
             throw new IllegalArgumentException(
                 "--apply is blocked inside a Git repository by default. " +
                 "Use --allow-inside-git to override, or run outside repos.");
         }
         if (insideGit && !config.isJson()) {
-            // Warn when operating in or under a Git repository (suppress on stdout in JSON mode)
             if (config.isApply()) {
                 printWarning("Applying inside a Git repository: " + source);
                 printWarning("Proceeding because --allow-inside-git is set. Ensure you have backups.");
@@ -101,10 +101,6 @@ public class FileOrganizationExecutor {
                 printWarning("Git repository detected: " + source + " (dry-run; --apply blocked unless --allow-inside-git)");
             }
         }
-    }
-
-    private boolean isInsideGitRepository(Path start) {
-        return PathSecurity.isInsideGitRepository(start);
     }
 
     private void validatePaths(CLIConfig config) {
@@ -143,43 +139,29 @@ public class FileOrganizationExecutor {
     }
 
     private void applyDisplayOptions(CLIConfig config) {
-        if (config.isNoColor()) {
-            Ansi.setEnabled(false);
-        }
-        if (config.isAscii()) {
-            AsciiSymbols.setUseUnicode(false);
-        }
+        if (config.isNoColor()) Ansi.setEnabled(false);
+        if (config.isAscii()) AsciiSymbols.setUseUnicode(false);
     }
 
     private Map<String, String> loadRules(CLIConfig config) throws IOException {
         if (config.isUseDefaultRules()) {
             if (!config.isJson()) printInfo("Using built-in default rules...");
-            Map<String, String> rules = Rules.getDefaults();
-            if (!config.isJson()) {
-                printSuccess(rules.size() + " default rule(s) loaded");
-                System.out.println();
-            }
+            Map<String, String> rules = rulesProvider.getDefaults();
+            if (!config.isJson()) { printSuccess(rules.size() + " default rule(s) loaded"); System.out.println(); }
             return rules;
         } else {
             if (!config.isJson()) printInfo("Loading rules from: " + config.getRulesFile());
-            Map<String, String> rules = Rules.load(config.getRulesFile());
-            if (!config.isJson()) {
-                printSuccess(rules.size() + " rule(s) loaded");
-                System.out.println();
-            }
+            Map<String, String> rules = rulesProvider.load(config.getRulesFile());
+            if (!config.isJson()) { printSuccess(rules.size() + " rule(s) loaded"); System.out.println(); }
             return rules;
         }
     }
 
     private List<FileMover.Action> planActions(CLIConfig config, Map<String, String> rules) throws IOException {
         if (!config.isJson()) printInfo("Scanning folder: " + config.getSourceDir());
-        List<FileMover.Action> actions = FileMover.plan(
-            config.getSourceDir(),
-            rules,
-            config.getMaxFiles(),
-            config.getIncludes(),
-            config.getExcludes(),
-            /*skipGitRepos=*/!config.isAllowInsideGit()
+        List<FileMover.Action> actions = fileMover.plan(
+            config.getSourceDir(), rules, config.getMaxFiles(),
+            config.getIncludes(), config.getExcludes(), !config.isAllowInsideGit()
         );
         if (!config.isJson()) printSuccess(actions.size() + " file(s) to move");
         return actions;
@@ -190,44 +172,37 @@ public class FileOrganizationExecutor {
             .maxFilesPerFolder(config.getPerFolderPreview())
             .sortMode(parseSortMode(config.getSortMode()))
             .showDuplicates(true);
-
         Preview.print(actions, rendererConfig);
     }
 
     private FileMover.Result executeActions(CLIConfig config, List<FileMover.Action> actions) {
         if (!config.isJson()) {
-            if (config.isApply()) {
-                printInfo("Applying changes...");
-            } else {
-                printInfo("DRY-RUN mode - Use --apply to apply");
-            }
+            if (config.isApply()) printInfo("Applying changes...");
+            else printInfo("DRY-RUN mode - Use --apply to apply");
             System.out.println();
         }
 
         FileMover.CollisionStrategy strategy = parseCollision(config.getOnCollision());
         if (config.isApply()) {
             java.util.List<io.neatify.cli.core.UndoExecutor.Move> moves = new java.util.ArrayList<>();
-            FileMover.Result res = FileMover.execute(actions, false, strategy, (src, dst) -> {
+            FileMover.Result res = fileMover.execute(actions, false, strategy, (src, dst) -> {
                 moves.add(new io.neatify.cli.core.UndoExecutor.Move(src, dst));
             });
             try {
                 java.nio.file.Path runPath = io.neatify.cli.core.UndoExecutor.appendRun(config.getSourceDir(), config.getOnCollision(), moves);
-                if (runPath != null && !config.isJson()) {
-                    printInfo("Journal written: " + runPath.toAbsolutePath());
-                }
+                if (runPath != null && !config.isJson()) printInfo("Journal written: " + runPath.toAbsolutePath());
             } catch (java.io.IOException e) {
                 logger.error("Failed to write undo journal: {}", e.getMessage(), e);
                 printErr("Unable to write undo journal: " + e.getMessage());
             }
             return res;
         } else {
-            return FileMover.execute(actions, true, strategy);
+            return fileMover.execute(actions, true, strategy, null);
         }
     }
 
     private void showSummary(CLIConfig config, FileMover.Result result) {
         ResultPrinter.print(result);
-
         if (!config.isApply() && result.moved() > 0) {
             System.out.println();
             printInfo("Re-run with --apply to apply");
@@ -235,7 +210,7 @@ public class FileOrganizationExecutor {
     }
 
     private Preview.SortMode parseSortMode(String mode) {
-        return switch (mode.toLowerCase()) {
+        return switch (mode.toLowerCase(java.util.Locale.ROOT)) {
             case "ext" -> Preview.SortMode.EXT;
             case "size" -> Preview.SortMode.SIZE;
             default -> Preview.SortMode.ALPHA;
@@ -243,7 +218,7 @@ public class FileOrganizationExecutor {
     }
 
     private FileMover.CollisionStrategy parseCollision(String s) {
-        return switch (s.toLowerCase()) {
+        return switch (s.toLowerCase(java.util.Locale.ROOT)) {
             case "skip" -> FileMover.CollisionStrategy.SKIP;
             case "overwrite" -> FileMover.CollisionStrategy.OVERWRITE;
             default -> FileMover.CollisionStrategy.RENAME;
@@ -251,34 +226,17 @@ public class FileOrganizationExecutor {
     }
 
     private void printJson(CLIConfig config, List<FileMover.Action> actions, FileMover.Result result) {
-        // Convert actions to DTOs
         List<ActionDto> actionDtos = actions.stream()
-            .map(a -> new ActionDto(
-                a.source().toString(),
-                a.target().toString(),
-                a.reason()
-            ))
+            .map(a -> new ActionDto(a.source().toString(), a.target().toString(), a.reason()))
             .toList();
-
-        // Convert result to DTO if present
         ResultDto resultDto = result != null
             ? new ResultDto(result.moved(), result.skipped(), result.errors())
             : null;
-
-        // Build JSON output object
         JsonOutput output = new JsonOutput(
-            config.getSourceDir().toString(),
-            config.isApply(),
-            config.getOnCollision(),
-            actions.size(),
-            actionDtos,
-            resultDto
+            config.getSourceDir().toString(), config.isApply(), config.getOnCollision(),
+            actions.size(), actionDtos, resultDto
         );
-
-        // Serialize to JSON using Gson
-        Gson gson = new GsonBuilder().create();
-        String json = gson.toJson(output);
-        System.out.println(json);
+        System.out.println(new GsonBuilder().create().toJson(output));
     }
 
     private void performUndo(CLIConfig config) throws IOException {
@@ -304,42 +262,19 @@ public class FileOrganizationExecutor {
                 if (!r.errors().isEmpty()) { printErr("Errors during undo:"); r.errors().forEach(e -> println("  - " + e)); }
                 return;
             } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("--undo-run requires a numeric timestamp");
+                throw new IllegalArgumentException("--undo-run requires a numeric timestamp", e);
             }
         }
 
         printInfo("Undoing last run...");
         var r = io.neatify.cli.core.UndoExecutor.undoLast(config.getSourceDir());
-        if (r == null) {
-            printWarning("No previous run found in the journal.");
-            return;
-        }
+        if (r == null) { printWarning("No previous run found in the journal."); return; }
         printSuccess("Restored: " + r.restored() + ", skipped: " + r.skipped() + ", errors: " + r.errors().size());
-        if (!r.errors().isEmpty()) {
-            printErr("Errors during undo:");
-            r.errors().forEach(e -> println("  - " + e));
-        }
+        if (!r.errors().isEmpty()) { printErr("Errors during undo:"); r.errors().forEach(e -> println("  - " + e)); }
     }
 
-    // JSON DTOs for serialization
-    private record JsonOutput(
-        String source,
-        boolean apply,
-        String onCollision,
-        int planned,
-        List<ActionDto> actions,
-        ResultDto result
-    ) {}
-
-    private record ActionDto(
-        String source,
-        String target,
-        String reason
-    ) {}
-
-    private record ResultDto(
-        int moved,
-        int skipped,
-        List<String> errors
-    ) {}
+    private record JsonOutput(String source, boolean apply, String onCollision, int planned,
+                               List<ActionDto> actions, ResultDto result) {}
+    private record ActionDto(String source, String target, String reason) {}
+    private record ResultDto(int moved, int skipped, List<String> errors) {}
 }
