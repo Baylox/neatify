@@ -42,7 +42,8 @@ class DocsGenerationTest {
         assertTrue(Files.isRegularFile(file),
             "Documentation target is missing: " + file);
 
-        String content = Files.readString(file, StandardCharsets.UTF_8);
+        // Normalize line endings so the check is stable on Windows checkouts (CRLF).
+        String content = Files.readString(file, StandardCharsets.UTF_8).replace("\r\n", "\n");
         String startMarker = "<!-- AUTOGEN:" + blockId + " START -->";
         String endMarker = "<!-- AUTOGEN:" + blockId + " END -->";
 
