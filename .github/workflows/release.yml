@@ -32,10 +32,38 @@ jobs:
           cp target/neatify.jar "neatify-${version}.jar"
           sha256sum "neatify-${version}.jar" > "neatify-${version}.jar.sha256"
 
+      # Build an "Install" section with the tag's version baked into the commands.
+      # It is placed before the auto-generated changelog (generate_release_notes).
+      # The heredoc body is intentionally NOT indented so the Markdown is not
+      # treated as an indented code block.
+      - name: Build release notes header
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          version="${tag#v}"
+          base="https://github.com/${GITHUB_REPOSITORY}/releases/download/${tag}"
+          {
+            printf '%s\n\n' "Neatify is a small Java CLI that tidies a folder by moving files into category folders (Documents, Images, Videos…) based on their extension. It defaults to a safe dry-run preview."
+            printf '## Install\n\n'
+            printf '%s\n\n' "Requires a **JDK 21+** — the jar is self-contained, no install step."
+            printf '```bash\n'
+            printf '# Download\n'
+            printf 'curl -LO %s/neatify-%s.jar\n\n' "$base" "$version"
+            printf '# Optional: verify the checksum\n'
+            printf 'curl -LO %s/neatify-%s.jar.sha256\n' "$base" "$version"
+            printf 'sha256sum -c neatify-%s.jar.sha256\n\n' "$version"
+            printf '# Run\n'
+            printf 'java -jar neatify-%s.jar                                          # interactive menu\n' "$version"
+            printf 'java -jar neatify-%s.jar --source ~/Downloads --use-default-rules # preview (dry-run)\n' "$version"
+            printf '```\n\n'
+            printf 'See the [README](https://github.com/%s#readme) and [docs](https://github.com/%s/blob/master/docs/index.md) for usage, and the [API docs](https://baylox.github.io/neatify/).\n\n' "$GITHUB_REPOSITORY" "$GITHUB_REPOSITORY"
+            printf -- '---\n'
+          } > release-notes-header.md
+
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@2bb465e97f322d3cb2a965294d483e0d26a67aa9 # v3.0.1
         with:
           generate_release_notes: true
+          body_path: release-notes-header.md
           files: |
             neatify-*.jar
             neatify-*.jar.sha256
