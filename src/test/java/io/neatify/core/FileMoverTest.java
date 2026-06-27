@@ -1,39 +1,34 @@
 package io.neatify.core;
 
-import io.neatify.TestHelper;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
+import io.neatify.TestHelper;
+import io.neatify.core.contract.FileMover;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Essential tests for FileMover.
- */
 class FileMoverTest extends TestHelper {
+
+    private final LocalFileMover mover = new LocalFileMover();
 
     @Test
     void testPlan_BasicFunctionality(@TempDir Path tempDir) throws IOException {
         createTestFile(tempDir, "image.jpg", "test");
         createTestFile(tempDir, "document.pdf", "test");
 
-        Map<String, String> rules = Map.of(
-            "jpg", "Images",
-            "pdf", "Documents"
-        );
-
-        List<FileMover.Action> actions = FileMover.plan(tempDir, rules);
+        Map<String, String> rules = Map.of("jpg", "Images", "pdf", "Documents");
+        List<FileMover.Action> actions = mover.plan(tempDir, rules, 100_000, List.of(), List.of(), true);
 
         assertEquals(2, actions.size());
-        assertTrue(actions.stream().anyMatch(a ->
-            a.source().getFileName().toString().equals("image.jpg")));
-        assertTrue(actions.stream().anyMatch(a ->
-            a.source().getFileName().toString().equals("document.pdf")));
+        assertTrue(actions.stream().anyMatch(a -> a.source().getFileName().toString().equals("image.jpg")));
+        assertTrue(actions.stream().anyMatch(a -> a.source().getFileName().toString().equals("document.pdf")));
     }
 
     @Test
@@ -41,7 +36,7 @@ class FileMoverTest extends TestHelper {
         createTestFile(tempDir, ".hidden.jpg", "test");
 
         Map<String, String> rules = Map.of("jpg", "Images");
-        List<FileMover.Action> actions = FileMover.plan(tempDir, rules);
+        List<FileMover.Action> actions = mover.plan(tempDir, rules, 100_000, List.of(), List.of(), true);
 
         assertEquals(0, actions.size());
     }
@@ -53,7 +48,7 @@ class FileMoverTest extends TestHelper {
         createTestFile(subDir, "nested.jpg", "test");
 
         Map<String, String> rules = Map.of("jpg", "Images");
-        List<FileMover.Action> actions = FileMover.plan(tempDir, rules);
+        List<FileMover.Action> actions = mover.plan(tempDir, rules, 100_000, List.of(), List.of(), true);
 
         assertEquals(1, actions.size());
         assertTrue(actions.get(0).source().toString().contains("nested.jpg"));
@@ -64,9 +59,8 @@ class FileMoverTest extends TestHelper {
         createTestFile(tempDir, "test.jpg", "content");
         Path source = tempDir.resolve("test.jpg");
         Path target = tempDir.resolve("Images").resolve("test.jpg");
-        FileMover.Action action = createAction(source, target);
 
-        FileMover.Result result = FileMover.execute(List.of(action), true);
+        FileMover.Result result = mover.execute(List.of(createAction(source, target)), true, FileMover.CollisionStrategy.RENAME, null);
 
         assertTrue(Files.exists(source));
         assertFalse(Files.exists(target));
@@ -78,9 +72,8 @@ class FileMoverTest extends TestHelper {
         createTestFile(tempDir, "test.jpg", "content");
         Path source = tempDir.resolve("test.jpg");
         Path target = tempDir.resolve("Images").resolve("test.jpg");
-        FileMover.Action action = createAction(source, target);
 
-        FileMover.Result result = FileMover.execute(List.of(action), false);
+        FileMover.Result result = mover.execute(List.of(createAction(source, target)), false, FileMover.CollisionStrategy.RENAME, null);
 
         assertFalse(Files.exists(source));
         assertTrue(Files.exists(target));
@@ -96,15 +89,12 @@ class FileMoverTest extends TestHelper {
         createTestFile(tempDir, "b.jpg", "b");
         createTestFile(sub, "c.txt", "c");
 
-        Map<String, String> rules = Map.of(
-            "pdf", "Docs",
-            "jpg", "Images",
-            "txt", "Texts"
-        );
+        Map<String, String> rules = Map.of("pdf", "Docs", "jpg", "Images", "txt", "Texts");
 
-        var actions = FileMover.plan(tempDir, rules, 100000,
-            java.util.List.of("**/*.pdf", "**/*.txt"),
-            java.util.List.of("**/sub/*.txt")
+        var actions = mover.plan(tempDir, rules, 100_000,
+            List.of("**/*.pdf", "**/*.txt"),
+            List.of("**/sub/*.txt"),
+            true
         );
 
         assertEquals(1, actions.stream().filter(a -> a.source().getFileName().toString().equals("a.pdf")).count());
@@ -114,35 +104,32 @@ class FileMoverTest extends TestHelper {
 
     @Test
     void testExecute_CollisionStrategies(@TempDir Path tempDir) throws IOException {
-        // Prepare files
         createTestFile(tempDir, "x.txt", "one");
         Path targetDir = tempDir.resolve("Dest");
         Files.createDirectories(targetDir);
         Path target = targetDir.resolve("x.txt");
         Files.writeString(target, "existing");
 
-        // SKIP: should not overwrite and should skip
-        FileMover.Action actionSkip = createAction(tempDir.resolve("x.txt"), target);
-        FileMover.Result resSkip = FileMover.execute(java.util.List.of(actionSkip), false, FileMover.CollisionStrategy.SKIP);
+        // SKIP
+        FileMover.Result resSkip = mover.execute(
+            List.of(createAction(tempDir.resolve("x.txt"), target)), false, FileMover.CollisionStrategy.SKIP, null);
         assertTrue(Files.exists(target));
-        assertTrue(Files.exists(tempDir.resolve("x.txt"))); // not moved
+        assertTrue(Files.exists(tempDir.resolve("x.txt")));
         assertEquals(1, resSkip.skipped());
 
         // OVERWRITE
         Files.writeString(tempDir.resolve("x.txt"), "two");
-        FileMover.Action actionOv = createAction(tempDir.resolve("x.txt"), target);
-        FileMover.Result resOv = FileMover.execute(java.util.List.of(actionOv), false, FileMover.CollisionStrategy.OVERWRITE);
+        FileMover.Result resOv = mover.execute(
+            List.of(createAction(tempDir.resolve("x.txt"), target)), false, FileMover.CollisionStrategy.OVERWRITE, null);
         assertFalse(Files.exists(tempDir.resolve("x.txt")));
         assertEquals("two", Files.readString(target));
         assertEquals(1, resOv.moved());
 
         // RENAME
-        // recreate source
         Files.writeString(tempDir.resolve("x.txt"), "three");
-        FileMover.Action actionRn = createAction(tempDir.resolve("x.txt"), target);
-        FileMover.Result resRn = FileMover.execute(java.util.List.of(actionRn), false, FileMover.CollisionStrategy.RENAME);
+        FileMover.Result resRn = mover.execute(
+            List.of(createAction(tempDir.resolve("x.txt"), target)), false, FileMover.CollisionStrategy.RENAME, null);
         assertFalse(Files.exists(tempDir.resolve("x.txt")));
-        // original target remains, a new file with suffix exists
         assertTrue(Files.exists(target));
         assertTrue(Files.list(targetDir).anyMatch(p -> p.getFileName().toString().matches("x_\\d+\\.txt")));
         assertEquals(1, resRn.moved());
@@ -152,13 +139,11 @@ class FileMoverTest extends TestHelper {
     void testExecute_CreatesTargetDirectory(@TempDir Path tempDir) throws IOException {
         createTestFile(tempDir, "test.jpg", "content");
         Path source = tempDir.resolve("test.jpg");
-        Path targetDir = tempDir.resolve("NewFolder").resolve("Images");
-        Path target = targetDir.resolve("test.jpg");
-        FileMover.Action action = createAction(source, target);
+        Path target = tempDir.resolve("NewFolder").resolve("Images").resolve("test.jpg");
 
-        FileMover.Result result = FileMover.execute(List.of(action), false);
+        FileMover.Result result = mover.execute(List.of(createAction(source, target)), false, FileMover.CollisionStrategy.RENAME, null);
 
-        assertTrue(Files.exists(targetDir));
+        assertTrue(Files.exists(target.getParent()));
         assertTrue(Files.exists(target));
         assertEquals(1, result.moved());
     }
@@ -169,17 +154,13 @@ class FileMoverTest extends TestHelper {
         createTestFile(tempDir, "image2.jpg", "image2");
         createTestFile(tempDir, "doc.pdf", "document");
 
-        Path file1 = tempDir.resolve("image1.jpg");
-        Path file2 = tempDir.resolve("image2.jpg");
-        Path file3 = tempDir.resolve("doc.pdf");
-
         List<FileMover.Action> actions = List.of(
-            createAction(file1, tempDir.resolve("Images/image1.jpg")),
-            createAction(file2, tempDir.resolve("Images/image2.jpg")),
-            createAction(file3, tempDir.resolve("Docs/doc.pdf"))
+            createAction(tempDir.resolve("image1.jpg"), tempDir.resolve("Images/image1.jpg")),
+            createAction(tempDir.resolve("image2.jpg"), tempDir.resolve("Images/image2.jpg")),
+            createAction(tempDir.resolve("doc.pdf"), tempDir.resolve("Docs/doc.pdf"))
         );
 
-        FileMover.Result result = FileMover.execute(actions, false);
+        FileMover.Result result = mover.execute(actions, false, FileMover.CollisionStrategy.RENAME, null);
 
         assertEquals(3, result.moved());
         assertTrue(Files.exists(tempDir.resolve("Images/image1.jpg")));

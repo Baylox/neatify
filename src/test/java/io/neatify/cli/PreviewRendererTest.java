@@ -1,16 +1,17 @@
 package io.neatify.cli;
 
+import java.nio.file.Path;
+import java.util.List;
+
 import io.neatify.TestHelper;
 import io.neatify.cli.ui.Preview;
 import io.neatify.cli.util.Ansi;
 import io.neatify.cli.util.AsciiSymbols;
-import io.neatify.core.FileMover;
+import io.neatify.core.contract.FileMover;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-
-import java.nio.file.Path;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 

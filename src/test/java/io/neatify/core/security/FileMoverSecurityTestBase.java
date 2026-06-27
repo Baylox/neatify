@@ -1,26 +1,20 @@
 package io.neatify.core.security;
 
-import io.neatify.TestHelper;
-import io.neatify.core.FileMover;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
+import io.neatify.TestHelper;
+import io.neatify.core.LocalFileMover;
+import io.neatify.core.contract.FileMover;
+
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Base class for FileMover security tests.
- * Provides security-specific utility methods.
- * Inherits common helpers from TestHelper.
- */
 public abstract class FileMoverSecurityTestBase extends TestHelper {
 
-    // =====================================================
-    // HELPER METHODS - Action assertions
-    // =====================================================
+    protected final LocalFileMover mover = new LocalFileMover();
 
     protected void assertActionExists(List<FileMover.Action> actions, String filename) {
         assertTrue(actions.stream().anyMatch(a ->
@@ -33,22 +27,13 @@ public abstract class FileMoverSecurityTestBase extends TestHelper {
             a.source().getFileName().toString().equals(filename)), message);
     }
 
-    // =====================================================
-    // HELPER METHODS - Path Traversal
-    // =====================================================
-
     protected void assertMaliciousRuleBlockedForFile(Path tempDir, String filename, String extension,
-                                                       String maliciousTarget) throws IOException {
+                                                     String maliciousTarget) throws IOException {
         createTestFile(tempDir, filename);
         Map<String, String> maliciousRules = Map.of(extension, maliciousTarget);
-        List<FileMover.Action> actions = FileMover.plan(tempDir, maliciousRules);
-        assertEquals(0, actions.size(),
-            "Rules with path traversal should not generate any actions");
+        List<FileMover.Action> actions = mover.plan(tempDir, maliciousRules, 100_000, List.of(), List.of(), true);
+        assertEquals(0, actions.size(), "Rules with path traversal should not generate any actions");
     }
-
-    // =====================================================
-    // HELPER METHODS - Collisions
-    // =====================================================
 
     protected void setupCollisionScenario(Path tempDir, String baseFilename, String... existingContents)
             throws IOException {

@@ -1,15 +1,16 @@
 package io.neatify.cli;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import io.neatify.Neatify;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+
+import io.neatify.Neatify;
+
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -58,4 +59,3 @@ class JsonOutputNoActionTest {
         assertTrue(result.getAsJsonArray("errors").size() >= 0);
     }
 }
-

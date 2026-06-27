@@ -1,16 +1,17 @@
 package io.neatify.cli;
 
-import io.neatify.cli.args.ArgumentParser;
-import io.neatify.cli.args.CLIConfig;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+
+import io.neatify.cli.args.ArgumentParser;
+import io.neatify.cli.args.CLIConfig;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.*;
 
