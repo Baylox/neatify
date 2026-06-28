@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class FileOrganizationExecutorTest {
 
-    private final FileOrganizationExecutor executor = new FileOrganizationExecutor();
+    private final FileOrganizationExecutor executor = FileOrganizationExecutor.from(AppContext.production());
 
     @Test
     void execute_emptySource_doesNotThrow(@TempDir Path tempDir) {

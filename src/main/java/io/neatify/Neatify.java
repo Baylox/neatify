@@ -2,6 +2,7 @@ package io.neatify;
 
 import java.io.IOException;
 
+import io.neatify.cli.AppContext;
 import io.neatify.cli.FileOrganizationExecutor;
 import io.neatify.cli.args.ArgumentParser;
 import io.neatify.cli.args.CLIConfig;
@@ -27,9 +28,11 @@ public final class Neatify {
 
     public static void main(String[] args) {
         try {
+            AppContext context = AppContext.production();
+
             // Interactive mode when no arguments
             if (args.length == 0) {
-                new InteractiveCLI(VERSION).run();
+                new InteractiveCLI(VERSION, context).run();
                 return;
             }
 
@@ -56,12 +59,12 @@ public final class Neatify {
                 }
 
                 if (config.isInteractive()) {
-                    new InteractiveCLI(VERSION).run();
+                    new InteractiveCLI(VERSION, context).run();
                     return;
                 }
 
                 // Normal execution
-                new FileOrganizationExecutor().execute(config);
+                FileOrganizationExecutor.from(context).execute(config);
             } finally {
                 MDC.remove("jsonMode");
             }

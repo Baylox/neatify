@@ -28,7 +28,7 @@ class UndoFlowTest {
                 "--use-default-rules",
                 "--apply"
             });
-            FileOrganizationExecutor exec = new FileOrganizationExecutor();
+            FileOrganizationExecutor exec = FileOrganizationExecutor.from(AppContext.production());
             exec.execute(cfg);
 
             // Verify files moved under expected folders
@@ -46,7 +46,7 @@ class UndoFlowTest {
             }
 
             // Undo last run
-            var result = io.neatify.cli.core.UndoExecutor.undoLast(src);
+            var result = new io.neatify.core.FileSystemRunJournal().undoLast(src);
             assertNotNull(result);
             assertTrue(result.restored() >= 3);
 
