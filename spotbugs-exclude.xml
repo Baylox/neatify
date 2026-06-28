@@ -14,7 +14,20 @@
     <!-- Gson DTOs: fields are populated by reflection during deserialization,
          SpotBugs cannot see the writes (UWF_UNWRITTEN_FIELD is a false positive here) -->
     <Match>
-        <Class name="~io\.neatify\.cli\.core\.UndoExecutor\$(Legacy.*|RunDoc|MoveDto)" />
+        <Class name="~io\.neatify\.core\.FileSystemRunJournal\$(Legacy.*|RunDoc|MoveDto)" />
         <Bug pattern="UWF_UNWRITTEN_FIELD" />
+    </Match>
+
+    <!-- Composition-root wiring: AppContext, the CLI executor and the organization service hold
+         injected, stateless collaborators (FileMover / RulesProvider / RunJournal / Console).
+         Storing or returning these by reference is intentional dependency injection, not an
+         exposure of mutable internal state. -->
+    <Match>
+        <Or>
+            <Class name="io.neatify.cli.AppContext" />
+            <Class name="io.neatify.cli.FileOrganizationExecutor" />
+            <Class name="io.neatify.core.OrganizationService" />
+        </Or>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
     </Match>
 </FindBugsFilter>

@@ -5,7 +5,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-import io.neatify.cli.core.UndoExecutor;
+import io.neatify.core.FileSystemRunJournal;
+import io.neatify.core.contract.RunJournal;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledOnOs;
@@ -15,12 +16,14 @@ import org.junit.jupiter.api.io.TempDir;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Security tests for UndoExecutor: verifies that out-of-scope paths and symlinks
+ * Security tests for {@link FileSystemRunJournal}: verifies that out-of-scope paths and symlinks
  * are properly blocked during undo operations.
  *
  * Regression for: undoRunFile only checked symlinks on "from", not on "to".
  */
 class UndoSecurityTest {
+
+    private final RunJournal journal = new FileSystemRunJournal();
 
     @Test
     void undoRun_outOfScopePath_isSkippedWithError(@TempDir Path root, @TempDir Path outside) throws IOException {
@@ -28,10 +31,6 @@ class UndoSecurityTest {
         Path inRoot = root.resolve("Images").resolve("photo.jpg");
         Files.createDirectories(inRoot.getParent());
         Files.writeString(inRoot, "img");
-
-        // Write a run file that pretends to restore to an OUT-OF-SCOPE location
-        UndoExecutor.Move legitimateMove = new UndoExecutor.Move(root.resolve("photo.jpg"), inRoot);
-        UndoExecutor.Move maliciousMove  = new UndoExecutor.Move(outside.resolve("stolen.jpg"), inRoot);
 
         // Manually create the run journal to inject the malicious move
         Path runsDir = root.resolve(".neatify").resolve("runs");
@@ -45,7 +44,7 @@ class UndoSecurityTest {
         );
         Files.writeString(runsDir.resolve(ts + ".json"), json);
 
-        UndoExecutor.UndoResult result = UndoExecutor.undoLast(root);
+        RunJournal.UndoResult result = journal.undoLast(root);
         assertNotNull(result);
         // The malicious move should be skipped (out of scope), file must NOT appear outside root
         assertFalse(Files.exists(outside.resolve("stolen.jpg")),
@@ -87,7 +86,7 @@ class UndoSecurityTest {
         );
         Files.writeString(runsDir.resolve(ts + ".json"), json);
 
-        UndoExecutor.UndoResult result = UndoExecutor.undoLast(root);
+        RunJournal.UndoResult result = journal.undoLast(root);
         assertNotNull(result);
         // The move through a symlink should have been blocked
         assertEquals(0, result.restored(), "No file should be restored through a symlink path");
@@ -100,7 +99,7 @@ class UndoSecurityTest {
         Files.writeString(runsDir.resolve("9999999.json"), "NOT_VALID_JSON{{{{");
 
         // Must not throw
-        List<UndoExecutor.RunMeta> runs = UndoExecutor.listRuns(root);
+        List<RunJournal.RunMeta> runs = journal.list(root);
         // Corrupt file should be silently skipped
         assertEquals(0, runs.size());
     }

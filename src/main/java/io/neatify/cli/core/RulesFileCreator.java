@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import io.neatify.cli.ui.Console;
 import io.neatify.core.PathSecurity;
 
 import static io.neatify.cli.ui.Display.*;
@@ -14,17 +15,19 @@ import static io.neatify.cli.ui.Display.*;
  */
 public final class RulesFileCreator {
 
-    private RulesFileCreator() {
-        // Utility class
+    private final Console console;
+
+    public RulesFileCreator(Console console) {
+        this.console = console;
     }
 
     /**
      * Starts the full flow to create a rules file.
      */
-    public static void create() throws IOException {
+    public void create() throws IOException {
         printSection("CREATE A RULES FILE");
 
-        String filename = readInput("File name", "custom-rules/my-rules.properties");
+        String filename = console.readInput("File name", "custom-rules/my-rules.properties");
         Path rulesFile = Paths.get(filename).toAbsolutePath().normalize();
 
         if (!validateSecurity(rulesFile)) return;
@@ -37,16 +40,16 @@ public final class RulesFileCreator {
 
         if (!writeSecurely(rulesFile, content, fileExists)) return;
 
-        printSuccess(rulesFile);
+        printCreated(rulesFile);
     }
 
-    private static boolean validateSecurity(Path rulesFile) {
+    private boolean validateSecurity(Path rulesFile) {
         Path safeDir = Paths.get("custom-rules").toAbsolutePath().normalize();
         Path target = rulesFile.toAbsolutePath().normalize();
 
         if (!target.startsWith(safeDir)) {
             printError("SECURITY: The file must be inside the custom-rules/ folder");
-            waitForEnter();
+            console.waitForEnter();
             return false;
         }
 
@@ -55,19 +58,19 @@ public final class RulesFileCreator {
             PathSecurity.validateRelativeSubpath(relativeTarget.toString());
         } catch (SecurityException | IllegalArgumentException e) {
             printError("SECURITY: " + e.getMessage());
-            waitForEnter();
+            console.waitForEnter();
             return false;
         }
 
         return true;
     }
 
-    private static boolean confirmOverwriteIfExists(Path rulesFile) {
+    private boolean confirmOverwriteIfExists(Path rulesFile) {
         if (Files.exists(rulesFile)) {
-            String overwrite = readInput("File already exists. Overwrite? (y/N)", "n");
+            String overwrite = console.readInput("File already exists. Overwrite? (y/N)", "n");
             if (!"y".equalsIgnoreCase(overwrite) && !"yes".equalsIgnoreCase(overwrite)) {
                 printWarning("Operation cancelled.");
-                waitForEnter();
+                console.waitForEnter();
                 return false;
             }
         }
@@ -112,14 +115,14 @@ public final class RulesFileCreator {
         }
     }
 
-    private static boolean writeSecurely(Path rulesFile, String content, boolean overwrite) throws IOException {
+    private boolean writeSecurely(Path rulesFile, String content, boolean overwrite) throws IOException {
         // SECURITY: the real (symlink-resolved) target must stay inside custom-rules/
         try {
             Path safeDir = Paths.get("custom-rules").toAbsolutePath().normalize();
             PathSecurity.assertResolvedWithin(safeDir, rulesFile);
         } catch (SecurityException e) {
             printError("SECURITY: " + e.getMessage());
-            waitForEnter();
+            console.waitForEnter();
             return false;
         }
 
@@ -136,15 +139,15 @@ public final class RulesFileCreator {
         } catch (java.nio.file.FileAlreadyExistsException e) {
             // If we get here, another process created the file meanwhile (race condition)
             printError("SECURITY: File was created by another process");
-            waitForEnter();
+            console.waitForEnter();
             return false;
         }
     }
 
-    private static void printSuccess(Path rulesFile) {
-        io.neatify.cli.ui.Display.printSuccess("File created: " + rulesFile.toAbsolutePath());
+    private void printCreated(Path rulesFile) {
+        printSuccess("File created: " + rulesFile.toAbsolutePath());
         printInfo("You can now edit it to customize rules.");
         printInfo("Note: This file will not be versioned by Git.");
-        waitForEnter();
+        console.waitForEnter();
     }
 }
