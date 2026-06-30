@@ -4,20 +4,20 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import io.neatify.cli.args.CLIConfig;
+import io.neatify.cli.ui.DisplayOptions;
 import io.neatify.cli.ui.Preview;
-import io.neatify.cli.util.Ansi;
-import io.neatify.cli.util.AsciiSymbols;
+import io.neatify.cli.ui.Theme;
 import io.neatify.cli.util.ResultPrinter;
-import io.neatify.core.LocalFileMover;
+import io.neatify.core.OrganizationService;
 import io.neatify.core.PathSecurity;
-import io.neatify.core.PropertiesRulesProvider;
 import io.neatify.core.contract.FileMover;
 import io.neatify.core.contract.RulesProvider;
+import io.neatify.core.contract.RunJournal;
 
-import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,19 +29,28 @@ public class FileOrganizationExecutor {
 
     private static final Logger logger = LoggerFactory.getLogger(FileOrganizationExecutor.class);
 
-    private final FileMover fileMover;
     private final RulesProvider rulesProvider;
+    private final OrganizationService organizationService;
+    private final RunJournal runJournal;
+    private final DisplayOptions baseDisplayOptions;
+    private Theme theme;
 
-    public FileOrganizationExecutor(FileMover fileMover, RulesProvider rulesProvider) {
-        this.fileMover = fileMover;
+    public FileOrganizationExecutor(
+        RulesProvider rulesProvider,
+        OrganizationService organizationService,
+        RunJournal runJournal,
+        DisplayOptions displayOptions) {
         this.rulesProvider = rulesProvider;
+        this.organizationService = organizationService;
+        this.runJournal = runJournal;
+        this.baseDisplayOptions = displayOptions;
+        this.theme = new Theme(displayOptions);
     }
 
-    /**
-     * Convenience constructor wiring the default local implementations.
-     */
-    public FileOrganizationExecutor() {
-        this(new LocalFileMover(), new PropertiesRulesProvider());
+    /** Builds an executor from the application context. */
+    public static FileOrganizationExecutor from(AppContext ctx) {
+        return new FileOrganizationExecutor(
+            ctx.rulesProvider(), ctx.organizationService(), ctx.runJournal(), ctx.displayOptions());
     }
 
     public void execute(CLIConfig config) throws IOException {
@@ -71,12 +80,13 @@ public class FileOrganizationExecutor {
                 return;
             }
 
+            OrganizationService.Request request = toRequest(config, rules);
             if (config.isJson()) {
-                FileMover.Result result = executeActions(config, actions);
+                FileMover.Result result = executeActions(config, request, actions);
                 printJson(config, actions, result);
             } else {
                 showPreview(config, actions);
-                FileMover.Result result = executeActions(config, actions);
+                FileMover.Result result = executeActions(config, request, actions);
                 showSummary(config, result);
             }
         } finally {
@@ -139,8 +149,14 @@ public class FileOrganizationExecutor {
     }
 
     private void applyDisplayOptions(CLIConfig config) {
-        if (config.isNoColor()) Ansi.setEnabled(false);
-        if (config.isAscii()) AsciiSymbols.setUseUnicode(false);
+        DisplayOptions options = baseDisplayOptions;
+        if (config.isNoColor()) {
+            options = options.withoutColor();
+        }
+        if (config.isAscii()) {
+            options = options.asciiOnly();
+        }
+        this.theme = new Theme(options);
     }
 
     private Map<String, String> loadRules(CLIConfig config) throws IOException {
@@ -157,12 +173,16 @@ public class FileOrganizationExecutor {
         }
     }
 
+    private OrganizationService.Request toRequest(CLIConfig config, Map<String, String> rules) {
+        return new OrganizationService.Request(
+            config.getSourceDir(), rules, config.getMaxFiles(),
+            config.getIncludes(), config.getExcludes(),
+            parseCollision(config.getOnCollision()), !config.isAllowInsideGit());
+    }
+
     private List<FileMover.Action> planActions(CLIConfig config, Map<String, String> rules) throws IOException {
         if (!config.isJson()) printInfo("Scanning folder: " + config.getSourceDir());
-        List<FileMover.Action> actions = fileMover.plan(
-            config.getSourceDir(), rules, config.getMaxFiles(),
-            config.getIncludes(), config.getExcludes(), !config.isAllowInsideGit()
-        );
+        List<FileMover.Action> actions = organizationService.plan(toRequest(config, rules));
         if (!config.isJson()) printSuccess(actions.size() + " file(s) to move");
         return actions;
     }
@@ -171,33 +191,29 @@ public class FileOrganizationExecutor {
         Preview.Config rendererConfig = new Preview.Config()
             .maxFilesPerFolder(config.getPerFolderPreview())
             .sortMode(parseSortMode(config.getSortMode()))
-            .showDuplicates(true);
+            .showDuplicates(true)
+            .theme(theme);
         Preview.print(actions, rendererConfig);
     }
 
-    private FileMover.Result executeActions(CLIConfig config, List<FileMover.Action> actions) {
+    private FileMover.Result executeActions(CLIConfig config, OrganizationService.Request request,
+            List<FileMover.Action> actions) {
         if (!config.isJson()) {
             if (config.isApply()) printInfo("Applying changes...");
             else printInfo("DRY-RUN mode - Use --apply to apply");
             System.out.println();
         }
 
-        FileMover.CollisionStrategy strategy = parseCollision(config.getOnCollision());
         if (config.isApply()) {
-            java.util.List<io.neatify.cli.core.UndoExecutor.Move> moves = new java.util.ArrayList<>();
-            FileMover.Result res = fileMover.execute(actions, false, strategy, (src, dst) -> {
-                moves.add(new io.neatify.cli.core.UndoExecutor.Move(src, dst));
-            });
-            try {
-                java.nio.file.Path runPath = io.neatify.cli.core.UndoExecutor.appendRun(config.getSourceDir(), config.getOnCollision(), moves);
-                if (runPath != null && !config.isJson()) printInfo("Journal written: " + runPath.toAbsolutePath());
-            } catch (java.io.IOException e) {
-                logger.error("Failed to write undo journal: {}", e.getMessage(), e);
-                printErr("Unable to write undo journal: " + e.getMessage());
+            OrganizationService.Outcome outcome = organizationService.apply(request, actions);
+            if (outcome.journalError() != null) {
+                printErr("Unable to write undo journal: " + outcome.journalError());
+            } else if (outcome.journalPath() != null && !config.isJson()) {
+                printInfo("Journal written: " + outcome.journalPath().toAbsolutePath());
             }
-            return res;
+            return outcome.result();
         } else {
-            return fileMover.execute(actions, true, strategy, null);
+            return organizationService.dryRun(request, actions);
         }
     }
 
@@ -210,7 +226,7 @@ public class FileOrganizationExecutor {
     }
 
     private Preview.SortMode parseSortMode(String mode) {
-        return switch (mode.toLowerCase(java.util.Locale.ROOT)) {
+        return switch (mode.toLowerCase(Locale.ROOT)) {
             case "ext" -> Preview.SortMode.EXT;
             case "size" -> Preview.SortMode.SIZE;
             default -> Preview.SortMode.ALPHA;
@@ -218,7 +234,7 @@ public class FileOrganizationExecutor {
     }
 
     private FileMover.CollisionStrategy parseCollision(String s) {
-        return switch (s.toLowerCase(java.util.Locale.ROOT)) {
+        return switch (s.toLowerCase(Locale.ROOT)) {
             case "skip" -> FileMover.CollisionStrategy.SKIP;
             case "overwrite" -> FileMover.CollisionStrategy.OVERWRITE;
             default -> FileMover.CollisionStrategy.RENAME;
@@ -241,12 +257,12 @@ public class FileOrganizationExecutor {
 
     private void performUndo(CLIConfig config) throws IOException {
         if (config.isUndoList()) {
-            var runs = io.neatify.cli.core.UndoExecutor.listRuns(config.getSourceDir());
+            List<RunJournal.RunMeta> runs = runJournal.list(config.getSourceDir());
             if (runs.isEmpty()) {
                 printWarning("No previous runs.");
             } else {
                 printSection("AVAILABLE JOURNALS (.neatify/runs)");
-                for (var m : runs) {
+                for (RunJournal.RunMeta m : runs) {
                     println("  - " + m.file().getFileName() + " (" + m.movesCount() + " moves, collision=" + m.onCollision() + ")");
                 }
             }
@@ -256,7 +272,7 @@ public class FileOrganizationExecutor {
         if (config.getUndoRun() != null) {
             try {
                 long ts = Long.parseLong(config.getUndoRun());
-                var r = io.neatify.cli.core.UndoExecutor.undoRun(config.getSourceDir(), ts);
+                RunJournal.UndoResult r = runJournal.undoRun(config.getSourceDir(), ts);
                 if (r == null) { printWarning("Run not found: " + ts); return; }
                 printSuccess("Restored: " + r.restored() + ", skipped: " + r.skipped() + ", errors: " + r.errors().size());
                 if (!r.errors().isEmpty()) { printErr("Errors during undo:"); r.errors().forEach(e -> println("  - " + e)); }
@@ -267,7 +283,7 @@ public class FileOrganizationExecutor {
         }
 
         printInfo("Undoing last run...");
-        var r = io.neatify.cli.core.UndoExecutor.undoLast(config.getSourceDir());
+        RunJournal.UndoResult r = runJournal.undoLast(config.getSourceDir());
         if (r == null) { printWarning("No previous run found in the journal."); return; }
         printSuccess("Restored: " + r.restored() + ", skipped: " + r.skipped() + ", errors: " + r.errors().size());
         if (!r.errors().isEmpty()) { printErr("Errors during undo:"); r.errors().forEach(e -> println("  - " + e)); }

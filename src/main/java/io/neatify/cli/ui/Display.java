@@ -1,18 +1,14 @@
 package io.neatify.cli.ui;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Scanner;
-
 import io.neatify.cli.AppInfo;
 
 /**
  * Lightweight console display utility.
- * Provides banner, formatted outputs and user input helpers.
+ * Provides banner and formatted output helpers. Interactive input lives in {@link Console}.
  */
 public final class Display {
 
     public static final int LINE_WIDTH = 63;
-    private static final Scanner scanner = new Scanner(System.in, StandardCharsets.UTF_8);
 
     private Display() {
         // Utility class
@@ -85,9 +81,9 @@ public final class Display {
      * Unicode banner encoded with sequences, with ASCII fallback.
      * Respects env override NEATIFY_FORCE_UNICODE=true to force Unicode rendering.
      */
-    public static void printBannerSafe(AppInfo appInfo) {
+    public static void printBannerSafe(AppInfo appInfo, Theme theme) {
         println();
-        if (io.neatify.cli.util.AsciiSymbols.useUnicode()) {
+        if (theme.unicode()) {
             String title = appInfo.name() + " - v" + appInfo.version();
             String desc = appInfo.description();
             int inner = Math.max(title.length(), desc.length());
@@ -130,27 +126,6 @@ public final class Display {
         println(String.format("  Skipped            : %-15d", skipped));
         println(String.format("  Errors             : %-15d", errors));
         println("-".repeat(LINE_WIDTH));
-    }
-
-    // ============ User input ============
-
-    public static String readInput(String prompt) {
-        return readInput(prompt, null);
-    }
-
-    public static String readInput(String prompt, String defaultValue) {
-        String fullPrompt = defaultValue != null && !defaultValue.isEmpty()
-            ? prompt + " [" + defaultValue + "]: "
-            : prompt + ": ";
-
-        print(fullPrompt);
-        String input = scanner.nextLine().trim();
-        return input.isEmpty() && defaultValue != null ? defaultValue : input;
-    }
-
-    public static void waitForEnter() {
-        print("\nPress Enter to continue...");
-        scanner.nextLine();
     }
 
     // Centers text inside a fixed width using spaces (no ANSI/unicode), returns exactly width chars

@@ -5,11 +5,9 @@ import java.util.List;
 
 import io.neatify.TestHelper;
 import io.neatify.cli.ui.Preview;
-import io.neatify.cli.util.Ansi;
-import io.neatify.cli.util.AsciiSymbols;
+import io.neatify.cli.ui.Theme;
 import io.neatify.core.contract.FileMover;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -20,16 +18,15 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class PreviewRendererTest extends TestHelper {
 
-    @BeforeEach
-    void setUp() {
-        Ansi.setEnabled(false);
-        AsciiSymbols.setUseUnicode(false);
+    /** Deterministic plain output (no ANSI color, ASCII symbols). */
+    private Preview.Config plainConfig() {
+        return new Preview.Config().theme(Theme.plain());
     }
 
     @Test
     void testRender_EmptyActions() {
         List<FileMover.Action> actions = List.of();
-        Preview.Config config = new Preview.Config();
+        Preview.Config config = plainConfig();
 
         List<String> lines = Preview.render(actions, config);
 
@@ -43,7 +40,7 @@ class PreviewRendererTest extends TestHelper {
         FileMover.Action action = createAction(source, target);
 
         List<FileMover.Action> actions = List.of(action);
-        Preview.Config config = new Preview.Config();
+        Preview.Config config = plainConfig();
 
         List<String> lines = Preview.render(actions, config);
 
@@ -66,7 +63,7 @@ class PreviewRendererTest extends TestHelper {
             )
         );
 
-        Preview.Config config = new Preview.Config();
+        Preview.Config config = plainConfig();
         List<String> lines = Preview.render(actions, config);
 
         String output = String.join("\n", lines);
@@ -90,7 +87,7 @@ class PreviewRendererTest extends TestHelper {
             createAction(sub3.resolve("photo.jpg"), imagesDir.resolve("photo.jpg"))
         );
 
-        Preview.Config config = new Preview.Config().showDuplicates(true);
+        Preview.Config config = plainConfig().showDuplicates(true);
         List<String> lines = Preview.render(actions, config);
 
         String output = String.join("\n", lines);

@@ -5,8 +5,6 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import io.neatify.cli.util.Ansi;
-import io.neatify.cli.util.AsciiSymbols;
 import io.neatify.core.FileMetadata;
 import io.neatify.core.contract.FileMover;
 
@@ -32,10 +30,12 @@ public final class Preview {
         private int maxFilesPerFolder = 5;
         private SortMode sortMode = SortMode.ALPHA;
         private boolean showDuplicates = true;
+        private Theme theme = new Theme(DisplayOptions.detect());
 
         public Config maxFilesPerFolder(int value) { this.maxFilesPerFolder = value; return this; }
         public Config sortMode(SortMode mode) { this.sortMode = mode; return this; }
         public Config showDuplicates(boolean value) { this.showDuplicates = value; return this; }
+        public Config theme(Theme value) { this.theme = value; return this; }
     }
 
     /** File entry with metadata for display. */
@@ -157,10 +157,11 @@ public final class Preview {
     private static List<String> renderFolderGroup(FolderGroup group, Config config) {
         List<String> lines = new ArrayList<>();
 
+        Theme theme = config.theme;
         int totalFiles = group.files.stream().mapToInt(FileEntry::count).sum();
         String header = String.format("%s %s/  (%d file%s)",
-            Ansi.cyan(AsciiSymbols.arrow()),
-            Ansi.cyan(group.folderName),
+            theme.cyan(theme.arrow()),
+            theme.cyan(group.folderName),
             totalFiles,
             totalFiles > 1 ? "s" : ""
         );
@@ -170,24 +171,24 @@ public final class Preview {
         int maxShow = Math.min(config.maxFilesPerFolder, group.files.size());
         for (int i = 0; i < maxShow; i++) {
             FileEntry entry = group.files.get(i);
-            lines.add(formatFileEntry(entry, config.showDuplicates));
+            lines.add(formatFileEntry(entry, config.showDuplicates, theme));
         }
 
         if (group.files.size() > maxShow) {
             int remaining = group.files.size() - maxShow;
-            lines.add(Ansi.dim(String.format("  %s %d more...", AsciiSymbols.plus(), remaining)));
+            lines.add(theme.dim(String.format("  %s %d more...", theme.plus(), remaining)));
         }
 
         return lines;
     }
 
     /** Formats a file entry. */
-    private static String formatFileEntry(FileEntry entry, boolean showDuplicates) {
+    private static String formatFileEntry(FileEntry entry, boolean showDuplicates, Theme theme) {
         StringBuilder sb = new StringBuilder();
-        sb.append("  ").append(Ansi.dim(AsciiSymbols.bullet())).append(" ");
+        sb.append("  ").append(theme.dim(theme.bullet())).append(" ");
         sb.append(entry.name);
         if (showDuplicates && entry.count > 1) {
-            sb.append(" ").append(Ansi.yellow(AsciiSymbols.times() + entry.count));
+            sb.append(" ").append(theme.yellow(theme.times() + entry.count));
         }
         return sb.toString();
     }
