@@ -16,9 +16,9 @@
         <neatify.buildDirectory>${project.basedir}/target</neatify.buildDirectory>
 
         <!-- Dependencies -->
-        <junit.version>6.1.0</junit.version>
-        <slf4j.version>2.0.17</slf4j.version>
-        <logback.version>1.5.37</logback.version>
+        <junit.version>6.1.2</junit.version>
+        <slf4j.version>2.0.18</slf4j.version>
+        <logback.version>1.5.38</logback.version>
         <gson.version>2.14.0</gson.version>
 
         <!-- Plugins -->
@@ -27,15 +27,15 @@
         <maven-shade-plugin.version>3.6.2</maven-shade-plugin.version>
         <maven-surefire-plugin.version>3.5.6</maven-surefire-plugin.version>
         <exec-maven-plugin.version>3.6.3</exec-maven-plugin.version>
-        <spotbugs-maven-plugin.version>4.10.2.0</spotbugs-maven-plugin.version>
-        <spotbugs.version>4.10.2</spotbugs.version>
+        <spotbugs-maven-plugin.version>4.10.3.0</spotbugs-maven-plugin.version>
+        <spotbugs.version>4.10.3</spotbugs.version>
         <maven-pmd-plugin.version>3.28.0</maven-pmd-plugin.version>
         <jacoco-maven-plugin.version>0.8.15</jacoco-maven-plugin.version>
         <maven-enforcer-plugin.version>3.6.3</maven-enforcer-plugin.version>
-        <spotless-maven-plugin.version>3.7.0</spotless-maven-plugin.version>
+        <spotless-maven-plugin.version>3.8.0</spotless-maven-plugin.version>
         <versions-maven-plugin.version>2.21.0</versions-maven-plugin.version>
         <dependency-check-maven.version>12.2.2</dependency-check-maven.version>
-        <maven-javadoc-plugin.version>3.11.2</maven-javadoc-plugin.version>
+        <maven-javadoc-plugin.version>3.12.0</maven-javadoc-plugin.version>
     </properties>
 
     <dependencies>
