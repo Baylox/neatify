@@ -1,79 +1,122 @@
 <svg width="1200" height="460" viewBox="0 0 1200 460" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Animated demo — neatify sorts loose files into category folders">
   <style>
-    .file { animation: 12s cubic-bezier(.55,0,.25,1) infinite; }
+    /* ambient */
+    .aur1 { animation: aurA 17s ease-in-out infinite alternate; }
+    .aur2 { animation: aurB 22s ease-in-out infinite alternate; }
+    .cursor { animation: blink 1.2s step-end infinite; }
+
+    /* file cards: lift, arc across, shrink into their row, respawn */
+    .file { transform-box: fill-box; transform-origin: center; animation: 12s cubic-bezier(.55,0,.25,1) infinite; }
     .f1 { animation-name: fly1; }
     .f2 { animation-name: fly2; }
     .f3 { animation-name: fly3; }
     .f4 { animation-name: fly4; }
     .f5 { animation-name: fly5; }
-    .arr { animation: 12s ease-in-out infinite; }
+
+    /* folder rows catch with a squash-and-stretch bounce */
+    .row { transform-box: fill-box; transform-origin: center; animation: 12s ease-in-out infinite; }
+    .row.r1 { animation-name: row1; }
+    .row.r2 { animation-name: row2; }
+    .row.r3 { animation-name: row3; }
+    .row.r4 { animation-name: row4; }
+    .row.r5 { animation-name: row5; }
+
+    /* filed entry pops in */
+    .arr { transform-box: fill-box; transform-origin: center; animation: 12s ease-in-out infinite; }
     .a1 { animation-name: arr1; }
     .a2 { animation-name: arr2; }
     .a3 { animation-name: arr3; }
     .a4 { animation-name: arr4; }
     .a5 { animation-name: arr5; }
+
     .rowglow { animation: 12s ease-in-out infinite; }
     .g1 { animation-name: glow1; }
     .g2 { animation-name: glow2; }
     .g3 { animation-name: glow3; }
     .g4 { animation-name: glow4; }
     .g5 { animation-name: glow5; }
-    .cursor { animation: blink 1.2s step-end infinite; }
+
+    /* sparkle pings on catch */
+    .sprk { transform-box: fill-box; transform-origin: center; opacity: 0; animation: 12s ease-in-out infinite; }
+    .sprk.k1 { animation-name: ping1; }
+    .sprk.k2 { animation-name: ping2; }
+    .sprk.k3 { animation-name: ping3; }
+    .sprk.k4 { animation-name: ping4; }
+    .sprk.k5 { animation-name: ping5; }
+
+    @keyframes aurA { from { transform: translate(0,0); opacity: .55; } to { transform: translate(-28px,14px); opacity: .95; } }
+    @keyframes aurB { from { transform: translate(0,0); opacity: .5; } to { transform: translate(24px,-16px); opacity: .9; } }
+    @keyframes blink { 0%, 100% { opacity: 1; fill-opacity: 1; } 50% { opacity: 0; fill-opacity: 0; } }
 
     @keyframes fly1 {
-      0%, 8% { transform: translate(0,0); opacity: 1; }
-      13% { opacity: 1; }
-      16% { transform: translate(584px,-4px); opacity: 0; }
-      84% { transform: translate(584px,-4px); opacity: 0; }
-      85%, 88% { transform: translate(0,0); opacity: 0; }
-      94%, 100% { transform: translate(0,0); opacity: 1; }
+      0%, 8% { transform: translate(0,0) scale(1); opacity: 1; }
+      10% { transform: translate(3px,-6px) scale(1.02); opacity: 1; animation-timing-function: cubic-bezier(.3,0,.7,.4); }
+      13% { transform: translate(350px,-20px) scale(1); opacity: 1; animation-timing-function: cubic-bezier(.3,.6,.4,1); }
+      16% { transform: translate(584px,-4px) scale(.88); opacity: 0; }
+      84% { transform: translate(584px,-4px) scale(.88); opacity: 0; }
+      85%, 88% { transform: translate(0,12px) scale(1); opacity: 0; }
+      94%, 100% { transform: translate(0,0) scale(1); opacity: 1; }
     }
     @keyframes fly2 {
-      0%, 14% { transform: translate(0,0); opacity: 1; }
-      19% { opacity: 1; }
-      22% { transform: translate(560px,6px); opacity: 0; }
-      84% { transform: translate(560px,6px); opacity: 0; }
-      85%, 88% { transform: translate(0,0); opacity: 0; }
-      94%, 100% { transform: translate(0,0); opacity: 1; }
+      0%, 14% { transform: translate(0,0) scale(1); opacity: 1; }
+      16% { transform: translate(3px,-6px) scale(1.02); opacity: 1; animation-timing-function: cubic-bezier(.3,0,.7,.4); }
+      19% { transform: translate(336px,-15px) scale(1); opacity: 1; animation-timing-function: cubic-bezier(.3,.6,.4,1); }
+      22% { transform: translate(560px,6px) scale(.88); opacity: 0; }
+      85% { transform: translate(560px,6px) scale(.88); opacity: 0; }
+      86%, 89% { transform: translate(0,12px) scale(1); opacity: 0; }
+      95%, 100% { transform: translate(0,0) scale(1); opacity: 1; }
     }
     @keyframes fly3 {
-      0%, 20% { transform: translate(0,0); opacity: 1; }
-      25% { opacity: 1; }
-      28% { transform: translate(592px,-6px); opacity: 0; }
-      84% { transform: translate(592px,-6px); opacity: 0; }
-      85%, 88% { transform: translate(0,0); opacity: 0; }
-      94%, 100% { transform: translate(0,0); opacity: 1; }
+      0%, 20% { transform: translate(0,0) scale(1); opacity: 1; }
+      22% { transform: translate(3px,-6px) scale(1.02); opacity: 1; animation-timing-function: cubic-bezier(.3,0,.7,.4); }
+      25% { transform: translate(355px,-21px) scale(1); opacity: 1; animation-timing-function: cubic-bezier(.3,.6,.4,1); }
+      28% { transform: translate(592px,-6px) scale(.88); opacity: 0; }
+      86% { transform: translate(592px,-6px) scale(.88); opacity: 0; }
+      87%, 90% { transform: translate(0,12px) scale(1); opacity: 0; }
+      96%, 100% { transform: translate(0,0) scale(1); opacity: 1; }
     }
     @keyframes fly4 {
-      0%, 26% { transform: translate(0,0); opacity: 1; }
-      31% { opacity: 1; }
-      34% { transform: translate(552px,4px); opacity: 0; }
-      84% { transform: translate(552px,4px); opacity: 0; }
-      85%, 88% { transform: translate(0,0); opacity: 0; }
-      94%, 100% { transform: translate(0,0); opacity: 1; }
+      0%, 26% { transform: translate(0,0) scale(1); opacity: 1; }
+      28% { transform: translate(3px,-6px) scale(1.02); opacity: 1; animation-timing-function: cubic-bezier(.3,0,.7,.4); }
+      31% { transform: translate(331px,-16px) scale(1); opacity: 1; animation-timing-function: cubic-bezier(.3,.6,.4,1); }
+      34% { transform: translate(552px,4px) scale(.88); opacity: 0; }
+      87% { transform: translate(552px,4px) scale(.88); opacity: 0; }
+      88%, 91% { transform: translate(0,12px) scale(1); opacity: 0; }
+      97%, 100% { transform: translate(0,0) scale(1); opacity: 1; }
     }
     @keyframes fly5 {
-      0%, 32% { transform: translate(0,0); opacity: 1; }
-      37% { opacity: 1; }
-      40% { transform: translate(576px,-5px); opacity: 0; }
-      84% { transform: translate(576px,-5px); opacity: 0; }
-      85%, 88% { transform: translate(0,0); opacity: 0; }
-      94%, 100% { transform: translate(0,0); opacity: 1; }
+      0%, 32% { transform: translate(0,0) scale(1); opacity: 1; }
+      34% { transform: translate(3px,-6px) scale(1.02); opacity: 1; animation-timing-function: cubic-bezier(.3,0,.7,.4); }
+      37% { transform: translate(346px,-20px) scale(1); opacity: 1; animation-timing-function: cubic-bezier(.3,.6,.4,1); }
+      40% { transform: translate(576px,-5px) scale(.88); opacity: 0; }
+      88% { transform: translate(576px,-5px) scale(.88); opacity: 0; }
+      89%, 92% { transform: translate(0,12px) scale(1); opacity: 0; }
+      98%, 100% { transform: translate(0,0) scale(1); opacity: 1; }
     }
 
-    @keyframes arr1 { 0%, 15% { opacity: 0; } 18%, 80% { opacity: 1; } 88%, 100% { opacity: 0; } }
-    @keyframes arr2 { 0%, 21% { opacity: 0; } 24%, 80% { opacity: 1; } 88%, 100% { opacity: 0; } }
-    @keyframes arr3 { 0%, 27% { opacity: 0; } 30%, 80% { opacity: 1; } 88%, 100% { opacity: 0; } }
-    @keyframes arr4 { 0%, 33% { opacity: 0; } 36%, 80% { opacity: 1; } 88%, 100% { opacity: 0; } }
-    @keyframes arr5 { 0%, 39% { opacity: 0; } 42%, 80% { opacity: 1; } 88%, 100% { opacity: 0; } }
+    @keyframes row1 { 0%, 15.5% { transform: scale(1,1); } 17% { transform: scale(1.02,.93); } 18.5% { transform: scale(.995,1.01); } 19.5%, 100% { transform: scale(1,1); } }
+    @keyframes row2 { 0%, 21.5% { transform: scale(1,1); } 23% { transform: scale(1.02,.93); } 24.5% { transform: scale(.995,1.01); } 25.5%, 100% { transform: scale(1,1); } }
+    @keyframes row3 { 0%, 27.5% { transform: scale(1,1); } 29% { transform: scale(1.02,.93); } 30.5% { transform: scale(.995,1.01); } 31.5%, 100% { transform: scale(1,1); } }
+    @keyframes row4 { 0%, 33.5% { transform: scale(1,1); } 35% { transform: scale(1.02,.93); } 36.5% { transform: scale(.995,1.01); } 37.5%, 100% { transform: scale(1,1); } }
+    @keyframes row5 { 0%, 39.5% { transform: scale(1,1); } 41% { transform: scale(1.02,.93); } 42.5% { transform: scale(.995,1.01); } 43.5%, 100% { transform: scale(1,1); } }
 
-    @keyframes glow1 { 0%, 15% { opacity: 0; } 17% { opacity: 0.12; } 22%, 100% { opacity: 0; } }
-    @keyframes glow2 { 0%, 21% { opacity: 0; } 23% { opacity: 0.12; } 28%, 100% { opacity: 0; } }
-    @keyframes glow3 { 0%, 27% { opacity: 0; } 29% { opacity: 0.12; } 34%, 100% { opacity: 0; } }
-    @keyframes glow4 { 0%, 33% { opacity: 0; } 35% { opacity: 0.12; } 40%, 100% { opacity: 0; } }
-    @keyframes glow5 { 0%, 39% { opacity: 0; } 41% { opacity: 0.12; } 46%, 100% { opacity: 0; } }
+    @keyframes arr1 { 0%, 15% { opacity: 0; transform: scale(.6); } 17.5% { opacity: 1; transform: scale(1.06); } 19% { transform: scale(1); } 80% { opacity: 1; transform: scale(1); } 88%, 100% { opacity: 0; transform: scale(1); } }
+    @keyframes arr2 { 0%, 21% { opacity: 0; transform: scale(.6); } 23.5% { opacity: 1; transform: scale(1.06); } 25% { transform: scale(1); } 80% { opacity: 1; transform: scale(1); } 88%, 100% { opacity: 0; transform: scale(1); } }
+    @keyframes arr3 { 0%, 27% { opacity: 0; transform: scale(.6); } 29.5% { opacity: 1; transform: scale(1.06); } 31% { transform: scale(1); } 80% { opacity: 1; transform: scale(1); } 88%, 100% { opacity: 0; transform: scale(1); } }
+    @keyframes arr4 { 0%, 33% { opacity: 0; transform: scale(.6); } 35.5% { opacity: 1; transform: scale(1.06); } 37% { transform: scale(1); } 80% { opacity: 1; transform: scale(1); } 88%, 100% { opacity: 0; transform: scale(1); } }
+    @keyframes arr5 { 0%, 39% { opacity: 0; transform: scale(.6); } 41.5% { opacity: 1; transform: scale(1.06); } 43% { transform: scale(1); } 80% { opacity: 1; transform: scale(1); } 88%, 100% { opacity: 0; transform: scale(1); } }
 
-    @keyframes blink { 0%, 100% { opacity: 1; fill-opacity: 1; } 50% { opacity: 0; fill-opacity: 0; } }
+    @keyframes glow1 { 0%, 15.5% { opacity: 0; } 17% { opacity: 0.14; } 21%, 100% { opacity: 0; } }
+    @keyframes glow2 { 0%, 21.5% { opacity: 0; } 23% { opacity: 0.14; } 27%, 100% { opacity: 0; } }
+    @keyframes glow3 { 0%, 27.5% { opacity: 0; } 29% { opacity: 0.14; } 33%, 100% { opacity: 0; } }
+    @keyframes glow4 { 0%, 33.5% { opacity: 0; } 35% { opacity: 0.14; } 39%, 100% { opacity: 0; } }
+    @keyframes glow5 { 0%, 39.5% { opacity: 0; } 41% { opacity: 0.14; } 45%, 100% { opacity: 0; } }
+
+    @keyframes ping1 { 0%, 15.5% { transform: scale(0) rotate(0deg); opacity: 0; } 17% { transform: scale(1) rotate(45deg); opacity: .9; } 19.5%, 100% { transform: scale(0) rotate(90deg); opacity: 0; } }
+    @keyframes ping2 { 0%, 21.5% { transform: scale(0) rotate(0deg); opacity: 0; } 23% { transform: scale(1) rotate(45deg); opacity: .9; } 25.5%, 100% { transform: scale(0) rotate(90deg); opacity: 0; } }
+    @keyframes ping3 { 0%, 27.5% { transform: scale(0) rotate(0deg); opacity: 0; } 29% { transform: scale(1) rotate(45deg); opacity: .9; } 31.5%, 100% { transform: scale(0) rotate(90deg); opacity: 0; } }
+    @keyframes ping4 { 0%, 33.5% { transform: scale(0) rotate(0deg); opacity: 0; } 35% { transform: scale(1) rotate(45deg); opacity: .9; } 37.5%, 100% { transform: scale(0) rotate(90deg); opacity: 0; } }
+    @keyframes ping5 { 0%, 39.5% { transform: scale(0) rotate(0deg); opacity: 0; } 41% { transform: scale(1) rotate(45deg); opacity: .9; } 43.5%, 100% { transform: scale(0) rotate(90deg); opacity: 0; } }
 
     @media (prefers-reduced-motion: reduce) {
       * { animation: none !important; }
@@ -85,14 +128,34 @@
       <stop offset="0.55" stop-color="#111c33"/>
       <stop offset="1" stop-color="#1e293b"/>
     </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#38bdf8"/>
+      <stop offset="1" stop-color="#818cf8"/>
+    </linearGradient>
+    <radialGradient id="auraSky" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#38bdf8" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#38bdf8" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="auraIndigo" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#818cf8" stop-opacity="0.1"/>
+      <stop offset="1" stop-color="#818cf8" stop-opacity="0"/>
+    </radialGradient>
     <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
       <feDropShadow dx="0" dy="5" stdDeviation="8" flood-color="#0ea5e9" flood-opacity="0.18"/>
     </filter>
     <path id="fold" d="M2 6 a2.5 2.5 0 0 1 2.5 -2.5 h5 l2.5 3 h7.5 a2.5 2.5 0 0 1 2.5 2.5 v8.5 a2.5 2.5 0 0 1 -2.5 2.5 h-15 a2.5 2.5 0 0 1 -2.5 -2.5 Z" fill="#38bdf8" opacity="0.9"/>
+    <path id="star" d="M0 -7 L1.8 -1.8 L7 0 L1.8 1.8 L0 7 L-1.8 1.8 L-7 0 L-1.8 -1.8 Z"/>
   </defs>
 
   <!-- background -->
   <rect width="1200" height="460" rx="24" fill="url(#bg)"/>
+
+  <!-- ambient aurora glows -->
+  <ellipse class="aur1" cx="950" cy="40" rx="320" ry="150" fill="url(#auraSky)"/>
+  <ellipse class="aur2" cx="180" cy="440" rx="300" ry="160" fill="url(#auraIndigo)"/>
+
+  <!-- hairline frame -->
+  <rect x="0.5" y="0.5" width="1199" height="459" rx="23.5" stroke="url(#accent)" stroke-opacity="0.18"/>
 
   <!-- command line -->
   <text x="80" y="66" font-family="'JetBrains Mono', 'Consolas', monospace" font-size="18" fill="#64748b"><tspan fill="#34d399">$</tspan> <tspan fill="#e2e8f0">neatify</tspan> --source ~/Downloads --use-default-rules <tspan fill="#7dd3fc">--apply</tspan> <tspan class="cursor" fill="#38bdf8">█</tspan></text>
@@ -100,54 +163,69 @@
   <!-- category folders (right) -->
   <g filter="url(#soft)" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
     <g transform="translate(660, 112)">
-      <rect width="460" height="52" rx="12" fill="#111c33" stroke="#26334d"/>
-      <use href="#fold" transform="translate(16, 17)"/>
-      <text x="50" y="33" font-size="17" font-weight="600" fill="#f8fafc">Documents/</text>
-      <g class="arr a1" opacity="0">
-        <rect x="240" y="20" width="12" height="12" rx="3" fill="#38bdf8"/>
-        <text x="260" y="32" font-family="'JetBrains Mono', 'Consolas', monospace" font-size="14.5" fill="#94a3b8">report.pdf</text>
+      <g class="row r1">
+        <rect width="460" height="52" rx="12" fill="#111c33" stroke="#26334d"/>
+        <use href="#fold" transform="translate(16, 17)"/>
+        <text x="50" y="33" font-size="17" font-weight="600" fill="#f8fafc">Documents/</text>
+        <g class="arr a1" opacity="0">
+          <rect x="240" y="20" width="12" height="12" rx="3" fill="#38bdf8"/>
+          <text x="260" y="32" font-family="'JetBrains Mono', 'Consolas', monospace" font-size="14.5" fill="#94a3b8">report.pdf</text>
+        </g>
+        <rect class="rowglow g1" width="460" height="52" rx="12" fill="#38bdf8" opacity="0"/>
+        <use class="sprk k1" href="#star" x="30" y="6" fill="#38bdf8"/>
       </g>
-      <rect class="rowglow g1" width="460" height="52" rx="12" fill="#38bdf8" opacity="0"/>
     </g>
     <g transform="translate(660, 176)">
-      <rect width="460" height="52" rx="12" fill="#111c33" stroke="#26334d"/>
-      <use href="#fold" transform="translate(16, 17)"/>
-      <text x="50" y="33" font-size="17" font-weight="600" fill="#f8fafc">Images/</text>
-      <g class="arr a2" opacity="0">
-        <rect x="240" y="20" width="12" height="12" rx="3" fill="#f472b6"/>
-        <text x="260" y="32" font-family="'JetBrains Mono', 'Consolas', monospace" font-size="14.5" fill="#94a3b8">photo.png</text>
+      <g class="row r2">
+        <rect width="460" height="52" rx="12" fill="#111c33" stroke="#26334d"/>
+        <use href="#fold" transform="translate(16, 17)"/>
+        <text x="50" y="33" font-size="17" font-weight="600" fill="#f8fafc">Images/</text>
+        <g class="arr a2" opacity="0">
+          <rect x="240" y="20" width="12" height="12" rx="3" fill="#f472b6"/>
+          <text x="260" y="32" font-family="'JetBrains Mono', 'Consolas', monospace" font-size="14.5" fill="#94a3b8">photo.png</text>
+        </g>
+        <rect class="rowglow g2" width="460" height="52" rx="12" fill="#38bdf8" opacity="0"/>
+        <use class="sprk k2" href="#star" x="30" y="6" fill="#f472b6"/>
       </g>
-      <rect class="rowglow g2" width="460" height="52" rx="12" fill="#38bdf8" opacity="0"/>
     </g>
     <g transform="translate(660, 240)">
-      <rect width="460" height="52" rx="12" fill="#111c33" stroke="#26334d"/>
-      <use href="#fold" transform="translate(16, 17)"/>
-      <text x="50" y="33" font-size="17" font-weight="600" fill="#f8fafc">Music/</text>
-      <g class="arr a3" opacity="0">
-        <rect x="240" y="20" width="12" height="12" rx="3" fill="#34d399"/>
-        <text x="260" y="32" font-family="'JetBrains Mono', 'Consolas', monospace" font-size="14.5" fill="#94a3b8">song.mp3</text>
+      <g class="row r3">
+        <rect width="460" height="52" rx="12" fill="#111c33" stroke="#26334d"/>
+        <use href="#fold" transform="translate(16, 17)"/>
+        <text x="50" y="33" font-size="17" font-weight="600" fill="#f8fafc">Music/</text>
+        <g class="arr a3" opacity="0">
+          <rect x="240" y="20" width="12" height="12" rx="3" fill="#34d399"/>
+          <text x="260" y="32" font-family="'JetBrains Mono', 'Consolas', monospace" font-size="14.5" fill="#94a3b8">song.mp3</text>
+        </g>
+        <rect class="rowglow g3" width="460" height="52" rx="12" fill="#38bdf8" opacity="0"/>
+        <use class="sprk k3" href="#star" x="30" y="6" fill="#34d399"/>
       </g>
-      <rect class="rowglow g3" width="460" height="52" rx="12" fill="#38bdf8" opacity="0"/>
     </g>
     <g transform="translate(660, 304)">
-      <rect width="460" height="52" rx="12" fill="#111c33" stroke="#26334d"/>
-      <use href="#fold" transform="translate(16, 17)"/>
-      <text x="50" y="33" font-size="17" font-weight="600" fill="#f8fafc">Videos/</text>
-      <g class="arr a4" opacity="0">
-        <rect x="240" y="20" width="12" height="12" rx="3" fill="#818cf8"/>
-        <text x="260" y="32" font-family="'JetBrains Mono', 'Consolas', monospace" font-size="14.5" fill="#94a3b8">movie.mkv</text>
+      <g class="row r4">
+        <rect width="460" height="52" rx="12" fill="#111c33" stroke="#26334d"/>
+        <use href="#fold" transform="translate(16, 17)"/>
+        <text x="50" y="33" font-size="17" font-weight="600" fill="#f8fafc">Videos/</text>
+        <g class="arr a4" opacity="0">
+          <rect x="240" y="20" width="12" height="12" rx="3" fill="#818cf8"/>
+          <text x="260" y="32" font-family="'JetBrains Mono', 'Consolas', monospace" font-size="14.5" fill="#94a3b8">movie.mkv</text>
+        </g>
+        <rect class="rowglow g4" width="460" height="52" rx="12" fill="#38bdf8" opacity="0"/>
+        <use class="sprk k4" href="#star" x="30" y="6" fill="#818cf8"/>
       </g>
-      <rect class="rowglow g4" width="460" height="52" rx="12" fill="#38bdf8" opacity="0"/>
     </g>
     <g transform="translate(660, 368)">
-      <rect width="460" height="52" rx="12" fill="#111c33" stroke="#26334d"/>
-      <use href="#fold" transform="translate(16, 17)"/>
-      <text x="50" y="33" font-size="17" font-weight="600" fill="#f8fafc">Archives/</text>
-      <g class="arr a5" opacity="0">
-        <rect x="240" y="20" width="12" height="12" rx="3" fill="#fbbf24"/>
-        <text x="260" y="32" font-family="'JetBrains Mono', 'Consolas', monospace" font-size="14.5" fill="#94a3b8">archive.zip</text>
+      <g class="row r5">
+        <rect width="460" height="52" rx="12" fill="#111c33" stroke="#26334d"/>
+        <use href="#fold" transform="translate(16, 17)"/>
+        <text x="50" y="33" font-size="17" font-weight="600" fill="#f8fafc">Archives/</text>
+        <g class="arr a5" opacity="0">
+          <rect x="240" y="20" width="12" height="12" rx="3" fill="#fbbf24"/>
+          <text x="260" y="32" font-family="'JetBrains Mono', 'Consolas', monospace" font-size="14.5" fill="#94a3b8">archive.zip</text>
+        </g>
+        <rect class="rowglow g5" width="460" height="52" rx="12" fill="#38bdf8" opacity="0"/>
+        <use class="sprk k5" href="#star" x="30" y="6" fill="#fbbf24"/>
       </g>
-      <rect class="rowglow g5" width="460" height="52" rx="12" fill="#38bdf8" opacity="0"/>
     </g>
   </g>
 
