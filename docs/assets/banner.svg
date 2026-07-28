@@ -1,4 +1,31 @@
 <svg width="1200" height="320" viewBox="0 0 1200 320" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="neatify — automatic file organization">
+  <style>
+    .dots { animation: pulse 6s ease-in-out infinite; }
+    .card { animation: drift 7s ease-in-out infinite; }
+    .card.c2 { animation-delay: -2.3s; }
+    .card.c3 { animation-delay: -4.6s; }
+    .flow { stroke-dasharray: 6 10; animation: flow 1.8s linear infinite; }
+    .glow { animation: glow 7s ease-in-out infinite; }
+    @keyframes drift {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(7px, -3px); }
+    }
+    @keyframes flow {
+      from { stroke-dashoffset: 32; }
+      to { stroke-dashoffset: 0; }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.35; }
+      50% { opacity: 0.18; }
+    }
+    @keyframes glow {
+      0%, 100% { opacity: 0.12; }
+      50% { opacity: 0.3; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; }
+    }
+  </style>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="320" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#0f172a"/>
@@ -8,10 +35,6 @@
     <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#38bdf8"/>
       <stop offset="1" stop-color="#818cf8"/>
-    </linearGradient>
-    <linearGradient id="folderTop" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#38bdf8"/>
-      <stop offset="1" stop-color="#0ea5e9"/>
     </linearGradient>
     <linearGradient id="folderBody" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#7dd3fc"/>
@@ -26,7 +49,7 @@
   <rect width="1200" height="320" rx="24" fill="url(#bg)"/>
 
   <!-- subtle dotted grid -->
-  <g fill="#334155" opacity="0.35">
+  <g class="dots" fill="#334155" opacity="0.35">
     <circle cx="90" cy="60" r="2"/><circle cx="150" cy="60" r="2"/><circle cx="210" cy="60" r="2"/>
     <circle cx="90" cy="120" r="2"/><circle cx="150" cy="120" r="2"/><circle cx="210" cy="120" r="2"/>
     <circle cx="1050" cy="250" r="2"/><circle cx="1110" cy="250" r="2"/><circle cx="990" cy="250" r="2"/>
@@ -49,36 +72,41 @@
     <!-- folder -->
     <g transform="translate(905, 96)">
       <path d="M8 28 a12 12 0 0 1 12 -12 h54 l16 18 h78 a12 12 0 0 1 12 12 v92 a12 12 0 0 1 -12 12 H20 a12 12 0 0 1 -12 -12 Z" fill="url(#folderBody)"/>
-      <path d="M8 40 a12 12 0 0 1 12 -12 h160 a12 12 0 0 1 12 12 v8 H8 Z" fill="url(#folderTop)" opacity="0.0"/>
       <rect x="8" y="44" width="192" height="96" rx="12" fill="#0ea5e9"/>
-      <rect x="8" y="44" width="192" height="96" rx="12" fill="#38bdf8" opacity="0.15"/>
+      <rect class="glow" x="8" y="44" width="192" height="96" rx="12" fill="#38bdf8" opacity="0.12"/>
     </g>
 
     <!-- incoming file cards -->
     <g transform="translate(690, 70)">
-      <rect x="0" y="0" width="120" height="44" rx="10" fill="#1e293b" stroke="#334155"/>
-      <rect x="14" y="14" width="16" height="16" rx="3" fill="#f472b6"/>
-      <rect x="42" y="15" width="62" height="6" rx="3" fill="#475569"/>
-      <rect x="42" y="27" width="40" height="6" rx="3" fill="#334155"/>
+      <g class="card c1">
+        <rect x="0" y="0" width="120" height="44" rx="10" fill="#1e293b" stroke="#334155"/>
+        <rect x="14" y="14" width="16" height="16" rx="3" fill="#f472b6"/>
+        <rect x="42" y="15" width="62" height="6" rx="3" fill="#475569"/>
+        <rect x="42" y="27" width="40" height="6" rx="3" fill="#334155"/>
+      </g>
     </g>
     <g transform="translate(710, 132)">
-      <rect x="0" y="0" width="120" height="44" rx="10" fill="#1e293b" stroke="#334155"/>
-      <rect x="14" y="14" width="16" height="16" rx="3" fill="#34d399"/>
-      <rect x="42" y="15" width="62" height="6" rx="3" fill="#475569"/>
-      <rect x="42" y="27" width="40" height="6" rx="3" fill="#334155"/>
+      <g class="card c2">
+        <rect x="0" y="0" width="120" height="44" rx="10" fill="#1e293b" stroke="#334155"/>
+        <rect x="14" y="14" width="16" height="16" rx="3" fill="#34d399"/>
+        <rect x="42" y="15" width="62" height="6" rx="3" fill="#475569"/>
+        <rect x="42" y="27" width="40" height="6" rx="3" fill="#334155"/>
+      </g>
     </g>
     <g transform="translate(688, 194)">
-      <rect x="0" y="0" width="120" height="44" rx="10" fill="#1e293b" stroke="#334155"/>
-      <rect x="14" y="14" width="16" height="16" rx="3" fill="#fbbf24"/>
-      <rect x="42" y="15" width="62" height="6" rx="3" fill="#475569"/>
-      <rect x="42" y="27" width="40" height="6" rx="3" fill="#334155"/>
+      <g class="card c3">
+        <rect x="0" y="0" width="120" height="44" rx="10" fill="#1e293b" stroke="#334155"/>
+        <rect x="14" y="14" width="16" height="16" rx="3" fill="#fbbf24"/>
+        <rect x="42" y="15" width="62" height="6" rx="3" fill="#475569"/>
+        <rect x="42" y="27" width="40" height="6" rx="3" fill="#334155"/>
+      </g>
     </g>
 
     <!-- flow arrows -->
     <g stroke="url(#accent)" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.7">
-      <path d="M816 92 q40 0 70 30"/>
-      <path d="M836 154 h54"/>
-      <path d="M814 216 q44 0 72 -28"/>
+      <path class="flow" d="M816 92 q40 0 70 30"/>
+      <path class="flow" d="M836 154 h54"/>
+      <path class="flow" d="M814 216 q44 0 72 -28"/>
     </g>
   </g>
 </svg>
