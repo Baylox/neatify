@@ -41,8 +41,6 @@ folders, driven by simple extension rules. It **previews changes by default** (d
 **journals every run** so you can undo it, and refuses to touch Git repos or system
 directories.
 
-<img src="docs/assets/demo.svg" alt="Animated demo: loose files being sorted into category folders" width="100%">
-
 **Before** — a messy `~/Downloads`:
 
 ```text

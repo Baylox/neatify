@@ -1,225 +1,72 @@
-<svg width="1200" height="320" viewBox="0 0 1200 320" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="neatify — automatic file organization">
+<svg width="920" height="260" viewBox="0 0 920 260" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="neatify — tidy your folders, safely">
   <style>
-    /* ambient */
-    .aur1 { animation: aurA 16s ease-in-out infinite alternate; }
-    .aur2 { animation: aurB 21s ease-in-out infinite alternate; }
-    .dots circle { animation: tw 4.4s ease-in-out infinite; }
-    .dots circle:nth-child(odd) { animation-delay: -2.2s; }
-    .dots circle:nth-child(3n) { animation-delay: -1.1s; }
-    .dots circle:nth-child(4n) { animation-delay: -3.3s; }
+    text { font-family: ui-sans-serif, system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+    .mono { font-family: 'SF Mono','JetBrains Mono','Cascadia Code', ui-monospace, Consolas, monospace; }
 
-    /* intro (plays once on load; base styles are the final state) */
-    .intro1, .intro2, .intro3 { animation: rise .7s cubic-bezier(.2,.7,.2,1) both; }
-    .intro2 { animation-delay: .12s; }
-    .intro3 { animation-delay: .24s; }
+    /* the emerald node breathes */
+    .node { transform-box: fill-box; transform-origin: center; animation: breathe 3.6s ease-in-out infinite; }
+    .nodeHalo { transform-box: fill-box; transform-origin: center; animation: halo 3.6s ease-in-out infinite; }
+    @keyframes breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.18); } }
+    @keyframes halo { 0%,100% { transform: scale(1); opacity: .18; } 50% { transform: scale(1.5); opacity: .05; } }
 
-    /* wordmark sheen (rect starts outside the clip, so base state is invisible) */
-    .sheen { animation: sweep 9s linear infinite; }
-
-    /* file cards: lift, arc into the folder, fade, respawn */
-    .card { transform-box: fill-box; transform-origin: center; animation: 9s cubic-bezier(.45,.05,.4,1) infinite; }
-    .card.c1 { animation-name: card1; }
-    .card.c2 { animation-name: card2; }
-    .card.c3 { animation-name: card3; }
-
-    /* folder squash-and-stretch on each catch */
-    .fold { transform-box: fill-box; transform-origin: 50% 85%; animation: recv 9s ease-in-out infinite; }
-    .glow { animation: flash 9s ease-in-out infinite; }
-
-    /* sparkle pings */
-    .spark { transform-box: fill-box; transform-origin: center; opacity: 0; animation: 9s ease-in-out infinite; }
-    .spark.s1 { animation-name: ping1; }
-    .spark.s2 { animation-name: ping2; }
-    .spark.s3 { animation-name: ping3; }
-
-    /* flow arrows: constant dash stream, brighter while their card travels */
-    .flow { stroke-dasharray: 6 10; }
-    .flow.p1 { animation: flow 1.8s linear infinite, hot1 9s ease-in-out infinite; }
-    .flow.p2 { animation: flow 1.8s linear infinite, hot2 9s ease-in-out infinite; }
-    .flow.p3 { animation: flow 1.8s linear infinite, hot3 9s ease-in-out infinite; }
-
-    @keyframes aurA { from { transform: translate(0,0); opacity: .55; } to { transform: translate(-30px,16px); opacity: .95; } }
-    @keyframes aurB { from { transform: translate(0,0); opacity: .5; } to { transform: translate(26px,-18px); opacity: .9; } }
-    @keyframes tw { 0%, 100% { opacity: .35; } 50% { opacity: .1; } }
-    @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes sweep { 0%, 58% { transform: translateX(-260px); } 66%, 100% { transform: translateX(820px); } }
-    @keyframes flow { from { stroke-dashoffset: 32; } to { stroke-dashoffset: 0; } }
-
-    @keyframes card1 {
-      0%, 8% { transform: translate(0,0) scale(1); opacity: 1; }
-      11% { transform: translate(2px,-5px) scale(1.02); opacity: 1; animation-timing-function: cubic-bezier(.3,0,.7,.4); }
-      19% { transform: translate(156px,16px) scale(.99); opacity: 1; animation-timing-function: cubic-bezier(.3,.6,.4,1); }
-      26% { transform: translate(252px,60px) scale(.88); opacity: 0; }
-      79.9% { transform: translate(252px,60px) scale(.88); opacity: 0; }
-      80% { transform: translate(0,12px) scale(1); opacity: 0; }
-      88%, 100% { transform: translate(0,0) scale(1); opacity: 1; }
+    /* the "sorted stack": three bars, always visible, gently re-aligning in a wave */
+    .bar { transform-box: fill-box; transform-origin: left center; }
+    .bar1 { animation: nudge 4.6s ease-in-out infinite; }
+    .bar2 { animation: nudge 4.6s ease-in-out .18s infinite; }
+    .bar3 { animation: nudge 4.6s ease-in-out .36s infinite; }
+    @keyframes nudge {
+      0%, 100% { transform: scaleX(1);   opacity: 1; }
+      42%      { transform: scaleX(.78); opacity: .6; }
+      58%      { transform: scaleX(1.04);opacity: 1; }
     }
-    @keyframes card2 {
-      0%, 23% { transform: translate(0,0) scale(1); opacity: 1; }
-      26% { transform: translate(2px,-5px) scale(1.02); opacity: 1; animation-timing-function: cubic-bezier(.3,0,.7,.4); }
-      34% { transform: translate(144px,0px) scale(.99); opacity: 1; animation-timing-function: cubic-bezier(.3,.6,.4,1); }
-      41% { transform: translate(232px,6px) scale(.88); opacity: 0; }
-      82.9% { transform: translate(232px,6px) scale(.88); opacity: 0; }
-      83% { transform: translate(0,12px) scale(1); opacity: 0; }
-      91%, 100% { transform: translate(0,0) scale(1); opacity: 1; }
-    }
-    @keyframes card3 {
-      0%, 38% { transform: translate(0,0) scale(1); opacity: 1; }
-      41% { transform: translate(2px,-5px) scale(1.02); opacity: 1; animation-timing-function: cubic-bezier(.3,0,.7,.4); }
-      49% { transform: translate(158px,-12px) scale(.99); opacity: 1; animation-timing-function: cubic-bezier(.3,.6,.4,1); }
-      56% { transform: translate(254px,-58px) scale(.88); opacity: 0; }
-      85.9% { transform: translate(254px,-58px) scale(.88); opacity: 0; }
-      86% { transform: translate(0,12px) scale(1); opacity: 0; }
-      94%, 100% { transform: translate(0,0) scale(1); opacity: 1; }
-    }
-
-    @keyframes recv {
-      0%, 25.5% { transform: scale(1,1); }
-      27% { transform: scale(1.05,.94); }
-      28.5% { transform: scale(.99,1.01); }
-      29.5%, 40.5% { transform: scale(1,1); }
-      42% { transform: scale(1.05,.94); }
-      43.5% { transform: scale(.99,1.01); }
-      44.5%, 55.5% { transform: scale(1,1); }
-      57% { transform: scale(1.05,.94); }
-      58.5% { transform: scale(.99,1.01); }
-      59.5%, 100% { transform: scale(1,1); }
-    }
-    @keyframes flash {
-      0%, 25% { opacity: .1; }
-      27% { opacity: .45; }
-      31%, 40% { opacity: .1; }
-      42% { opacity: .45; }
-      46%, 55% { opacity: .1; }
-      57% { opacity: .45; }
-      61%, 100% { opacity: .1; }
-    }
-    @keyframes ping1 { 0%, 25% { transform: scale(0) rotate(0deg); opacity: 0; } 26.5% { transform: scale(1) rotate(45deg); opacity: .9; } 29%, 100% { transform: scale(0) rotate(90deg); opacity: 0; } }
-    @keyframes ping2 { 0%, 40% { transform: scale(0) rotate(0deg); opacity: 0; } 41.5% { transform: scale(1) rotate(45deg); opacity: .9; } 44%, 100% { transform: scale(0) rotate(90deg); opacity: 0; } }
-    @keyframes ping3 { 0%, 55% { transform: scale(0) rotate(0deg); opacity: 0; } 56.5% { transform: scale(1) rotate(45deg); opacity: .9; } 59%, 100% { transform: scale(0) rotate(90deg); opacity: 0; } }
-    @keyframes hot1 { 0%, 7% { opacity: .35; } 11% { opacity: .95; } 24% { opacity: .95; } 28%, 100% { opacity: .35; } }
-    @keyframes hot2 { 0%, 22% { opacity: .35; } 26% { opacity: .95; } 39% { opacity: .95; } 43%, 100% { opacity: .35; } }
-    @keyframes hot3 { 0%, 37% { opacity: .35; } 41% { opacity: .95; } 54% { opacity: .95; } 58%, 100% { opacity: .35; } }
 
     @media (prefers-reduced-motion: reduce) {
       * { animation: none !important; }
     }
   </style>
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="320" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#0f172a"/>
-      <stop offset="0.55" stop-color="#111c33"/>
-      <stop offset="1" stop-color="#1e293b"/>
-    </linearGradient>
-    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#38bdf8"/>
-      <stop offset="1" stop-color="#818cf8"/>
-    </linearGradient>
-    <linearGradient id="folderBody" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#7dd3fc"/>
-      <stop offset="1" stop-color="#38bdf8"/>
-    </linearGradient>
-    <radialGradient id="auraSky" cx="0.5" cy="0.5" r="0.5">
-      <stop offset="0" stop-color="#38bdf8" stop-opacity="0.13"/>
-      <stop offset="1" stop-color="#38bdf8" stop-opacity="0"/>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#4ADE80" stop-opacity="0.10"/>
+      <stop offset="1" stop-color="#4ADE80" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="auraIndigo" cx="0.5" cy="0.5" r="0.5">
-      <stop offset="0" stop-color="#818cf8" stop-opacity="0.12"/>
-      <stop offset="1" stop-color="#818cf8" stop-opacity="0"/>
-    </radialGradient>
-    <linearGradient id="sheenGrad" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#bae6fd" stop-opacity="0"/>
-      <stop offset="0.5" stop-color="#bae6fd" stop-opacity="0.5"/>
-      <stop offset="1" stop-color="#bae6fd" stop-opacity="0"/>
-    </linearGradient>
-    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#0ea5e9" flood-opacity="0.25"/>
-    </filter>
-    <clipPath id="wordclip">
-      <text x="96" y="150" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="92" font-weight="700" letter-spacing="-2">neatify</text>
-    </clipPath>
-    <path id="star" d="M0 -7 L1.8 -1.8 L7 0 L1.8 1.8 L0 7 L-1.8 1.8 L-7 0 L-1.8 -1.8 Z"/>
   </defs>
 
-  <!-- background -->
-  <rect width="1200" height="320" rx="24" fill="url(#bg)"/>
+  <!-- ink-black ground -->
+  <rect width="920" height="260" rx="16" fill="#0A0B0D"/>
+  <rect x="0.5" y="0.5" width="919" height="259" rx="15.5" fill="none" stroke="#1C1F24"/>
 
-  <!-- ambient aurora glows -->
-  <ellipse class="aur1" cx="700" cy="30" rx="320" ry="150" fill="url(#auraSky)"/>
-  <ellipse class="aur2" cx="1080" cy="320" rx="300" ry="160" fill="url(#auraIndigo)"/>
+  <!-- faint emerald ambient, low and off to one side -->
+  <ellipse cx="340" cy="150" rx="420" ry="180" fill="url(#glow)"/>
 
-  <!-- hairline frame -->
-  <rect x="0.5" y="0.5" width="1199" height="319" rx="23.5" stroke="url(#accent)" stroke-opacity="0.18"/>
-
-  <!-- subtle dotted grid -->
-  <g class="dots" fill="#334155" opacity="0.35">
-    <circle cx="90" cy="60" r="2"/><circle cx="150" cy="60" r="2"/><circle cx="210" cy="60" r="2"/>
-    <circle cx="90" cy="120" r="2"/><circle cx="150" cy="120" r="2"/><circle cx="210" cy="120" r="2"/>
-    <circle cx="1050" cy="250" r="2"/><circle cx="1110" cy="250" r="2"/><circle cx="990" cy="250" r="2"/>
-    <circle cx="1050" cy="200" r="2"/><circle cx="1110" cy="200" r="2"/><circle cx="990" cy="200" r="2"/>
+  <!-- ===================== WORDMARK (vectorized Century Gothic Bold) ===================== -->
+  <!-- neat (ink) + ify (emerald). Native glyph box: x 0..424, baseline 0, caps up to -99, descender +26. -->
+  <g transform="translate(96,150)">
+    <path fill="#F4F6F5" d="M8.9 -70.1H26.4V-63Q32.4 -68 37.3 -70Q42.2 -71.9 47.2 -71.9Q57.7 -71.9 65 -64.6Q71.1 -58.5 71.1 -46.3V0H53.7V-30.7Q53.7 -43.3 52.6 -47.4Q51.4 -51.6 48.6 -53.7Q45.8 -55.9 41.7 -55.9Q36.4 -55.9 32.5 -52.3Q28.7 -48.7 27.2 -42.4Q26.4 -39.1 26.4 -28.2V0H8.9Z M156.8 -30H100.3Q101.5 -22.5 106.8 -18.1Q112.1 -13.7 120.4 -13.7Q130.2 -13.7 137.3 -20.6L152.1 -13.6Q146.6 -5.7 138.9 -2Q131.1 1.8 120.5 1.8Q104 1.8 93.6 -8.6Q83.2 -19 83.2 -34.7Q83.2 -50.7 93.6 -61.3Q103.9 -71.9 119.5 -71.9Q136.1 -71.9 146.5 -61.3Q156.8 -50.7 156.8 -33.3ZM139.1 -43.8Q137.4 -49.7 132.3 -53.4Q127.1 -57 120.4 -57Q113 -57 107.5 -52.9Q104 -50.3 101 -43.8Z M221.3 -70.1H238.8V0H221.3V-7.4Q216.1 -2.5 210.9 -0.4Q205.7 1.8 199.7 1.8Q186.1 1.8 176.1 -8.7Q166.2 -19.3 166.2 -34.9Q166.2 -51.2 175.8 -61.6Q185.4 -71.9 199.2 -71.9Q205.5 -71.9 211 -69.5Q216.6 -67.2 221.3 -62.4ZM202.8 -55.7Q194.6 -55.7 189.2 -49.9Q183.7 -44.2 183.7 -35.1Q183.7 -26 189.3 -20.2Q194.8 -14.3 202.8 -14.3Q211.1 -14.3 216.6 -20.1Q222.1 -25.8 222.1 -35.2Q222.1 -44.3 216.6 -50Q211.1 -55.7 202.8 -55.7Z M257.1 -96H274.7V-70.1H285.1V-55H274.7V0H257.1V-55H248.1V-70.1H257.1Z"/>
+    <path fill="#4ADE80" d="M299.9 -99Q304.5 -99 307.8 -95.6Q311.2 -92.3 311.2 -87.5Q311.2 -82.8 307.9 -79.5Q304.6 -76.2 300 -76.2Q295.3 -76.2 292 -79.6Q288.7 -83 288.7 -87.8Q288.7 -92.4 292 -95.7Q295.2 -99 299.9 -99ZM291.1 -70.1H308.7V0H291.1Z M314.7 -70.1H320.9Q321 -83.9 321.4 -86.4Q322.1 -92.2 326.2 -95.6Q330.4 -99 338 -99Q343.5 -99 350.4 -96.5V-83.1Q346.6 -84.2 344.1 -84.2Q341 -84.2 339.6 -82.9Q338.6 -81.9 338.6 -78.9L338.5 -70.1H349.7V-55.2H338.5V0H320.9V-55.2H314.7Z M350.6 -70.1H368.6L386.8 -26.1L406.9 -70.1H425L381 25.7H362.8L377.3 -5.2Z"/>
   </g>
 
-  <!-- wordmark -->
-  <text class="intro1" x="96" y="150" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="92" font-weight="700" fill="#f8fafc" letter-spacing="-2">
-    neat<tspan fill="url(#accent)">ify</tspan>
-  </text>
-  <g clip-path="url(#wordclip)">
-    <g class="sheen" transform="translate(-260, 0)">
-      <rect x="120" y="52" width="170" height="115" fill="url(#sheenGrad)" transform="skewX(-18)"/>
-    </g>
+  <!-- emerald node + halo, riding just after the wordmark -->
+  <g transform="translate(548,120)">
+    <circle class="nodeHalo" r="15" fill="#4ADE80" opacity="0.18"/>
+    <circle class="node" r="7.5" fill="#4ADE80"/>
   </g>
-  <text class="intro2" x="100" y="208" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="400" fill="#94a3b8" letter-spacing="0.5">
-    Tidy your folders, safely.
-  </text>
-  <text class="intro3" x="100" y="252" font-family="'JetBrains Mono', 'Consolas', monospace" font-size="19" fill="#64748b">
-    A small Java CLI that sorts files into folders by extension.
-  </text>
 
-  <!-- illustration: files flying into a folder that catches them -->
-  <g filter="url(#soft)">
-    <!-- flow arrows -->
-    <g stroke="url(#accent)" stroke-width="3" stroke-linecap="round" fill="none">
-      <path class="flow p1" opacity="0.35" d="M816 92 q40 0 70 30"/>
-      <path class="flow p2" opacity="0.35" d="M836 154 h54"/>
-      <path class="flow p3" opacity="0.35" d="M814 216 q44 0 72 -28"/>
-    </g>
-
-    <!-- folder -->
-    <g transform="translate(905, 96)">
-      <g class="fold">
-        <path d="M8 28 a12 12 0 0 1 12 -12 h54 l16 18 h78 a12 12 0 0 1 12 12 v92 a12 12 0 0 1 -12 12 H20 a12 12 0 0 1 -12 -12 Z" fill="url(#folderBody)"/>
-        <rect x="8" y="44" width="192" height="96" rx="12" fill="#0ea5e9"/>
-        <rect class="glow" x="8" y="44" width="192" height="96" rx="12" fill="#38bdf8" opacity="0.1"/>
-      </g>
-      <use class="spark s1" href="#star" x="16" y="-4" fill="#7dd3fc"/>
-      <use class="spark s2" href="#star" x="188" y="6" fill="#bae6fd"/>
-      <use class="spark s3" href="#star" x="102" y="-12" fill="#a5b4fc"/>
-    </g>
-
-    <!-- file cards -->
-    <g transform="translate(690, 70)">
-      <g class="card c1">
-        <rect x="0" y="0" width="120" height="44" rx="10" fill="#1e293b" stroke="#334155"/>
-        <rect x="14" y="14" width="16" height="16" rx="3" fill="#f472b6"/>
-        <rect x="42" y="15" width="62" height="6" rx="3" fill="#475569"/>
-        <rect x="42" y="27" width="40" height="6" rx="3" fill="#334155"/>
-      </g>
-    </g>
-    <g transform="translate(710, 132)">
-      <g class="card c2">
-        <rect x="0" y="0" width="120" height="44" rx="10" fill="#1e293b" stroke="#334155"/>
-        <rect x="14" y="14" width="16" height="16" rx="3" fill="#34d399"/>
-        <rect x="42" y="15" width="62" height="6" rx="3" fill="#475569"/>
-        <rect x="42" y="27" width="40" height="6" rx="3" fill="#334155"/>
-      </g>
-    </g>
-    <g transform="translate(688, 194)">
-      <g class="card c3">
-        <rect x="0" y="0" width="120" height="44" rx="10" fill="#1e293b" stroke="#334155"/>
-        <rect x="14" y="14" width="16" height="16" rx="3" fill="#fbbf24"/>
-        <rect x="42" y="15" width="62" height="6" rx="3" fill="#475569"/>
-        <rect x="42" y="27" width="40" height="6" rx="3" fill="#334155"/>
-      </g>
-    </g>
+  <!-- the "sorted stack" glyph: three bars, top one emerald -->
+  <g transform="translate(584,104)">
+    <rect class="bar bar1" x="0" y="0"  width="42" height="6" rx="3" fill="#4ADE80"/>
+    <rect class="bar bar2" x="0" y="14" width="30" height="6" rx="3" fill="#3A3D42"/>
+    <rect class="bar bar3" x="0" y="28" width="36" height="6" rx="3" fill="#3A3D42"/>
   </g>
+
+  <!-- supporting copy, quiet -->
+  <text x="98" y="196" font-size="19" font-weight="500" fill="#C7CDD2" letter-spacing="0.2">Tidy your folders, safely.</text>
+  <text class="mono" x="98" y="222" font-size="13.5" fill="#8A9199" letter-spacing="0.2">A small Java CLI that sorts files into folders by extension — dry-run by default.</text>
+
+  <!-- minimal meta strip, right-aligned, unobtrusive -->
+  <g class="mono" text-anchor="end" font-size="12" letter-spacing="0.4">
+    <text x="824" y="150" fill="#8A9199">v1.0.1</text>
+    <text x="824" y="170" fill="#565C63">Java 21+ · MIT</text>
+  </g>
+  <line x1="824" y1="120" x2="824" y2="180" stroke="#1C1F24"/>
+  <circle cx="856" cy="146" r="3" fill="#4ADE80"/>
 </svg>
