@@ -5,6 +5,8 @@ on:
     branches: [master]
   pull_request:
   workflow_dispatch:
+  # Called by release.yml so a release is only published when the full CI passes.
+  workflow_call:
 
 # Cancel superseded runs on a PR; keep every run on master.
 concurrency:
