@@ -87,7 +87,7 @@ accidentally scanning entire partitions or mounted archives.
 
 ## 6. Atomic operations (TOCTOU prevention)
 
-**Class:** `RulesFileCreator`, `UndoExecutor.appendRun()`.
+**Class:** `RulesFileCreator`, `FileSystemRunJournal.append()`.
 
 File creation uses `StandardOpenOption.CREATE_NEW` (`O_CREAT | O_EXCL`), which fails
 atomically if the file already exists — closing TOCTOU race windows. Journals are
@@ -108,7 +108,7 @@ The default `RENAME` never overwrites a destination file.
 
 ## 8. Undo scope validation
 
-**Class:** `UndoExecutor` — on every undo move.
+**Class:** `FileSystemRunJournal` — on every undo move.
 
 Verifies that the `from` and `to` paths recorded in a journal stay **inside the
 current source directory** (via `assertResolvedWithin`). A move pointing outside the
