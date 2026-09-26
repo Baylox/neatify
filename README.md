@@ -87,15 +87,15 @@ Grab the latest `neatify-<version>.jar` from the
 
 ```bash
 # Download
-curl -LO https://github.com/Baylox/neatify/releases/latest/download/neatify-1.0.1.jar
+curl -LO https://github.com/Baylox/neatify/releases/latest/download/neatify-1.0.2.jar
 
 # Optional: verify the checksum
-curl -LO https://github.com/Baylox/neatify/releases/latest/download/neatify-1.0.1.jar.sha256
-sha256sum -c neatify-1.0.1.jar.sha256
+curl -LO https://github.com/Baylox/neatify/releases/latest/download/neatify-1.0.2.jar.sha256
+sha256sum -c neatify-1.0.2.jar.sha256
 
 # Run it
-java -jar neatify-1.0.1.jar                                          # interactive menu
-java -jar neatify-1.0.1.jar --source ~/Downloads --use-default-rules # preview (dry-run)
+java -jar neatify-1.0.2.jar                                          # interactive menu
+java -jar neatify-1.0.2.jar --source ~/Downloads --use-default-rules # preview (dry-run)
 ```
 
 ### Build from source
@@ -122,7 +122,7 @@ Building also gives you the launchers — `./neatify` (Linux/macOS/WSL) and `.\n
 ./neatify --source ~/Downloads --undo                       # revert the last run
 ```
 
-<sub>On Windows, use `.\neatify.cmd` (or `java -jar neatify-1.0.1.jar`).</sub>
+<sub>On Windows, use `.\neatify.cmd` (or `java -jar neatify-1.0.2.jar`).</sub>
 
 **Shortcuts** (Linux/macOS/WSL) — a `Makefile` wraps the common flows:
 
